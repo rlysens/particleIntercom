@@ -70,6 +70,13 @@ static void SpiInit( int slow )
 void  VS1063InitSPI(void)
 {
     SpiInit(1 /*=slow*/);
+
+    pinMode(INTERCOM_CODEC_XRESET, OUTPUT);
+    pinMode(INTERCOM_CODEC_XCS, OUTPUT);
+    pinMode(INTERCOM_CODEC_XDCS, OUTPUT);
+    pinMode(INTERCOM_CODEC_XRESET, OUTPUT);
+    pinMode(INTERCOM_CODEC_DREQ, INPUT);
+
     digitalWrite(INTERCOM_CODEC_XRESET, LOW); //  Reset  VS10xx
     digitalWrite(INTERCOM_CODEC_XCS, HIGH); //  VS10xx  xCS  high
     digitalWrite(INTERCOM_CODEC_XDCS, HIGH); //  VS10xx  xDCS  high

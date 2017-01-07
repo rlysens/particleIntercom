@@ -8,11 +8,19 @@ SerialLogHandler logHandler;
 
 void setup() {
   PLF_PRINT("Entered setup()");
-  VS1063InitHardware();
-  VS1063InitSoftware();
+  pinMode(D0, INPUT);
+  delay(5000);
+  PLF_PRINT("Pull up D0...");
+  while(digitalRead(D0)==LOW);
+  //VS1063InitHardware();
+  //VS1063InitSoftware();
+  PLF_PRINT("Starting test1");
   test1();
+  PLF_PRINT("Test1 complete.");
   PLF_PRINT("Exiting setup()");
 }
 
 void loop() {
+  PLF_PRINT("In loop()");
+  delay(3000);
 }

@@ -12,6 +12,7 @@
 #endif
 
 void test1(void) {
+  VS1063InitSPI();
   digitalWrite(INTERCOM_CODEC_XRESET, LOW); //  Reset  VS10xx
   delay( 10 );
   digitalWrite(INTERCOM_CODEC_XRESET, HIGH); //Using Logic Analyzer, check DREQ signal
