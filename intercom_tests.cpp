@@ -11,6 +11,7 @@
 #include "intercom_print.h"
 #endif
 
+/*RL port complete*/
 void test1(void) {
   VS1063InitSPI();
   digitalWrite(INTERCOM_CODEC_XRESET, LOW); //  Reset  VS10xx
@@ -19,12 +20,13 @@ void test1(void) {
   delay( 10 );
 }
 
-#if 0
 void test2(void) {
+    VS1063InitSPI();
     WriteSci(SCI_MODE,  SM_RESET);
-    wiced_rtos_delay_milliseconds( 10 ); //Using Logic Analyzer, check DREQ signal
+    delay( 10 ); //Using Logic Analyzer, check DREQ signal
 }
 
+#if 0
 void test3(void) {
     while (1) {
         WriteSci(SCI_VOL,  0);
