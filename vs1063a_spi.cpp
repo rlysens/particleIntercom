@@ -1,15 +1,11 @@
 #include "Particle.h"
 #include "plf_utils.h"
+#include "vs1063a_spi.h"
 
 /*60MHz/64*/
 int SPI_CLOCK_SPEED_SLOW_HZ = 937500;
 /*60MHz/16*/
 int SPI_CLOCK_SPEED_FAST_HZ = 7500000;
-
-int INTERCOM_CODEC_XRESET = A1;
-int INTERCOM_CODEC_XCS = DAC;
-int INTERCOM_CODEC_XDCS = A2;
-int INTERCOM_CODEC_DREQ = A0;
 
 /*RL port complete*/
 int  WriteSdi(const  uint8_t  *data,  uint32_t  bytes)

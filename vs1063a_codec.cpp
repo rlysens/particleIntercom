@@ -14,15 +14,6 @@
 #include "plf_utils.h"
 #include "vs1063a_codec.h"
 
-#if 0
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
-#include <ctype.h>
-#include "wiced.h"
-#include "player.h"
-#endif
-
 #include "vs1063a_spi.h"
 
 /* Download the latest VS1063a Patches package and its vs1063a-patches.plg.

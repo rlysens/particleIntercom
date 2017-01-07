@@ -1,6 +1,7 @@
 #ifndef VS1063A_CODEC_H
 #define VS1063A_CODEC_H
 
+#include "Particle.h"
 #include "vs10xx_uc.h"
 
 #define VS1063_SAMPLE_RATE 24000 /*Number of 8-bit samples per second*/
