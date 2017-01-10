@@ -1,6 +1,7 @@
 #include "intercom_tests.h"
 #include "vs1063a_codec.h"
 #include "vs1063a_spi.h"
+#include "plf_utils.h"
 
 #if 0
 #include "platform.h"
@@ -20,36 +21,34 @@ void test1(void) {
   delay( 10 );
 }
 
+/*RL port complete*/
 void test2(void) {
-    VS1063InitSPI();
-    WriteSci(SCI_MODE,  SM_RESET);
-    delay( 10 ); //Using Logic Analyzer, check DREQ signal
+  VS1063InitSPI();
+  WriteSci(SCI_MODE,  SM_RESET);
+  delay( 10 ); //Using Logic Analyzer, check DREQ signal
 }
 
-#if 0
+/*RL port complete*/
 void test3(void) {
-    while (1) {
-        WriteSci(SCI_VOL,  0);
-        wiced_rtos_delay_milliseconds( 500 );
-        WriteSci(SCI_VOL,  0xffff);
-        wiced_rtos_delay_milliseconds( 500 );
-        ICOM_PRINT( (".\n") );
-    }
+  WriteSci(SCI_VOL, 0);
+  delay(500);
+  WriteSci(SCI_VOL, 0xffff);
+  delay( 500 );
+  PLF_PRINT(".");
 }
 
 void test4(void) {
     uint16_t res;
-    uint32_t count=0;
+    static int count=0;
 
-    while (1) {
-        WriteSci(SCI_VOL,  0xA2F5);
-        wiced_rtos_delay_milliseconds( 500 );
-        res = ReadSci(SCI_VOL);
-        ICOM_PRINT( ("Vol=0x%x, count=%u\n", res, (unsigned int)count++) );
-        wiced_rtos_delay_milliseconds( 500 );
-    }
+    WriteSci(SCI_VOL,  0xA2F5);
+    delay( 500 );
+    res = ReadSci(SCI_VOL);
+    PLF_PRINT("Vol=0x%x, count=%u\n", res, (unsigned int)count++);
+    delay( 500 );
 }
 
+#if 0
 void test5(void) {
     uint8_t activateData[] = {0x53, 0xEF, 0x6E, 0x44, 0, 0, 0, 0, 0, 0 ,0 ,0 ,0 ,0};
     uint8_t deactivateData[] = {0x45, 0x78, 0x69, 0x74, 0, 0, 0, 0};

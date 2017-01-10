@@ -57,13 +57,13 @@ static void SpiInit( int slow )
     SPI.setBitOrder(MSBFIRST);
 
     /* Configure mode CPHA and CPOL */
-    SPI.setDataMode(SPI_MODE0);
+    SPI.setDataMode(SPI_MODE1);
 
     /* Enable SPI peripheral clock */
     SPI.setClockSpeed(slow ? SPI_CLOCK_SPEED_SLOW_HZ : SPI_CLOCK_SPEED_FAST_HZ);
 
     /* Init and enable SPI */
-    SPI.begin(SPI_MODE_MASTER);
+    SPI.begin(SPI_MODE_MASTER, INTERCOM_CODEC_XCS);
 }
 
 /*RL: Port complete*/
