@@ -57,7 +57,7 @@ static void SpiInit( int slow )
     SPI.setBitOrder(MSBFIRST);
 
     /* Configure mode CPHA and CPOL */
-    SPI.setDataMode(SPI_MODE1);
+    SPI.setDataMode(SPI_MODE3);
 
     /* Enable SPI peripheral clock */
     SPI.setClockSpeed(slow ? SPI_CLOCK_SPEED_SLOW_HZ : SPI_CLOCK_SPEED_FAST_HZ);
@@ -85,5 +85,5 @@ void  VS1063InitSPI(void)
 
 /*RL: Port complete*/
 void VS1063AdjustSPIFast(void)  {
-    SpiInit(0 /*=fast*/);
+  SpiInit(0 /*=fast*/);
 }

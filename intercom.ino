@@ -10,16 +10,18 @@ SerialLogHandler logHandler;
 void setup() {
   PLF_PRINT("Entered setup()");
 
-  //VS1063InitHardware();
-  //VS1063InitSoftware();
+  VS1063InitHardware();
+  VS1063InitSoftware();
 
-  VS1063InitSPI();
+  //VS1063RecordInit();
+  //PLF_PRINT("VS1063RecordInit done\n");
+
   //pinMode(D0, INPUT);
   //PLF_PRINT("Pull up D0...");
   //while(digitalRead(D0)==LOW);
-  //PLF_PRINT("Starting test4, exiting setup()");
+  PLF_PRINT("Starting test, exiting setup()");
 }
 
 void loop() {
-  test4();
+  test5();
 }

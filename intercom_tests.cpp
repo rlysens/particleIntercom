@@ -37,57 +37,48 @@ void test3(void) {
   PLF_PRINT(".");
 }
 
+/*RL port complete*/
 void test4(void) {
-    uint16_t res;
-    static int count=0;
+  uint16_t res;
+  static int count=0;
 
-    WriteSci(SCI_VOL,  0xA2F5);
-    delay( 500 );
-    res = ReadSci(SCI_VOL);
-    PLF_PRINT("Vol=0x%x, count=%u\n", res, (unsigned int)count++);
-    delay( 500 );
+  WriteSci(SCI_VOL,  0xA2F5);
+  delay( 500 );
+  res = ReadSci(SCI_VOL);
+  PLF_PRINT("Vol=0x%x, count=%u\n", res, (unsigned int)count++);
+  delay( 500 );
 }
 
-#if 0
 void test5(void) {
-    uint8_t activateData[] = {0x53, 0xEF, 0x6E, 0x44, 0, 0, 0, 0, 0, 0 ,0 ,0 ,0 ,0};
-    uint8_t deactivateData[] = {0x45, 0x78, 0x69, 0x74, 0, 0, 0, 0};
+  uint8_t activateData[] = {0x53, 0xEF, 0x6E, 0x44, 0, 0, 0, 0, 0, 0 ,0 ,0 ,0 ,0};
+  uint8_t deactivateData[] = {0x45, 0x78, 0x69, 0x74, 0, 0, 0, 0};
 
-    while (1) {
-        WriteSdi(activateData, sizeof(activateData)/sizeof(activateData[0]));
-        wiced_rtos_delay_milliseconds( 500 );
-        WriteSdi(deactivateData, sizeof(deactivateData)/sizeof(deactivateData[0]));
-        wiced_rtos_delay_milliseconds( 500 );
-    }
+  WriteSdi(activateData, sizeof(activateData)/sizeof(activateData[0]));
+  delay( 500 );
+  WriteSdi(deactivateData, sizeof(deactivateData)/sizeof(deactivateData[0]));
+  delay( 500 );
+  PLF_PRINT(".");
 }
 
 void test6(void) {
-    int counter=0;
+    static int counter=0;
 #define SAMPLE_BUFFER_SZ 2048
     static uint8_t sampleBuffer[SAMPLE_BUFFER_SZ] = {0};
     int numRxSamples = SAMPLE_BUFFER_SZ;
 
-    VS1063RecordInit();
-    ICOM_PRINT( ("VS1063RecordInit done\n") );
+    VS1063RecordBufFull(sampleBuffer, numRxSamples);
 
-    while(1)
+    VS1063PlayBuf(sampleBuffer, numRxSamples);
+
+    if (counter++%128==0)
     {
-
-        //wiced_rtos_delay_milliseconds( 40 );
-
-        VS1063RecordBufFull(sampleBuffer, numRxSamples);
-
-        VS1063PlayBuf(sampleBuffer, numRxSamples);
-
-        if (counter++%128==0)
-        {
-            ICOM_PRINT(("%d, numRxSamples=%d\n", counter, numRxSamples));
-        }
-
-        numRxSamples = SAMPLE_BUFFER_SZ/2;
+        PLF_PRINT("%d, numRxSamples=%d\n", counter, numRxSamples);
     }
+
+    numRxSamples = SAMPLE_BUFFER_SZ/2;
 }
 
+#if 0
 void test7(void) {
     while (1) {
     ICOM_PRINT(("%d\n",wiced_gpio_input_get(INTERCOM_CODEC_DREQ)));

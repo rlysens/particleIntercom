@@ -486,7 +486,7 @@ void VS1063InitSoftware(void) {
      Datasheet for details. */
     /* Not setting: SDISHARE, using the 7 pin connection, i.e. with xDCS*/
     /* Or-in SM_TESTS to allow SDI tests like sine test*/
-    WriteSci(SCI_MODE, SM_SDINEW|SM_RESET);
+    WriteSci(SCI_MODE, SM_SDINEW|SM_RESET|SM_TESTS);
 
     /* A quick sanity check: write to two registers, then test if we
      get the same results. Note that if you use a too high SPI
