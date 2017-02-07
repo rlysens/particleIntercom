@@ -1,4 +1,6 @@
 #include "intercom_tests.h"
+#include "intercom_outgoing.h"
+#include "intercom_incoming.h"
 #include "vs1063a_codec.h"
 #include "vs1063a_spi.h"
 #include "plf_utils.h"
@@ -7,9 +9,6 @@
 #include "platform.h"
 #include "platform_peripheral.h"
 #include "plf_utils.h"
-#include "intercom_udp_server.h"
-#include "intercom_proxy.h"
-#include "intercom_print.h"
 #endif
 
 /*RL port complete*/
@@ -29,7 +28,7 @@ void test2(void) {
 }
 
 /*RL port complete*/
-void test3(void) {
+void test3_loop(void) {
   WriteSci(SCI_VOL, 0);
   delay(500);
   WriteSci(SCI_VOL, 0xffff);
@@ -38,18 +37,19 @@ void test3(void) {
 }
 
 /*RL port complete*/
-void test4(void) {
+void test4_loop(void) {
   uint16_t res;
-  static int count=0;
+  static uint16_t count=0;
 
-  WriteSci(SCI_VOL,  0xA2F5);
-  delay( 500 );
+  WriteSci(SCI_VOL,  0xA2F5+count);
+  //delay( 500 );
   res = ReadSci(SCI_VOL);
   PLF_PRINT("Vol=0x%x, count=%u\n", res, (unsigned int)count++);
-  delay( 500 );
+  //delay( 500 );
 }
 
-void test5(void) {
+/*RL port complete*/
+void test5_loop(void) {
   uint8_t activateData[] = {0x53, 0xEF, 0x6E, 0x44, 0, 0, 0, 0, 0, 0 ,0 ,0 ,0 ,0};
   uint8_t deactivateData[] = {0x45, 0x78, 0x69, 0x74, 0, 0, 0, 0};
 
@@ -60,9 +60,15 @@ void test5(void) {
   PLF_PRINT(".");
 }
 
+/* RL port complete */
+#undef TEST6_ENABLE /*define to enable this test.*/
 void test6(void) {
+#ifdef TEST6_ENABLE
     static int counter=0;
-#define SAMPLE_BUFFER_SZ 2048
+    int energy=0;
+    int ii;
+
+#define SAMPLE_BUFFER_SZ (2048*16)
     static uint8_t sampleBuffer[SAMPLE_BUFFER_SZ] = {0};
     int numRxSamples = SAMPLE_BUFFER_SZ;
 
@@ -70,40 +76,45 @@ void test6(void) {
 
     VS1063PlayBuf(sampleBuffer, numRxSamples);
 
-    if (counter++%128==0)
+    for (ii=0; ii<numRxSamples; ii++)
     {
-        PLF_PRINT("%d, numRxSamples=%d\n", counter, numRxSamples);
+      energy += sampleBuffer[ii]*sampleBuffer[ii];
     }
 
-    numRxSamples = SAMPLE_BUFFER_SZ/2;
+    PLF_PRINT("%d, energy=%d\n", counter++, energy);
+#endif /*TEST6_ENABLE*/
+}
+
+/* RL port complete */
+void test7(void) {
+    while (1) {
+      PLF_PRINT("%d\n", digitalRead(INTERCOM_CODEC_DREQ));
+    }
+}
+
+#define REMOTE_PORT (50007)
+#define REMOTE_IP (IPAddress(10,0,1,3))
+#define LOCAL_PORT (50008)
+
+static Intercom_Incoming *intercom_incomingp=0;
+
+void test8_setup(void) {
+  static Intercom_Incoming intercom_incoming(LOCAL_PORT);
+  static Intercom_Outgoing intercom_outgoing(REMOTE_IP, REMOTE_PORT, intercom_incoming.getSocket());
+
+  intercom_incomingp = &intercom_incoming;
+
+  PLF_PRINT("intercom_outgoing created\n");
+}
+
+void test8_loop(void) {
+  if (intercom_incomingp) {
+    intercom_incomingp->receive();
+    intercom_incomingp->drain();
+  }
 }
 
 #if 0
-void test7(void) {
-    while (1) {
-    ICOM_PRINT(("%d\n",wiced_gpio_input_get(INTERCOM_CODEC_DREQ)));
-    }
-}
-
-void test8(void) {
-    wiced_result_t result;
-    static Intercom_proxy intercom_proxy;
-
-    intercom_udp_server_start();
-    ICOM_PRINT( ("udp_server started\n") );
-
-    intercom_proxy_create(&intercom_proxy);
-    ICOM_PRINT( ("intercom_proxy created\n") );
-
-    VS1063RecordInit();
-    ICOM_PRINT( ("VS1063RecordInit done\n") );
-
-    result = intercom_proxy_connect(&intercom_proxy);
-    icom_assert("intercom_proxy_connect err\n",result == WICED_SUCCESS);
-
-    ICOM_PRINT( ("intercom_proxy connected.\n") );
-}
-
 void test9(void)
 {
     VS1063RecordInit();

@@ -19,4 +19,8 @@
 #define MAX(x,y)  ((x) > (y) ? (x) : (y))
 #endif /* ifndef MAX */
 
+#define OUT
+#define IN
+#define INOUT
+
 #endif /*PLF_UTILS_H*/

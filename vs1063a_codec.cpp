@@ -33,7 +33,7 @@
    data is collected. */
 #define REPORT_INTERVAL 4096
 
-#define INIT_VOL 0x0c0c /*was:0x0c0c*/
+#define INIT_VOL 0x0101 /*was:0x0c0c*/
 
 enum AudioFormat {
   afUnknown,
@@ -410,8 +410,8 @@ void VS1063SetVol(uint32_t volLevel) {
 void VS1063RecordInit(void) {
     /* Initialize recording */
     WriteSci(SCI_RECRATE,    VS1063_SAMPLE_RATE /*Sample rate*/);
-    WriteSci(SCI_RECGAIN,     1024); /* 1024 = gain 1 = best quality */
-    WriteSci(SCI_RECMAXAUTO,  4096); /* if RECGAIN = 0, define max auto gain */
+    WriteSci(SCI_RECGAIN, 0); /* 1024 = gain 1 = best quality */
+    WriteSci(SCI_RECMAXAUTO,  0); /* if RECGAIN = 0, define max auto gain */
     WriteSci(SCI_RECMODE, RM_63_ADC_MODE_MONO | RM_63_FORMAT_G711_ALAW | RM_63_CODEC | RM_63_NO_RIFF);
     audioFormat = afRiff;
 
