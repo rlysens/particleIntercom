@@ -10,24 +10,28 @@
 SerialLogHandler logHandler;
 
 void setup() {
+  IPAddress localIP = WiFi.localIP();
+
   delay(5000);
   PLF_PRINT("Entered setup()");
+  Serial.println(localIP);
 
   VS1063InitHardware();
   VS1063InitSoftware();
 
-  //VS1063RecordInit();
-  //PLF_PRINT("VS1063RecordInit done\n");
+  VS1063RecordInit();
+  PLF_PRINT("VS1063RecordInit done\n");
 
-  //VS1063PrintState();
-  //pinMode(D0, INPUT);
+  VS1063PrintState();
+  pinMode(D0, INPUT);
   //PLF_PRINT("Pull up D0...");
-  //while(digitalRead(D0)==LOW);
-  //test8_setup();
+
+  test8_setup();
   PLF_PRINT("Starting test, exiting setup()");
 }
 
 void loop() {
-  test5_loop();
+  test8_loop();
   plf_event_counter_tick();
+  delay(10);
 }

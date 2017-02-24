@@ -12,6 +12,7 @@ private:
   Timer _timer;
 
   void _onTimeout(void);
+  bool _recordButtonPressed(void);
 
 public:
   Intercom_Outgoing(IPAddress remote_ip_address, int remote_port, UDP& udp);

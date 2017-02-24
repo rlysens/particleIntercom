@@ -42,7 +42,7 @@ void test4_loop(void) {
   static uint16_t count=0;
 
   WriteSci(SCI_VOL,  0xA2F5+count);
-  //delay( 500 );
+  delay( 500 );
   res = ReadSci(SCI_VOL);
   PLF_PRINT("Vol=0x%x, count=%u\n", res, (unsigned int)count++);
   //delay( 500 );
@@ -92,15 +92,15 @@ void test7(void) {
     }
 }
 
-#define REMOTE_PORT (50007)
-#define REMOTE_IP (IPAddress(10,0,1,3))
-#define LOCAL_PORT (50008)
-
 static Intercom_Incoming *intercom_incomingp=0;
 
 void test8_setup(void) {
-  static Intercom_Incoming intercom_incoming(LOCAL_PORT);
-  static Intercom_Outgoing intercom_outgoing(REMOTE_IP, REMOTE_PORT, intercom_incoming.getSocket());
+  static IPAddress localIP = WiFi.localIP();
+  //static Intercom_Incoming intercom_incoming(localIP==IPAddress(10,0,1,5) ? 50008 : 50009);
+  //static Intercom_Outgoing intercom_outgoing(localIP==IPAddress(10,0,1,5) ? IPAddress(10,0,1,6) : IPAddress(10,0,1,5), localIP==IPAddress(10,0,1,5) ? 50009 : 50008, intercom_incoming.getSocket());
+
+  static Intercom_Incoming intercom_incoming(50007);
+  static Intercom_Outgoing intercom_outgoing(IPAddress(52,26,112,44), 50007, intercom_incoming.getSocket());
 
   intercom_incomingp = &intercom_incoming;
 
