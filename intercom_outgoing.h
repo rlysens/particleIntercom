@@ -3,19 +3,15 @@
 
 #include "Particle.h"
 #include "plf_utils.h"
+#include "message_handler.h"
 
 class Intercom_Outgoing {
 private:
-  UDP& _udp;
-  IPAddress _remote_ip_address;
-  int _remote_port;
-  Timer _timer;
-
-  void _onTimeout(void);
-  bool _recordButtonPressed(void);
+	Message_Handler _message_handler;
 
 public:
-  Intercom_Outgoing(IPAddress remote_ip_address, int remote_port, UDP& udp);
+  	Intercom_Outgoing(Message_Handler& message_handler);
+  	void transfer(void);
 };
 
 #endif /*INTERCOM_PROXY_H*/

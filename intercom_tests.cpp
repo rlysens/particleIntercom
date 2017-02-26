@@ -1,4 +1,5 @@
 #include "intercom_tests.h"
+#include "message_handler.h"
 #include "intercom_outgoing.h"
 #include "intercom_incoming.h"
 #include "vs1063a_codec.h"
@@ -53,9 +54,9 @@ void test5_loop(void) {
   uint8_t activateData[] = {0x53, 0xEF, 0x6E, 0x44, 0, 0, 0, 0, 0, 0 ,0 ,0 ,0 ,0};
   uint8_t deactivateData[] = {0x45, 0x78, 0x69, 0x74, 0, 0, 0, 0};
 
-  WriteSdi(activateData, sizeof(activateData)/sizeof(activateData[0]));
+  WriteSdi(activateData, sizeof(activateData));
   delay( 500 );
-  WriteSdi(deactivateData, sizeof(deactivateData)/sizeof(deactivateData[0]));
+  WriteSdi(deactivateData, sizeof(deactivateData));
   delay( 500 );
   PLF_PRINT(".");
 }
@@ -88,29 +89,41 @@ void test6(void) {
 /* RL port complete */
 void test7(void) {
     while (1) {
-      PLF_PRINT("%d\n", digitalRead(INTERCOM_CODEC_DREQ));
+      PLF_PRINT("%d\n", (int)digitalRead(INTERCOM_CODEC_DREQ));
     }
 }
 
 static Intercom_Incoming *intercom_incomingp=0;
+static Intercom_Outgoing *intercom_outgoingp=0;
+static Message_Handler *message_handlerp=0;
 
 void test8_setup(void) {
   static IPAddress localIP = WiFi.localIP();
-  //static Intercom_Incoming intercom_incoming(localIP==IPAddress(10,0,1,5) ? 50008 : 50009);
-  //static Intercom_Outgoing intercom_outgoing(localIP==IPAddress(10,0,1,5) ? IPAddress(10,0,1,6) : IPAddress(10,0,1,5), localIP==IPAddress(10,0,1,5) ? 50009 : 50008, intercom_incoming.getSocket());
-
-  static Intercom_Incoming intercom_incoming(50007);
-  static Intercom_Outgoing intercom_outgoing(IPAddress(52,26,112,44), 50007, intercom_incoming.getSocket());
+  static Message_Handler message_handler(50007 /*local_port*/,
+    IPAddress(52,26,112,44) /*remote_ip*/, 50007 /*remote port*/);
+  static Intercom_Incoming intercom_incoming(message_handler);
+  static Intercom_Outgoing intercom_outgoing(message_handler);
 
   intercom_incomingp = &intercom_incoming;
+  intercom_outgoingp = &intercom_outgoing;
+  message_handlerp = &message_handler;
+}
 
-  PLF_PRINT("intercom_outgoing created\n");
+static bool recordButtonPressed(void) {
+  return (digitalRead(D0)==HIGH);
 }
 
 void test8_loop(void) {
+  if (message_handlerp) {
+    message_handlerp->receive();
+  }
+
   if (intercom_incomingp) {
-    intercom_incomingp->receive();
     intercom_incomingp->drain();
+  }
+
+  if ((intercom_outgoingp) && recordButtonPressed()) {
+    intercom_outgoingp->transfer();
   }
 }
 

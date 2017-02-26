@@ -7,7 +7,7 @@
 
 typedef struct {
     int eventCount;
-    char *eventName;
+    const char *eventName;
     int initVal;
 } EventTuple_t;
 
@@ -28,6 +28,8 @@ enum EventIds {
     ENCODER_AUDIO_FREE_MIN,
     ENCODER_OUTBUF_FREE_MAX,
     ENCODER_OUTBUF_FREE_MIN,
+    ENCODER_OUTBUF_FILL_MAX,
+    ENCODER_OUTBUF_FILL_MIN,
     UDP_BYTES_TX,
     UDP_PACKET_CREATED,
     CIRCULAR_BUF_OFL,
