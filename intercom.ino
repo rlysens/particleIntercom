@@ -11,10 +11,14 @@ SerialLogHandler logHandler;
 
 void setup() {
   IPAddress localIP = WiFi.localIP();
+  String myID = System.deviceID();
 
   delay(5000);
   PLF_PRINT("Entered setup()");
   Serial.println(localIP);
+
+  // Prints out the device ID over Serial
+  Serial.println(myID);
 
   VS1063InitHardware();
   VS1063InitSoftware();

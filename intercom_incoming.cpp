@@ -19,7 +19,7 @@ static PlfCircularBuf_t circularBufCtxt;
 #define DRAIN_STATE_FILL 0
 #define DRAIN_STATE_DRAIN 1
 
-static int message_handler_helper(Message &msg, 
+static int message_handler_helper(Intercom_Message &msg, 
   int payload_size, void *ctxt) {
   Intercom_Incoming *intercom_incomingp = (Intercom_Incoming*)ctxt;
 
@@ -28,10 +28,19 @@ static int message_handler_helper(Message &msg,
   return intercom_incomingp->handle_message(msg, payload_size);
 }
 
-int Intercom_Incoming::handle_message(Message &msg, int payload_size) {
+int Intercom_Incoming::handle_message(Intercom_Message &msg, int payload_size) {
+  
   switch (msg.id) {
     case MSG_ID_VOICE_DATA:
-      return _receive(msg.data, payload_size);
+    {
+      static voice_data_t voice_data;
+      int num_decoded_msg_bytes = voice_data_t_decode(msg.data, 0, payload_size, &voice_data);
+
+      if (num_decoded_msg_bytes < 0)
+        return -2;
+
+      return _receive(voice_data.data, voice_data.data_size);
+    }
 
     default:
       return -1;
@@ -102,19 +111,17 @@ void Intercom_Incoming::drain(void) {
     }
 }
 
-int Intercom_Incoming::_receive(uint8_t *rx_data, int rx_data_length)
+int Intercom_Incoming::_receive(int8_t *rx_data, int rx_data_length)
 {
     int free_space;
 
     if (rx_data_length > 0) {
-      PLF_COUNT_VAL(UDP_BYTES_RX, rx_data_length);
-
       free_space = plf_circular_buf_free_space(&circularBufCtxt);
       if (free_space < rx_data_length) {
         PLF_COUNT_EVENT(CIRCULAR_BUF_OFL);
       }
       else {
-        plf_circular_buf_write(&circularBufCtxt, rx_data, rx_data_length);
+        plf_circular_buf_write(&circularBufCtxt, (uint8_t*)rx_data, rx_data_length);
       }
     }
 

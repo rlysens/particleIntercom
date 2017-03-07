@@ -2,6 +2,7 @@
 #include "message_handler.h"
 #include "intercom_outgoing.h"
 #include "intercom_incoming.h"
+#include "intercom_controller.h"
 #include "vs1063a_codec.h"
 #include "vs1063a_spi.h"
 #include "plf_utils.h"
@@ -103,6 +104,7 @@ void test8_setup(void) {
     IPAddress(52,26,112,44) /*remote_ip*/, 50007 /*remote port*/);
   static Intercom_Incoming intercom_incoming(message_handler);
   static Intercom_Outgoing intercom_outgoing(message_handler);
+  static Intercom_Controller intercom_controller(message_handler, intercom_outgoing);
 
   intercom_incomingp = &intercom_incoming;
   intercom_outgoingp = &intercom_outgoing;

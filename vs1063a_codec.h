@@ -16,6 +16,8 @@ void VS1063PlayBuf(uint8_t *bufP, uint32_t bytesInBuffer);
 void VS1063PlayCancel(void);
 void VS1063SetVol(uint32_t vol);
 void VS1063RecordInit(void);
+
+/*Returns number of bytes recorder*/
 int VS1063RecordBuf(uint8_t *recBuf, uint32_t recBufferSize);
 void VS1063RecordBufFull(uint8_t *recBuf, uint32_t recBufferSize);
 void VS1063RecordCancel(void);

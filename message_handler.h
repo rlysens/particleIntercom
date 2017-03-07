@@ -8,12 +8,12 @@
 #define MAX_MESSAGE_ID 255
 
 typedef struct {
-	uint16_t id;
+	uint32_t id;
 	uint8_t data[MESSAGE_DATA_LENGTH];
 
-} Message;
+} Intercom_Message;
 
-typedef int (MessageHandlerFunType)(Message &msg, 
+typedef int (MessageHandlerFunType)(Intercom_Message &msg, 
 	int payload_size, void *ctxt);
 
 typedef struct {
@@ -31,7 +31,7 @@ private:
 public:
 	Message_Handler(int local_port, IPAddress remote_ip_address, int remote_port);
 
-	int send(Message &msg, int payload_size);
+	int send(Intercom_Message &msg, int payload_size);
 	int receive(void);
 	int register_handler(uint16_t id, MessageHandlerFunType *fun,
 		void *ctxt);

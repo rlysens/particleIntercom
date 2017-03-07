@@ -1,0 +1,23 @@
+
+struct voice_data_t
+{
+	int16_t destination_id;
+	int16_t data_size;
+	int8_t data[512-4-4];
+}
+
+struct i_am_t
+{
+	int8_t name[32];
+}
+
+struct who_is_t
+{
+	int8_t name[32];
+}
+
+struct who_is_reply_t
+{
+	int32_t id;
+	int8_t name[32];
+}
