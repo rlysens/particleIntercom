@@ -4,8 +4,10 @@
 #include "messages.h"
 
 void Intercom_Outgoing::transfer(void) {
-  static Message msg;
-  uint16_t available_data_length;
+  int num_encoded_bytes;
+  static Intercom_Message intercom_message;
+  static voice_data_t voice_data;
+  int recorded_num_bytes;
 
   PLF_COUNT_EVENT(INTERCOM_OUTGOING_TICK);
 
@@ -18,28 +20,34 @@ void Intercom_Outgoing::transfer(void) {
   PLF_COUNT_MAX(ENCODER_OUTBUF_FILL_MAX, VS1063aStreamOutputBufferFillWords());
   PLF_COUNT_MIN(ENCODER_OUTBUF_FILL_MIN, VS1063aStreamOutputBufferFillWords());
 
-  if (VS1063aStreamOutputBufferFillWords() < (int)(sizeof(msg.data)))
+  if (VS1063aStreamOutputBufferFillWords() < (int)(sizeof(voice_data.data)))
     return;
 
-  available_data_length = VS1063RecordBuf(msg.data, sizeof(msg.data));
-  if (available_data_length==0) {
+  recorded_num_bytes = VS1063RecordBuf((uint8_t*)voice_data.data, sizeof(voice_data.data));
+  if (recorded_num_bytes==0) {
       PLF_COUNT_EVENT(NO_ENCODER_AVL_BYTES);
       return;
   }
 
-  PLF_COUNT_VAL(ENCODER_AVL_BYTES,available_data_length);
-  PLF_COUNT_MAX(ENCODER_AVL_BYTES_MAX, available_data_length);
-  PLF_COUNT_MIN(ENCODER_AVL_BYTES_MIN, available_data_length);
+  PLF_COUNT_VAL(ENCODER_AVL_BYTES, recorded_num_bytes);
+  PLF_COUNT_MAX(ENCODER_AVL_BYTES_MAX, recorded_num_bytes);
+  PLF_COUNT_MIN(ENCODER_AVL_BYTES_MIN, recorded_num_bytes);
 
-  /* Send the data */
-  msg.id = MSG_ID_VOICE_DATA;
-  if (_message_handler.send(msg, available_data_length)) {
+  voice_data.data_size = recorded_num_bytes;
+  voice_data.destination_id = _destination_id;
+
+  num_encoded_bytes = voice_data_t_encode(intercom_message.data, 0, sizeof(intercom_message.data), &voice_data);
+
+  intercom_message.id = MSG_ID_VOICE_DATA;
+
+  if (_message_handler.send(intercom_message, num_encoded_bytes)) {
       PLF_PRINT(("Voice data send failed\n"));
       return;
   }
-  else {
-      PLF_COUNT_VAL(UDP_BYTES_TX, available_data_length);
-  }
+}
+
+void Intercom_Outgoing::set_target(int16_t destination_id) {
+  _destination_id = destination_id;
 }
 
 /*RL port ongoing*/
