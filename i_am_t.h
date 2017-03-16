@@ -14,6 +14,8 @@
 extern "C" {
 #endif
 
+#define I_AM_T_MSG_ID 2
+
 typedef struct _i_am_t i_am_t;
 struct _i_am_t
 {

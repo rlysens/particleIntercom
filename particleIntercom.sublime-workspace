@@ -4,12 +4,28 @@
 		"selected_items":
 		[
 			[
+				"inte",
+				"intercom_id_to_intercom_table"
+			],
+			[
+				"msg_handler",
+				"msg_i_am_handler"
+			],
+			[
+				"pa",
+				"payload_data"
+			],
+			[
 				"intercom",
-				"intercom_message"
+				"intercom_name_to_id_table"
+			],
+			[
+				"inter",
+				"intercom_name_table"
 			],
 			[
 				"num",
-				"num_encoded_bytes"
+				"num_decoded_msg_bytes"
 			],
 			[
 				"who",
@@ -83,6 +99,106 @@
 	},
 	"buffers":
 	[
+		{
+			"file": "intercom_controller.cpp",
+			"settings":
+			{
+				"buffer_size": 2550,
+				"encoding": "UTF-8",
+				"line_ending": "Windows"
+			}
+		},
+		{
+			"contents": "#include \"Particle.h\"\n#include \"intercom_incoming.h\"\n#include \"vs1063a_codec.h\"\n#include \"plf_utils.h\"\n#include \"plf_event_counter.h\"\n#include \"plf_circular_buffer.h\"\n#include \"messages.h\"\n\n#define CIRCULAR_BUFFER_SIZE (8192*2)\n#define UDP_PACKET_MAX_DATA_LENGTH (512)\n\nstatic uint8_t circularBuffer[CIRCULAR_BUFFER_SIZE];\nstatic PlfCircularBuf_t circularBufCtxt;\n\n#define BUFFER_NEARLY_EMPTY (CIRCULAR_BUFFER_SIZE/8)\n#define BUFFER_HALF (CIRCULAR_BUFFER_SIZE/2)\n#define BUFFER_NEARLY_FULL (CIRCULAR_BUFFER_SIZE - (CIRCULAR_BUFFER_SIZE/8))\n\n#define DRAIN_STATE_FILL 0\n#define DRAIN_STATE_DRAIN 1\n\nstatic int message_handler_helper(Intercom_Message &msg, \n  int payload_size, void *ctxt) {\n  Intercom_Incoming *intercom_incomingp = (Intercom_Incoming*)ctxt;\n\n  plf_assert(\"NULL ctxt ptr\", intercom_incomingp);\n\n  return intercom_incomingp->handle_message(msg, payload_size);\n}\n\nint Intercom_Incoming::handle_message(Intercom_Message &msg, int payload_size) {\n  \n  switch (msg.id) {\n    case VOICE_DATA_T_MSG_ID:\n    {\n      static voice_data_t voice_data;\n      int num_decoded_msg_bytes = voice_data_t_decode(msg.data, 0, payload_size, &voice_data);\n\n      if (num_decoded_msg_bytes < 0)\n        return -2;\n\n      return _receive(voice_data.data, voice_data.data_size);\n    }\n\n    default:\n    return -1;\n  }\n\n  return 0;\n}\n\nvoid Intercom_Incoming::drain(void) {\n  int numBytesBuffered = plf_circular_buf_used_space(&circularBufCtxt);\n  uint8_t *decoderData;\n  int numBytesForCodec, decoderAvlSpace;\n  static int drain_state = DRAIN_STATE_FILL;\n  static int discardNextByte=0;\n\n  PLF_COUNT_MAX(CIRCULAR_BUF_MAX, numBytesBuffered);\n  PLF_COUNT_MIN(CIRCULAR_BUF_MIN, numBytesBuffered);\n\n  if ((drain_state == DRAIN_STATE_FILL) && (numBytesBuffered >= BUFFER_NEARLY_FULL)) {\n    drain_state = DRAIN_STATE_DRAIN;\n  }\n\n  else if ((drain_state == DRAIN_STATE_DRAIN) && (numBytesBuffered < BUFFER_NEARLY_EMPTY)) {\n    drain_state = DRAIN_STATE_FILL;\n  }\n\n  PLF_COUNT_VAL(DECODER_UNDERFLOW, VS1063aAudioBufferUnderflow());\n\n  if (drain_state == DRAIN_STATE_FILL) {\n    static uint8_t zeroBuf[64]={0};\n\n    decoderAvlSpace = VS1063aStreamBufferFreeWords();\n    numBytesForCodec = MIN(decoderAvlSpace, (int)(sizeof(zeroBuf)&0x7ffffffe));\n    VS1063PlayBuf(zeroBuf, numBytesForCodec);\n  }\n\n  if (drain_state == DRAIN_STATE_DRAIN) {\n    decoderAvlSpace = VS1063aStreamBufferFreeWords();\n    numBytesBuffered = plf_circular_buf_used_space(&circularBufCtxt);\n    numBytesForCodec = MIN(decoderAvlSpace, numBytesBuffered);\n\n    if (numBytesForCodec && discardNextByte) {\n      plf_circular_buf_read_start(&circularBufCtxt, &decoderData, 1);\n      plf_circular_buf_read_release(&circularBufCtxt, 1);\n      discardNextByte = 0;\n    }\n\n    numBytesBuffered = plf_circular_buf_used_space(&circularBufCtxt);\n    numBytesForCodec = MIN(decoderAvlSpace, numBytesBuffered);\n    numBytesForCodec = plf_circular_buf_read_start(&circularBufCtxt, &decoderData, numBytesForCodec);\n\n    if (numBytesForCodec) {\n      if ((numBytesForCodec&1)==0) {\n        VS1063PlayBuf(decoderData, numBytesForCodec);\n      }\n          else { /*uneven number of bytes, make it even for decoder*/\n      VS1063PlayBuf(decoderData, numBytesForCodec&0x7ffffffe);\n            /*discard next byte too to fall back into even alignment*/\n      discardNextByte=1;\n    }\n\n    plf_circular_buf_read_release(&circularBufCtxt, numBytesForCodec);\n\n    PLF_COUNT_VAL(BYTES_SENT_TO_DECODER, numBytesForCodec);\n    PLF_COUNT_MAX(BYTES_SENT_TO_DECODER_MAX, numBytesForCodec);\n    PLF_COUNT_MIN(BYTES_SENT_TO_DECODER_MIN, numBytesForCodec);\n  }\n}\n}\n\nint Intercom_Incoming::_receive(int8_t *rx_data, int rx_data_length)\n{\n  int free_space;\n\n  if (rx_data_length > 0) {\n    free_space = plf_circular_buf_free_space(&circularBufCtxt);\n    if (free_space < rx_data_length) {\n      PLF_COUNT_EVENT(CIRCULAR_BUF_OFL);\n    }\n    else {\n      plf_circular_buf_write(&circularBufCtxt, (uint8_t*)rx_data, rx_data_length);\n    }\n  }\n\n  return 0;\n}\n\nIntercom_Incoming::Intercom_Incoming(Message_Handler& message_handler) :\n_message_handler(message_handler) {\n\n  plf_circular_buf_init(&circularBufCtxt, circularBuffer, CIRCULAR_BUFFER_SIZE);\n\n  PLF_COUNT_MIN_INIT(BYTES_SENT_TO_DECODER_MIN);\n  PLF_COUNT_MIN_INIT(CIRCULAR_BUF_MIN);\n\n  _message_handler.register_handler(VOICE_DATA_T_MSG_ID, message_handler_helper, this);\n}\n",
+			"file": "intercom_incoming.cpp",
+			"file_size": 4682,
+			"file_write_time": 131333763609205432,
+			"settings":
+			{
+				"buffer_size": 4346,
+				"encoding": "UTF-8",
+				"line_ending": "Windows"
+			}
+		},
+		{
+			"file": "intercom_outgoing.cpp",
+			"settings":
+			{
+				"buffer_size": 2025,
+				"encoding": "UTF-8",
+				"line_ending": "Windows"
+			}
+		},
+		{
+			"file": "intercom_outgoing.h",
+			"settings":
+			{
+				"buffer_size": 387,
+				"encoding": "UTF-8",
+				"line_ending": "Windows"
+			}
+		},
+		{
+			"file": "intercom_incoming.h",
+			"settings":
+			{
+				"buffer_size": 408,
+				"encoding": "UTF-8",
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "lcm/messages.lcm",
+			"settings":
+			{
+				"buffer_size": 327,
+				"encoding": "UTF-8",
+				"line_ending": "Windows"
+			}
+		},
+		{
+			"file": "messages.h",
+			"settings":
+			{
+				"buffer_size": 180,
+				"encoding": "UTF-8",
+				"line_ending": "Windows"
+			}
+		},
+		{
+			"file": "lcm/genMessages.py",
+			"settings":
+			{
+				"buffer_size": 602,
+				"encoding": "UTF-8",
+				"line_ending": "Windows"
+			}
+		},
+		{
+			"file": "python/intercom_server.py",
+			"settings":
+			{
+				"buffer_size": 4804,
+				"encoding": "UTF-8",
+				"line_ending": "Windows"
+			}
+		},
+		{
+			"file": "lcm/voice_data_t.py",
+			"settings":
+			{
+				"buffer_size": 2037,
+				"line_ending": "Windows"
+			}
+		},
+		{
+			"file": "/C/lcm/lcm-1.3.1/docs/content/lcm-type-ref.md",
+			"settings":
+			{
+				"buffer_size": 12736,
+				"line_ending": "Unix"
+			}
+		}
 	],
 	"build_system": "",
 	"build_system_choices":
@@ -91,12 +207,16 @@
 	"build_varint": "",
 	"command_palette":
 	{
-		"height": 0.0,
+		"height": 490.0,
 		"last_filter": "",
 		"selected_items":
 		[
+			[
+				"",
+				"Indentation: Reindent Lines"
+			]
 		],
-		"width": 0.0
+		"width": 494.0
 	},
 	"console":
 	{
@@ -117,10 +237,23 @@
 	"expanded_folders":
 	[
 		"/C/Users/rlysens/Documents/particleIntercom",
-		"/C/Users/rlysens/Documents/particleIntercom/messages"
+		"/C/Users/rlysens/Documents/particleIntercom/lcm",
+		"/C/Users/rlysens/Documents/particleIntercom/python",
+		"/C/Users/rlysens/Documents/particleIntercom/python/messages"
 	],
 	"file_history":
 	[
+		"/C/Users/rlysens/Documents/particleIntercom/i_am_t.h",
+		"/C/Users/rlysens/Documents/particleIntercom/voice_data_t.h",
+		"/C/Users/rlysens/Documents/particleIntercom/lcm/who_is_t.h",
+		"/C/Users/rlysens/Documents/particleIntercom/python/messages/__init__.py",
+		"/C/Users/rlysens/Documents/particleIntercom/python/messages.py",
+		"/C/Users/rlysens/Documents/particleIntercom/lcm/i_am_t.h",
+		"/C/Users/rlysens/Documents/particleIntercom/messages.lcm",
+		"/C/Users/rlysens/Documents/particleIntercom/who_is_reply_t.h",
+		"/C/Users/rlysens/Documents/particleIntercom/who_is_t.h",
+		"/C/Users/rlysens/Documents/particleIntercom/i_am_t.cpp",
+		"/C/Users/rlysens/Documents/particleIntercom/i_am_t.c",
 		"/C/Users/rlysens/Documents/particleIntercom/intercom_controller.h",
 		"/C/Users/rlysens/Documents/particleIntercom/plf_circular_buffer.cpp",
 		"/C/Users/rlysens/Documents/particleIntercom/intercom_incoming.cpp",
@@ -140,12 +273,10 @@
 		"/C/Users/rlysens/Documents/particleIntercom/messages.h",
 		"/C/Users/rlysens/Documents/particleIntercom/messages/voice_data_t.c",
 		"/C/Users/rlysens/Documents/particleIntercom/messages/i_am_t.h",
-		"/C/Users/rlysens/Documents/particleIntercom/i_am_t.h",
 		"/C/Users/rlysens/Documents/particleIntercom/messages/who_is_reply_t.h",
 		"/C/Users/rlysens/Documents/particleIntercom/messages/who_is_t.h",
 		"/C/Users/rlysens/Documents/particleIntercom/message_handler.h",
 		"/C/lcm/lcm-1.3.1/examples/types/example_t.lcm",
-		"/C/Users/rlysens/Documents/particleIntercom/messages.lcm",
 		"/C/Users/rlysens/Documents/particleIntercom/messages.lcm.h",
 		"/C/lcm/lcm-1.3.1/examples/types/exlcm/example_t.py",
 		"/C/lcm/lcm-1.3.1/examples/types/exlcm/__init__.py",
@@ -178,6 +309,7 @@
 		"case_sensitive": false,
 		"find_history":
 		[
+			"CIRCULAR_BUFFER_SIZE",
 			"messages.h",
 			"string",
 			"Message",
@@ -202,8 +334,328 @@
 	"groups":
 	[
 		{
+			"selected": 1,
 			"sheets":
 			[
+				{
+					"buffer": 0,
+					"file": "intercom_controller.cpp",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 2550,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								2053,
+								2053
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/C++/C++.sublime-syntax",
+							"translate_tabs_to_spaces": false
+						},
+						"translation.x": 0.0,
+						"translation.y": 900.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 5,
+					"type": "text"
+				},
+				{
+					"buffer": 1,
+					"file": "intercom_incoming.cpp",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 4346,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								654,
+								654
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/C++/C++.sublime-syntax",
+							"tab_size": 2,
+							"translate_tabs_to_spaces": true
+						},
+						"translation.x": 0.0,
+						"translation.y": 160.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 0,
+					"type": "text"
+				},
+				{
+					"buffer": 2,
+					"file": "intercom_outgoing.cpp",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 2025,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								1061,
+								1061
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/C++/C++.sublime-syntax",
+							"tab_size": 2,
+							"translate_tabs_to_spaces": true
+						},
+						"translation.x": 0.0,
+						"translation.y": 240.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 4,
+					"type": "text"
+				},
+				{
+					"buffer": 3,
+					"file": "intercom_outgoing.h",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 387,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								335,
+								335
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/C++/C++.sublime-syntax"
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 9,
+					"type": "text"
+				},
+				{
+					"buffer": 4,
+					"file": "intercom_incoming.h",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 408,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								408,
+								408
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/C++/C++.sublime-syntax"
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 10,
+					"type": "text"
+				},
+				{
+					"buffer": 5,
+					"file": "lcm/messages.lcm",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 327,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								244,
+								244
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/Text/Plain text.tmLanguage"
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 7,
+					"type": "text"
+				},
+				{
+					"buffer": 6,
+					"file": "messages.h",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 180,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								180,
+								180
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/C++/C++.sublime-syntax"
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 6,
+					"type": "text"
+				},
+				{
+					"buffer": 7,
+					"file": "lcm/genMessages.py",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 602,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								549,
+								549
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/Python/Python.sublime-syntax"
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 3,
+					"type": "text"
+				},
+				{
+					"buffer": 8,
+					"file": "python/intercom_server.py",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 4804,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								1921,
+								1921
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/Python/Python.sublime-syntax",
+							"tab_size": 4,
+							"translate_tabs_to_spaces": true
+						},
+						"translation.x": 0.0,
+						"translation.y": 1758.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 1,
+					"type": "text"
+				},
+				{
+					"buffer": 9,
+					"file": "lcm/voice_data_t.py",
+					"semi_transient": true,
+					"settings":
+					{
+						"buffer_size": 2037,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								0,
+								0
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/Python/Python.sublime-syntax",
+							"tab_size": 4,
+							"translate_tabs_to_spaces": true
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 2,
+					"type": "text"
+				},
+				{
+					"buffer": 10,
+					"file": "/C/lcm/lcm-1.3.1/docs/content/lcm-type-ref.md",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 12736,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								6664,
+								6767
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/Markdown/Markdown.sublime-syntax",
+							"tab_size": 2,
+							"translate_tabs_to_spaces": true
+						},
+						"translation.x": 0.0,
+						"translation.y": 2640.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 8,
+					"type": "text"
+				}
 			]
 		}
 	],

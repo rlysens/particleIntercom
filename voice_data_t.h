@@ -14,12 +14,15 @@
 extern "C" {
 #endif
 
+#define VOICE_DATA_T_MSG_ID 1
+
 typedef struct _voice_data_t voice_data_t;
 struct _voice_data_t
 {
+    int16_t    source_id;
     int16_t    destination_id;
     int16_t    data_size;
-    int8_t     data[512-4-4];
+    int8_t     data[512-4-2-2-2];
 };
 
 /**

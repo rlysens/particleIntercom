@@ -99,6 +99,9 @@ static Intercom_Outgoing *intercom_outgoingp=0;
 static Message_Handler *message_handlerp=0;
 
 void test8_setup(void) {
+  static String my_name = "Intercom1";
+  static String my_buddy_name = "Intercom2";
+
   static IPAddress localIP = WiFi.localIP();
   static Message_Handler message_handler(50007 /*local_port*/,
     IPAddress(52,26,112,44) /*remote_ip*/, 50007 /*remote port*/);
@@ -109,6 +112,9 @@ void test8_setup(void) {
   intercom_incomingp = &intercom_incoming;
   intercom_outgoingp = &intercom_outgoing;
   message_handlerp = &message_handler;
+
+  intercom_controller.set_my_name(my_name);
+  intercom_controller.set_buddy_name(my_buddy_name);
 }
 
 static bool recordButtonPressed(void) {

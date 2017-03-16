@@ -14,6 +14,8 @@
 extern "C" {
 #endif
 
+#define WHO_IS_T_MSG_ID 4
+
 typedef struct _who_is_t who_is_t;
 struct _who_is_t
 {

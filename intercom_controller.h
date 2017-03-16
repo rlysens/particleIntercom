@@ -14,10 +14,15 @@ private:
 	bool _buddy_name_is_set;
 	String _buddy_name;
 	Timer _timer;
+	int32_t _my_id;
+	bool _my_id_is_known;
+	int32_t _buddy_id;
+	bool _buddy_id_is_known;
 	
 	void _i_am(void);
 	void _whois(void);
 	int _whois_reply(Intercom_Message &msg, int payload_size);
+	int _i_am_reply(Intercom_Message& msg, int payload_size);
 	void _onTimeout(void);
 
 public:
