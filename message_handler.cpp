@@ -2,8 +2,11 @@
 #include "plf_utils.h"
 #include "plf_event_counter.h"
 
-int Message_Handler::send(Intercom_Message &msg, int payload_size){
-/* Send the UDP packet */
+int Message_Handler::send(Intercom_Message &msg, int payload_size) {
+
+  PLF_PRINT("Tx Msg %d\n", msg.id);
+
+  /* Send the UDP packet */
   if (_udp.sendPacket((uint8_t*)&msg, payload_size+4, 
   		_remote_ip_address, _remote_port) != payload_size+4) {
       PLF_PRINT(("UDP packet send failed. Could not send all data\n"));
@@ -30,6 +33,8 @@ int Message_Handler::receive(void) {
   if (_msgTable[msg.id].fun == 0) {
   	return -1;
   }
+
+  PLF_PRINT("Rx Msg %d\n", msg.id);
 
   /*Dispatch*/
   return _msgTable[msg.id].fun(msg, payload_size, _msgTable[msg.id].ctxt);

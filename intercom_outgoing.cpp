@@ -47,6 +47,9 @@ void Intercom_Outgoing::transfer(void) {
       PLF_PRINT(("Voice data send failed\n"));
       return;
     }
+  }
+  else {
+    PLF_PRINT("source_id_set %d, destination_id set %d\n", (int)_source_id_set, (int)_destination_id_set);
   }  
 }
 

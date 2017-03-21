@@ -6,6 +6,7 @@
 #include "vs1063a_codec.h"
 #include "vs1063a_spi.h"
 #include "plf_utils.h"
+#include "dev_specific.h"
 
 #if 0
 #include "platform.h"
@@ -97,10 +98,11 @@ void test7(void) {
 static Intercom_Incoming *intercom_incomingp=0;
 static Intercom_Outgoing *intercom_outgoingp=0;
 static Message_Handler *message_handlerp=0;
+static Intercom_Controller *intercom_controllerp=0;
 
 void test8_setup(void) {
-  static String my_name = "Intercom1";
-  static String my_buddy_name = "Intercom2";
+  static String my_name = MY_NAME;
+  static String my_buddy_name = MY_BUDDY;
 
   static IPAddress localIP = WiFi.localIP();
   static Message_Handler message_handler(50007 /*local_port*/,
@@ -112,6 +114,7 @@ void test8_setup(void) {
   intercom_incomingp = &intercom_incoming;
   intercom_outgoingp = &intercom_outgoing;
   message_handlerp = &message_handler;
+  intercom_controllerp = &intercom_controller;
 
   intercom_controller.set_my_name(my_name);
   intercom_controller.set_buddy_name(my_buddy_name);
@@ -123,15 +126,26 @@ static bool recordButtonPressed(void) {
 
 void test8_loop(void) {
   if (message_handlerp) {
-    message_handlerp->receive();
+    int res = message_handlerp->receive();
+    PLF_PRINT("-!-");
+    if (res != 0) {
+      PLF_PRINT("msg_hdlr rx code %d\n", res);
+    }
   }
 
   if (intercom_incomingp) {
+    PLF_PRINT("-<-");
     intercom_incomingp->drain();
   }
 
   if ((intercom_outgoingp) && recordButtonPressed()) {
+    PLF_PRINT("->-");
     intercom_outgoingp->transfer();
+  }
+
+  if (intercom_controllerp) {
+    PLF_PRINT("-.-");
+    intercom_controllerp->tick();
   }
 }
 

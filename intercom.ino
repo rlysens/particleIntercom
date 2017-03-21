@@ -10,10 +10,15 @@
 SerialLogHandler logHandler;
 
 void setup() {
+  int ii;
   IPAddress localIP = WiFi.localIP();
   String myID = System.deviceID();
 
-  delay(5000);
+  for (ii=0; ii<10; ii++) {
+    PLF_PRINT("%d\n", 10-ii);
+    delay(1000);
+  }
+
   PLF_PRINT("Entered setup()");
   Serial.println(localIP);
 
@@ -37,5 +42,4 @@ void setup() {
 void loop() {
   test8_loop();
   plf_event_counter_tick();
-  delay(10);
 }

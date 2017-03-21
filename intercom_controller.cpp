@@ -1,6 +1,8 @@
 #include "intercom_controller.h"
 #include "messages.h"
 
+#define INTERCOM_CONTROLLER_TICK_INTER_MS 2000
+
 static Intercom_Message intercom_message;
 
 static int message_handler_helper(Intercom_Message &msg, 
@@ -120,11 +122,16 @@ int Intercom_Controller::_i_am_reply(Intercom_Message& msg, int payload_size) {
 
 	int num_decoded_bytes = i_am_reply_t_decode(msg.data, 0, payload_size, &i_am_reply);
 
-	if (num_decoded_bytes < 0)
+	if (num_decoded_bytes < 0) {
 		return -1;
+	}
 
-	if (!String((const char*)i_am_reply.name).equals(_my_name))
+	if (!String((const char*)i_am_reply.name).equals(_my_name)) {
+		PLF_PRINT("i_am_reply string mismatch\n");
+		Serial.println(String((const char*)i_am_reply.name));
+		Serial.println(_my_name);
 		return -2;
+	}
 
 	if (!_my_id_is_known) {
 		PLF_PRINT("My id received %d\n", (int)i_am_reply.id);
@@ -152,15 +159,27 @@ int Intercom_Controller::handle_message(Intercom_Message& msg, int payload_size)
   return 0;
 }
 
-void Intercom_Controller::_onTimeout(void) {
-	_i_am();
-	_whois();
+void Intercom_Controller::tick(void) {
+	unsigned long cur_millis = millis();
+	unsigned long millis_delta;
+
+	if (cur_millis < _prev_millis) {
+		millis_delta = (~0UL) - _prev_millis + cur_millis;
+	}
+	else {
+		millis_delta = cur_millis - _prev_millis;
+	}
+
+	if (millis_delta > INTERCOM_CONTROLLER_TICK_INTER_MS) {
+		_prev_millis = cur_millis;
+		_i_am();
+		_whois();
+	}
 }
 
 Intercom_Controller::Intercom_Controller(Message_Handler& message_handler, Intercom_Outgoing& intercom_outgoing) : 
 	_message_handler(message_handler), _intercom_outgoing(intercom_outgoing), _my_name_is_set(false), _buddy_name_is_set(false),
-	_timer(2000, &Intercom_Controller::_onTimeout, *this), _my_id_is_known(false), _buddy_id_is_known(false) {
+ 	_my_id_is_known(false), _buddy_id_is_known(false), _prev_millis(0) {
 	_message_handler.register_handler(WHO_IS_REPLY_T_MSG_ID, message_handler_helper, this);
 	_message_handler.register_handler(I_AM_REPLY_T_MSG_ID, message_handler_helper, this);
-	_timer.start();
 }
