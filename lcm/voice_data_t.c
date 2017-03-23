@@ -21,7 +21,7 @@ uint64_t __voice_data_t_hash_recursive(const __lcm_hash_ptr *p)
     cp.v = (void*)__voice_data_t_get_hash;
     (void) cp;
 
-    uint64_t hash = (uint64_t)0xc94309bc34b62ba0LL
+    uint64_t hash = (uint64_t)0x4e076e450b8cb44aLL
          + __int16_t_hash_recursive(&cp)
          + __int16_t_hash_recursive(&cp)
          + __int16_t_hash_recursive(&cp)
@@ -57,7 +57,7 @@ int __voice_data_t_encode_array(void *buf, int offset, int maxlen, const voice_d
         thislen = __int16_t_encode_array(buf, offset + pos, maxlen - pos, &(p[element].data_size), 1);
         if (thislen < 0) return thislen; else pos += thislen;
 
-        thislen = __int8_t_encode_array(buf, offset + pos, maxlen - pos, p[element].data, 512-4-2-2-2);
+        thislen = __int8_t_encode_array(buf, offset + pos, maxlen - pos, p[element].data, 494);
         if (thislen < 0) return thislen; else pos += thislen;
 
     }
@@ -89,7 +89,7 @@ int __voice_data_t_encoded_array_size(const voice_data_t *p, int elements)
 
         size += __int16_t_encoded_array_size(&(p[element].data_size), 1);
 
-        size += __int8_t_encoded_array_size(p[element].data, 512-4-2-2-2);
+        size += __int8_t_encoded_array_size(p[element].data, 494);
 
     }
     return size;
@@ -115,7 +115,7 @@ int __voice_data_t_decode_array(const void *buf, int offset, int maxlen, voice_d
         thislen = __int16_t_decode_array(buf, offset + pos, maxlen - pos, &(p[element].data_size), 1);
         if (thislen < 0) return thislen; else pos += thislen;
 
-        thislen = __int8_t_decode_array(buf, offset + pos, maxlen - pos, p[element].data, 512-4-2-2-2);
+        thislen = __int8_t_decode_array(buf, offset + pos, maxlen - pos, p[element].data, 494);
         if (thislen < 0) return thislen; else pos += thislen;
 
     }
@@ -133,7 +133,7 @@ int __voice_data_t_decode_array_cleanup(voice_data_t *p, int elements)
 
         __int16_t_decode_array_cleanup(&(p[element].data_size), 1);
 
-        __int8_t_decode_array_cleanup(p[element].data, 512-4-2-2-2);
+        __int8_t_decode_array_cleanup(p[element].data, 494);
 
     }
     return 0;
@@ -171,7 +171,7 @@ int __voice_data_t_clone_array(const voice_data_t *p, voice_data_t *q, int eleme
 
         __int16_t_clone_array(&(p[element].data_size), &(q[element].data_size), 1);
 
-        __int8_t_clone_array(p[element].data, q[element].data, 512-4-2-2-2);
+        __int8_t_clone_array(p[element].data, q[element].data, 494);
 
     }
     return 0;

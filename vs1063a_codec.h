@@ -37,6 +37,13 @@ int VS1063aStreamBufferFreeWords(void);
 int VS1063aStreamBufferFreeWordsAlt(void);
 int VS1063aAudioBufferFillWords(void);
 int VS1063aAudioBufferFreeWords(void);
+
+#define VS1063aStreamBufferFillBytes() (VS1063aStreamBufferFillWords()*2)
+#define VS1063aStreamBufferFreeBytes() (VS1063aStreamBufferFreeWords()*2)
+#define VS1063aStreamBufferFreeBytesAlt() (VS1063aStreamBufferFreeWordsAlt()*2)
+#define VS1063aAudioBufferFillBytes() (VS1063aAudioBufferFillWords()*2)
+#define VS1063aAudioBufferFreeBytes() (VS1063aAudioBufferFreeBytes()*2)
+
 /*
    Function returns number of audio buffer underflow samples since function was last called.
    Note that as the value is only 16 bits, it may overflow.
@@ -54,6 +61,10 @@ int16_t VS1063aAudioBufferUnderflow(void);
 #define VS1063aAudioInputBufferFillWords() (VS1063aAudioInputBuffer(0))
 #define VS1063aAudioInputBufferFreeWords() (VS1063aAudioInputBuffer(1))
 
+#define VS1063aStreamOutputBufferFillBytes() (VS1063aStreamOutputBuffer(0)*2)
+#define VS1063aStreamOutputBufferFreeBytes() (VS1063aStreamOutputBuffer(1)*2)
+#define VS1063aAudioInputBufferFillBytes() (VS1063aAudioInputBuffer(0)*2)
+#define VS1063aAudioInputBufferFreeBytes() (VS1063aAudioInputBuffer(1)*2)
 
 /* Support functions. Do not call directly. */
 int VS1063aStreamOutputBuffer(uint16_t invert);

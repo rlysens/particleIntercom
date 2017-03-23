@@ -22,7 +22,7 @@ struct _voice_data_t
     int16_t    source_id;
     int16_t    destination_id;
     int16_t    data_size;
-    int8_t     data[512-4-2-2-2];
+    int8_t     data[494];
 };
 
 /**

@@ -80,9 +80,9 @@ class Intercom:
         self.msg_handler = msg_handler
         self.buddy_list = []
 
-    def sendTo(self, data):
+    def sendTo(self, sender_id, voice_data_msg):
         if sender_id in self.buddy_list:
-            self.msg_handler.send(data, self.id, self.address)
+            self.msg_handler.send(voice_data_msg, voice_data_t.voice_data_t.MSG_ID, self.address)
         else:
             print "sender %d not in buddy list"%(sender_id)
 
@@ -91,14 +91,14 @@ class Intercom:
             self.buddy_list.append(id)
 
     def delBuddy(self, id):
-        if id in x:
-            x.remove(id)
+        if id in self.buddy_list:
+            self.buddy_list.remove(id)
         
 def msg_voice_data_handler(msg_data, address, msg_handler):
     voice_data = voice_data_t.voice_data_t.decode(msg_data)
     if intercom_id_to_intercom_table.has_key(voice_data.destination_id):
         intercom = intercom_id_to_intercom_table[voice_data.destination_id]
-        intercom.sendTo(voice_data.source_id, voice_data.data[:voice_data.data_size])
+        intercom.sendTo(voice_data.source_id, msg_data)
     else:
         print "Unknown destination %d"%(voice_data.destination_id)
 

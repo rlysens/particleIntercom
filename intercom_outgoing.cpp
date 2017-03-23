@@ -11,16 +11,16 @@ void Intercom_Outgoing::transfer(void) {
 
   PLF_COUNT_EVENT(INTERCOM_OUTGOING_TICK);
 
-  PLF_COUNT_MAX(ENCODER_AUDIO_FREE_MAX, VS1063aAudioInputBufferFreeWords());
-  PLF_COUNT_MIN(ENCODER_AUDIO_FREE_MIN, VS1063aAudioInputBufferFreeWords());
+  PLF_COUNT_MAX(ENCODER_AUDIO_FREE_MAX, VS1063aAudioInputBufferFreeBytes());
+  PLF_COUNT_MIN(ENCODER_AUDIO_FREE_MIN, VS1063aAudioInputBufferFreeBytes());
 
-  PLF_COUNT_MAX(ENCODER_OUTBUF_FREE_MAX, VS1063aStreamOutputBufferFreeWords());
-  PLF_COUNT_MIN(ENCODER_OUTBUF_FREE_MIN, VS1063aStreamOutputBufferFreeWords());
+  PLF_COUNT_MAX(ENCODER_OUTBUF_FREE_MAX, VS1063aStreamOutputBufferFreeBytes());
+  PLF_COUNT_MIN(ENCODER_OUTBUF_FREE_MIN, VS1063aStreamOutputBufferFreeBytes());
 
-  PLF_COUNT_MAX(ENCODER_OUTBUF_FILL_MAX, VS1063aStreamOutputBufferFillWords());
-  PLF_COUNT_MIN(ENCODER_OUTBUF_FILL_MIN, VS1063aStreamOutputBufferFillWords());
+  PLF_COUNT_MAX(ENCODER_OUTBUF_FILL_MAX, VS1063aStreamOutputBufferFillBytes());
+  PLF_COUNT_MIN(ENCODER_OUTBUF_FILL_MIN, VS1063aStreamOutputBufferFillBytes());
 
-  if (VS1063aStreamOutputBufferFillWords() < (int)(sizeof(voice_data.data)))
+  if (VS1063aStreamOutputBufferFillBytes() < (int)(sizeof(voice_data.data)))
     return;
 
   recorded_num_bytes = VS1063RecordBuf((uint8_t*)voice_data.data, sizeof(voice_data.data));
@@ -48,9 +48,6 @@ void Intercom_Outgoing::transfer(void) {
       return;
     }
   }
-  else {
-    PLF_PRINT("source_id_set %d, destination_id set %d\n", (int)_source_id_set, (int)_destination_id_set);
-  }  
 }
 
 void Intercom_Outgoing::set_source_id(int16_t source_id) {

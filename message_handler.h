@@ -4,7 +4,7 @@
 #include "Particle.h"
 #include "message_handler.h"
 
-#define MESSAGE_DATA_LENGTH 510
+#define MESSAGE_DATA_LENGTH 508
 #define MAX_MESSAGE_ID 255
 
 typedef struct {

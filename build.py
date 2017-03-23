@@ -1,4 +1,4 @@
-import getopt, sys, subprocess, glob
+import getopt, sys, subprocess, glob, pdb
 
 def usage():
 	print "build.py --device Intercom1/Intercom2/all [--flash]"
@@ -13,7 +13,7 @@ def build_flash(device, flash):
 		subprocess.call("particle flash %s intercom.ino %s %s"%(device, cpp_files, h_files), shell=True)
 
 def genMessages():
-	subprocess.call("cd lcm && python genMessages.py", shell=True)
+	subprocess.call("cd lcm && python genMessages.py && cd ..", shell=True)
 
 def main():
     try:
@@ -42,7 +42,7 @@ def main():
     	usage()
     	sys.exit()
 
- 	genMessages()
+    genMessages()
 
     device_list = []
     if device == "all":

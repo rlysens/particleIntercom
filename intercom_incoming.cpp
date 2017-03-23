@@ -72,13 +72,13 @@ void Intercom_Incoming::drain(void) {
   if (drain_state == DRAIN_STATE_FILL) {
     static uint8_t zeroBuf[64]={0};
 
-    decoderAvlSpace = VS1063aStreamBufferFreeWords();
+    decoderAvlSpace = VS1063aStreamBufferFreeBytes();
     numBytesForCodec = MIN(decoderAvlSpace, (int)(sizeof(zeroBuf)&0x7ffffffe));
     VS1063PlayBuf(zeroBuf, numBytesForCodec);
   }
 
   if (drain_state == DRAIN_STATE_DRAIN) {
-    decoderAvlSpace = VS1063aStreamBufferFreeWords();
+    decoderAvlSpace = VS1063aStreamBufferFreeBytes();
     numBytesBuffered = plf_circular_buf_used_space(&circularBufCtxt);
     numBytesForCodec = MIN(decoderAvlSpace, numBytesBuffered);
 

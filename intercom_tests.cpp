@@ -127,24 +127,20 @@ static bool recordButtonPressed(void) {
 void test8_loop(void) {
   if (message_handlerp) {
     int res = message_handlerp->receive();
-    PLF_PRINT("-!-");
     if (res != 0) {
       PLF_PRINT("msg_hdlr rx code %d\n", res);
     }
   }
 
   if (intercom_incomingp) {
-    PLF_PRINT("-<-");
     intercom_incomingp->drain();
   }
 
   if ((intercom_outgoingp) && recordButtonPressed()) {
-    PLF_PRINT("->-");
     intercom_outgoingp->transfer();
   }
 
   if (intercom_controllerp) {
-    PLF_PRINT("-.-");
     intercom_controllerp->tick();
   }
 }
