@@ -5,19 +5,18 @@
 #include "intercom_tests.h"
 #include "plf_utils.h"
 #include "plf_event_counter.h"
+#include "intercom_buttons.h"
 
 // Use primary serial over USB interface for logging output. Used by PLF_PRINT
 SerialLogHandler logHandler;
 
+SYSTEM_MODE(SEMI_AUTOMATIC);
+
 void setup() {
-  int ii;
   IPAddress localIP = WiFi.localIP();
   String myID = System.deviceID();
 
-  for (ii=0; ii<10; ii++) {
-    PLF_PRINT("%d\n", 10-ii);
-    delay(1000);
-  }
+  while (!recordButtonPressed());
 
   PLF_PRINT("Entered setup()");
   Serial.println(localIP);
@@ -32,8 +31,8 @@ void setup() {
   PLF_PRINT("VS1063RecordInit done\n");
 
   VS1063PrintState();
-  pinMode(D0, INPUT);
-  //PLF_PRINT("Pull up D0...");
+
+  Particle.connect();
 
   test8_setup();
   PLF_PRINT("Starting test, exiting setup()");

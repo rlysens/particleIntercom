@@ -25,7 +25,8 @@ int PlfRegistry::set(int key, String& value, bool valid) {
 	if ( _live &&
 		((old_valid != valid) || (!old_value.equals(value))) &&
 		(_regHandlers[key].fun!=0)) {
-		_regHandlers[key].fun(key, value, valid, _regHandlers[key].ctxt);
+		PLF_PRINT("Registry change: key %d, value %s, valid %d\n", key, reg_entry.value, (int)valid);
+		_invokeHandler(key, value, valid);
 	}
 
 	return 0;
@@ -51,14 +52,29 @@ int PlfRegistry::get(int key, String& value, bool& valid) {
 }
 
 int PlfRegistry::registerHandler(int key, RegistryHandlerFunType *fun, void* ctxt) {
+	RegHandlerEntry_t *regHandlerEntryp;
 
 	plf_assert("Out of range registry key",key<=VALID_KEY_VAL);
 	plf_assert("Out of range registry key",key>=0);
 
-	_regHandlers[key].fun = fun;
-	_regHandlers[key].ctxt = ctxt;
+	regHandlerEntryp = &_regHandlers[key];
+
+	regHandlerEntryp->fun[regHandlerEntryp->top_index] = fun;
+	regHandlerEntryp->ctxt[regHandlerEntryp->top_index] = ctxt;
+	++(regHandlerEntryp->top_index);
 
 	return 0;
+}
+
+void PlfRegistry::_invokeHandler(int key, String& value, bool valid) {
+	int ii;
+	RegHandlerEntry_t *regHandlerEntryp = &_regHandlers[key];
+
+	for (ii=0; ii<regHandlerEntryp->top_index; ++ii) {
+		if (regHandlerEntryp->fun[ii]) {
+			regHandlerEntryp->fun[ii](key, value, valid, regHandlerEntryp->ctxt[ii]);
+		}
+	}
 }
 
 void PlfRegistry::_walkHandlers(void) {
@@ -66,11 +82,15 @@ void PlfRegistry::_walkHandlers(void) {
 
 	for (key=0; key<=MAX_KEY_VAL; key++) {
 		if (_regHandlers[key].fun) {
+
 			String value;
+			RegistryEntry_t reg_entry;
 			bool valid;
 
 			get(key, value, valid);
-			_regHandlers[key].fun(key, value, valid, _regHandlers[key].ctxt);
+			value.getBytes(reg_entry.value, sizeof(reg_entry.value));
+			PLF_PRINT("Registry walk: key %d, value %s, valid %d\n", key, reg_entry.value, (int)valid);
+			_invokeHandler(key, value, valid);
 		}
 	}
 }

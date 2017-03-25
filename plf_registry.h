@@ -6,6 +6,8 @@
 #define REG_KEY_MY_NAME 0
 #define REG_KEY_BUDDY_NAME 1
 
+#define MAX_NUM_FUNS_PER_KEY 8
+
 typedef struct RegistryEntry_t {
 	uint8_t value[32];
 	uint32_t validKey;
@@ -16,8 +18,9 @@ typedef struct RegistryEntry_t {
 typedef int (RegistryHandlerFunType)(int key, String& value, bool valid, void *ctxt);
 
 typedef struct RegHandlerEntry_t {
-	RegistryHandlerFunType *fun;
-	void *ctxt;
+	RegistryHandlerFunType *fun[MAX_NUM_FUNS_PER_KEY];
+	void *ctxt[MAX_NUM_FUNS_PER_KEY];
+	int top_index;
 } RegHandlerEntry_t;
 
 class PlfRegistry {
@@ -26,6 +29,7 @@ private:
 	bool _live;
 
 	void _walkHandlers(void);
+	void _invokeHandler(int key, String& value, bool valid);
 
 public:
 	PlfRegistry();

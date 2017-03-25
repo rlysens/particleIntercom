@@ -3,14 +3,15 @@ import getopt, sys, subprocess, glob, pdb
 def usage():
 	print "build.py --device Intercom1/Intercom2/all [--flash]"
 
-def build_flash(device, flash):
-	subprocess.call("copy dev_specific\%s.h dev_specific.h"%(device), shell=True)
+def build():
 	cpp_files = ' '.join(glob.glob("*.cpp"))
 	h_files = ' '.join(glob.glob("*.h"))
-	if not flash:
-		subprocess.call("particle compile photon intercom.ino %s %s"%(cpp_files, h_files), shell=True)
-	else:
-		subprocess.call("particle flash %s intercom.ino %s %s"%(device, cpp_files, h_files), shell=True)
+	subprocess.call("particle compile photon intercom.ino %s %s"%(cpp_files, h_files), shell=True)
+
+def flash_dev(device):
+    cpp_files = ' '.join(glob.glob("*.cpp"))
+    h_files = ' '.join(glob.glob("*.h"))
+    subprocess.call("particle flash %s intercom.ino %s %s"%(device, cpp_files, h_files), shell=True)
 
 def genMessages():
 	subprocess.call("cd lcm && python genMessages.py && cd ..", shell=True)
@@ -38,21 +39,24 @@ def main():
         else:
             assert False, "unhandled option"
     
-    if device is None:
+    if (device is None) and flash:
     	usage()
     	sys.exit()
 
     genMessages()
 
-    device_list = []
-    if device == "all":
-    	device_list.append("Intercom1")
-    	device_list.append("Intercom2")
-    else:
-    	device_list.append(device)
+    if flash:
+        device_list = []
+        if device == "all":
+    	   device_list.append("Intercom1")
+    	   device_list.append("Intercom2")
+        else:
+    	   device_list.append(device)
 
-    for dd in device_list:
-    	build_flash(dd, flash)
+        for dd in device_list:
+    	   flash_dev(dd)
+    else:
+        build()
 
 if __name__ == "__main__":
     main()
