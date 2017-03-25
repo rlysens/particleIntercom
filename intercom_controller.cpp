@@ -5,6 +5,16 @@
 
 static Intercom_Message intercom_message;
 
+static int registry_handler_helper(int key, String& value, bool valid, void *ctxt) {
+	Intercom_Controller* intercom_controllerp = (Intercom_Controller*)ctxt;
+
+	plf_assert("icom_ctrlr NULL", intercom_controllerp);
+
+	intercom_controllerp->registry_handler(key, value, valid);
+
+	return 0;
+}
+
 static int message_handler_helper(Intercom_Message &msg, 
   int payload_size, void *ctxt) {
 	Intercom_Controller *intercom_controllerp = (Intercom_Controller*)ctxt;
@@ -14,14 +24,29 @@ static int message_handler_helper(Intercom_Message &msg,
   return intercom_controllerp->handle_message(msg, payload_size);
 }
 
-void Intercom_Controller::set_my_name(String& name) {
+void Intercom_Controller::_set_my_name(String& name, bool valid) {
 	_my_name = name;
-	_my_name_is_set = true;
+	_my_name_is_set = valid;
 }
 
-void Intercom_Controller::set_buddy_name(String& name) {
+void Intercom_Controller::_set_buddy_name(String& name, bool valid) {
 	_buddy_name = name;
-	_buddy_name_is_set = true;
+	_buddy_name_is_set = valid;
+}
+
+int Intercom_Controller::registry_handler(int key, String& value, bool valid) {
+	switch (key) {
+		case REG_KEY_MY_NAME:
+			_set_my_name(value, valid);
+			break;
+		case REG_KEY_BUDDY_NAME:
+			_set_buddy_name(value, valid);
+			break;
+		default:
+			plf_assert("Invalid key", 0);
+	}
+
+	return 0;
 }
 
 void Intercom_Controller::_i_am(void) {
@@ -177,9 +202,14 @@ void Intercom_Controller::tick(void) {
 	}
 }
 
-Intercom_Controller::Intercom_Controller(Message_Handler& message_handler, Intercom_Outgoing& intercom_outgoing) : 
+Intercom_Controller::Intercom_Controller(Message_Handler& message_handler, 
+	Intercom_Outgoing& intercom_outgoing, PlfRegistry &registry) : 
 	_message_handler(message_handler), _intercom_outgoing(intercom_outgoing), _my_name_is_set(false), _buddy_name_is_set(false),
- 	_my_id_is_known(false), _buddy_id_is_known(false), _prev_millis(0) {
+ 	_my_id_is_known(false), _buddy_id_is_known(false), _prev_millis(0),
+ 	_registry(registry) {
 	_message_handler.register_handler(WHO_IS_REPLY_T_MSG_ID, message_handler_helper, this);
 	_message_handler.register_handler(I_AM_REPLY_T_MSG_ID, message_handler_helper, this);
+
+	registry.registerHandler(REG_KEY_MY_NAME, registry_handler_helper, this);
+	registry.registerHandler(REG_KEY_BUDDY_NAME, registry_handler_helper, this);
 }

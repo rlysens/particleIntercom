@@ -7,6 +7,7 @@
 #include "vs1063a_spi.h"
 #include "plf_utils.h"
 #include "dev_specific.h"
+#include "plf_registry.h"
 
 #if 0
 #include "platform.h"
@@ -105,19 +106,21 @@ void test8_setup(void) {
   static String my_buddy_name = MY_BUDDY;
 
   static IPAddress localIP = WiFi.localIP();
+  static PlfRegistry plf_registry;
   static Message_Handler message_handler(50007 /*local_port*/,
     IPAddress(52,26,112,44) /*remote_ip*/, 50007 /*remote port*/);
   static Intercom_Incoming intercom_incoming(message_handler);
   static Intercom_Outgoing intercom_outgoing(message_handler);
-  static Intercom_Controller intercom_controller(message_handler, intercom_outgoing);
+  static Intercom_Controller intercom_controller(message_handler, intercom_outgoing, plf_registry);
 
   intercom_incomingp = &intercom_incoming;
   intercom_outgoingp = &intercom_outgoing;
   message_handlerp = &message_handler;
   intercom_controllerp = &intercom_controller;
 
-  intercom_controller.set_my_name(my_name);
-  intercom_controller.set_buddy_name(my_buddy_name);
+  plf_registry.set(REG_KEY_MY_NAME, my_name, true);
+  plf_registry.set(REG_KEY_BUDDY_NAME, my_buddy_name, true);
+  plf_registry.go();
 }
 
 static bool recordButtonPressed(void) {

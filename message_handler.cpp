@@ -4,7 +4,7 @@
 
 int Message_Handler::send(Intercom_Message &msg, int payload_size) {
 
-  PLF_PRINT("Tx Msg %d\n", msg.id);
+  PLF_PRINT("Tx Msg %d\n", (int)msg.id);
 
   /* Send the UDP packet */
   if (_udp.sendPacket((uint8_t*)&msg, payload_size+4, 
@@ -34,7 +34,7 @@ int Message_Handler::receive(void) {
   	return -1;
   }
 
-  PLF_PRINT("Rx Msg %d\n", msg.id);
+  PLF_PRINT("Rx Msg %d\n", (int)msg.id);
 
   /*Dispatch*/
   return _msgTable[msg.id].fun(msg, payload_size, _msgTable[msg.id].ctxt);
