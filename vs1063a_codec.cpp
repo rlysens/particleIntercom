@@ -522,15 +522,15 @@ void VS1063InitSoftware(void) {
 
 /*RL port complete*/
 void VS1063PrintState(void) {
-    PLF_PRINT("\nMODE %x ST %x \n", ReadSci(SCI_MODE), ReadSci(SCI_STATUS));
-    PLF_PRINT(", HDAT1 %x HDAT0 %x", ReadSci(SCI_HDAT1), ReadSci(SCI_HDAT0));
-    PLF_PRINT(", sampleCounter %lu",ReadVS10xxMem32Counter(PAR_SAMPLE_COUNTER));
-    PLF_PRINT(", sdiFree %u", ReadVS10xxMem(PAR_SDI_FREE));
-    PLF_PRINT(", audioFill %u", ReadVS10xxMem(PAR_AUDIO_FILL));
-    PLF_PRINT("\n  positionMSec %lu", ReadVS10xxMem32Counter(PAR_POSITION_MSEC));
-    PLF_PRINT(", config1 0x%04x", ReadVS10xxMem(PAR_CONFIG1));
-    PLF_PRINT(", vol 0x%04x", ReadSci(SCI_VOL));
-    PLF_PRINT("\n");
+    PLF_PRINT(PRNTGRP_DFLT, "\nMODE %x ST %x \n", ReadSci(SCI_MODE), ReadSci(SCI_STATUS));
+    PLF_PRINT(PRNTGRP_DFLT, ", HDAT1 %x HDAT0 %x", ReadSci(SCI_HDAT1), ReadSci(SCI_HDAT0));
+    PLF_PRINT(PRNTGRP_DFLT, ", sampleCounter %lu",ReadVS10xxMem32Counter(PAR_SAMPLE_COUNTER));
+    PLF_PRINT(PRNTGRP_DFLT, ", sdiFree %u", ReadVS10xxMem(PAR_SDI_FREE));
+    PLF_PRINT(PRNTGRP_DFLT, ", audioFill %u", ReadVS10xxMem(PAR_AUDIO_FILL));
+    PLF_PRINT(PRNTGRP_DFLT, "\n  positionMSec %lu", ReadVS10xxMem32Counter(PAR_POSITION_MSEC));
+    PLF_PRINT(PRNTGRP_DFLT, ", config1 0x%04x", ReadVS10xxMem(PAR_CONFIG1));
+    PLF_PRINT(PRNTGRP_DFLT, ", vol 0x%04x", ReadSci(SCI_VOL));
+    PLF_PRINT(PRNTGRP_DFLT, "\n");
 }
 
 /*RL port complete*/

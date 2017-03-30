@@ -13,6 +13,9 @@ public:
 	int set_my_name(String name);
 	int set_buddy_name(String name);
 	int erase(String name);
+	int enable_printgroup(String name);
+	int disable_printgroup(String name);
+
 	int update_vars(void);
 };
 

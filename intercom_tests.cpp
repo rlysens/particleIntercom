@@ -38,7 +38,7 @@ void test3_loop(void) {
   delay(500);
   WriteSci(SCI_VOL, 0xffff);
   delay( 500 );
-  PLF_PRINT(".");
+  PLF_PRINT(PRNTGRP_DFLT, ".");
 }
 
 /*RL port complete*/
@@ -49,7 +49,7 @@ void test4_loop(void) {
   WriteSci(SCI_VOL,  0xA2F5+count);
   delay( 500 );
   res = ReadSci(SCI_VOL);
-  PLF_PRINT("Vol=0x%x, count=%u\n", res, (unsigned int)count++);
+  PLF_PRINT(PRNTGRP_DFLT, "Vol=0x%x, count=%u\n", res, (unsigned int)count++);
   //delay( 500 );
 }
 
@@ -62,7 +62,7 @@ void test5_loop(void) {
   delay( 500 );
   WriteSdi(deactivateData, sizeof(deactivateData));
   delay( 500 );
-  PLF_PRINT(".");
+  PLF_PRINT(PRNTGRP_DFLT, ".");
 }
 
 /* RL port complete */
@@ -86,14 +86,14 @@ void test6(void) {
       energy += sampleBuffer[ii]*sampleBuffer[ii];
     }
 
-    PLF_PRINT("%d, energy=%d\n", counter++, energy);
+    PLF_PRINT(PRNTGRP_DFLT, "%d, energy=%d\n", counter++, energy);
 #endif /*TEST6_ENABLE*/
 }
 
 /* RL port complete */
 void test7(void) {
     while (1) {
-      PLF_PRINT("%d\n", (int)digitalRead(INTERCOM_CODEC_DREQ));
+      PLF_PRINT(PRNTGRP_DFLT, "%d\n", (int)digitalRead(INTERCOM_CODEC_DREQ));
     }
 }
 
@@ -124,7 +124,7 @@ void test8_loop(void) {
   if (message_handlerp) {
     int res = message_handlerp->receive();
     if (res != 0) {
-      PLF_PRINT("msg_hdlr rx code %d\n", res);
+      PLF_PRINT(PRNTGRP_DFLT, "msg_hdlr rx code %d\n", res);
     }
   }
 

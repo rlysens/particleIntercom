@@ -16,9 +16,12 @@ void setup() {
   IPAddress localIP = WiFi.localIP();
   String myID = System.deviceID();
 
+  /*Only enable default printgroup by default*/
+  printGroupEnable(PRNTGRP_DFLT, true);
+
   while (!recordButtonPressed());
 
-  PLF_PRINT("Entered setup()");
+  PLF_PRINT(PRNTGRP_DFLT, "Entered setup()");
   Serial.println(localIP);
 
   // Prints out the device ID over Serial
@@ -28,14 +31,14 @@ void setup() {
   VS1063InitSoftware();
 
   VS1063RecordInit();
-  PLF_PRINT("VS1063RecordInit done\n");
+  PLF_PRINT(PRNTGRP_DFLT, "VS1063RecordInit done\n");
 
   VS1063PrintState();
 
   Particle.connect();
 
   test8_setup();
-  PLF_PRINT("Starting test, exiting setup()");
+  PLF_PRINT(PRNTGRP_DFLT, "Starting test, exiting setup()");
 }
 
 void loop() {

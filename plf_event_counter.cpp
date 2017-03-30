@@ -19,15 +19,15 @@ void plf_event_counter_tick(void) {
     else if (curMillis - prevMillis > PRINT_PERIOD_MS) {
       prevMillis = curMillis;
 
-      PLF_PRINT("--- Events Counted[%d]--->\n",counter++);
+      PLF_PRINT(PRNTGRP_STATS, "--- Events Counted[%d]--->\n",counter++);
 
       for (eventIndex=0; eventIndex<PLF_EVENT_LAST; eventIndex++) {
         //if ((icomEventArray[eventIndex].eventCount != 0) || (icomEventArray[eventIndex].initVal != 0)
         if (plfEventArray[eventIndex].eventName != 0) {
-            PLF_PRINT("%s: %d\n", plfEventArray[eventIndex].eventName, plfEventArray[eventIndex].eventCount);
+            PLF_PRINT(PRNTGRP_STATS, "%s: %d\n", plfEventArray[eventIndex].eventName, plfEventArray[eventIndex].eventCount);
             plfEventArray[eventIndex].eventCount = plfEventArray[eventIndex].initVal;
         }
       }
-      PLF_PRINT("<--- Events Counted---\n");
+      PLF_PRINT(PRNTGRP_STATS, "<--- Events Counted---\n");
     }
 }

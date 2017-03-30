@@ -101,7 +101,7 @@ int Intercom_Controller::_whois_reply(Intercom_Message& msg, int payload_size) {
 		return -3;
 
 	if (!_buddy_id_is_known) {
-		PLF_PRINT("Buddy id received %d\n", (int)who_is_reply.id);
+		PLF_PRINT(PRNTGRP_DFLT, "Buddy id received %d\n", (int)who_is_reply.id);
 	}
 
 	if (_buddy_id_is_known) {
@@ -152,14 +152,14 @@ int Intercom_Controller::_i_am_reply(Intercom_Message& msg, int payload_size) {
 	}
 
 	if (!String((const char*)i_am_reply.name).equals(_my_name)) {
-		PLF_PRINT("i_am_reply string mismatch\n");
+		PLF_PRINT(PRNTGRP_DFLT, "i_am_reply string mismatch\n");
 		Serial.println(String((const char*)i_am_reply.name));
 		Serial.println(_my_name);
 		return -2;
 	}
 
 	if (!_my_id_is_known) {
-		PLF_PRINT("My id received %d\n", (int)i_am_reply.id);
+		PLF_PRINT(PRNTGRP_DFLT, "My id received %d\n", (int)i_am_reply.id);
 	}
 
 	_my_id_is_known = true;

@@ -4,12 +4,12 @@
 
 int Message_Handler::send(Intercom_Message &msg, int payload_size) {
 
-  PLF_PRINT("Tx Msg %d\n", (int)msg.id);
+  PLF_PRINT(PRNTGRP_MSGS, "Tx Msg %d\n", (int)msg.id);
 
   /* Send the UDP packet */
   if (_udp.sendPacket((uint8_t*)&msg, payload_size+4, 
   		_remote_ip_address, _remote_port) != payload_size+4) {
-      PLF_PRINT(("UDP packet send failed. Could not send all data\n"));
+      PLF_PRINT(PRNTGRP_DFLT, ("UDP packet send failed. Could not send all data\n"));
       return -2;
   }
 
@@ -34,7 +34,7 @@ int Message_Handler::receive(void) {
   	return -1;
   }
 
-  PLF_PRINT("Rx Msg %d\n", (int)msg.id);
+  PLF_PRINT(PRNTGRP_MSGS, "Rx Msg %d\n", (int)msg.id);
 
   /*Dispatch*/
   return _msgTable[msg.id].fun(msg, payload_size, _msgTable[msg.id].ctxt);
@@ -57,7 +57,7 @@ Message_Handler::Message_Handler(int local_port,
 	_remote_port(remote_port), _msgTable() {
 
 	if (!_udp.setBuffer(sizeof(Intercom_Message))) {
-      PLF_PRINT("Couldn't allocate outgoing packet buffer\n");
+      PLF_PRINT(PRNTGRP_DFLT, "Couldn't allocate outgoing packet buffer\n");
     }
 
 	_udp.begin(local_port);

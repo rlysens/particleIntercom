@@ -13,7 +13,7 @@ typedef struct RegistryEntry_t {
 	uint32_t validKey;
 } RegistryEntry_t;
 
-#define MAX_KEY_VAL ((127/sizeof(RegistryEntry_t))-1)
+#define MAX_KEY_VAL ((int)((127/sizeof(RegistryEntry_t))-1))
 
 typedef int (RegistryHandlerFunType)(int key, String& value, bool valid, void *ctxt);
 

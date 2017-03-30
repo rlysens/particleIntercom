@@ -25,7 +25,7 @@ int PlfRegistry::set(int key, String& value, bool valid) {
 	if ( _live &&
 		((old_valid != valid) || (!old_value.equals(value))) &&
 		(_regHandlers[key].fun!=0)) {
-		PLF_PRINT("Registry change: key %d, value %s, valid %d\n", key, reg_entry.value, (int)valid);
+		PLF_PRINT(PRNTGRP_DFLT, "Registry change: key %d, value %s, valid %d\n", key, reg_entry.value, (int)valid);
 		_invokeHandler(key, value, valid);
 	}
 
@@ -89,7 +89,7 @@ void PlfRegistry::_walkHandlers(void) {
 
 			get(key, value, valid);
 			value.getBytes(reg_entry.value, sizeof(reg_entry.value));
-			PLF_PRINT("Registry walk: key %d, value %s, valid %d\n", key, reg_entry.value, (int)valid);
+			PLF_PRINT(PRNTGRP_DFLT, "Registry walk: key %d, value %s, valid %d\n", key, reg_entry.value, (int)valid);
 			_invokeHandler(key, value, valid);
 		}
 	}
