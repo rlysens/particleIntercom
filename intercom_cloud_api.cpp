@@ -4,6 +4,16 @@
 
 static String my_name;
 static String buddy_name;
+static IntercomCloudAPI *intercom_cloud_apip = 0;
+
+// Open a serial terminal and see the device name printed out
+static void device_name_handler_helper(const char *topic, const char *data) {
+    Serial.println("received " + String(topic) + ": " + String(data));
+
+    if (intercom_cloud_apip) {
+    	intercom_cloud_apip->set_my_name(String(data));
+    }
+}
 
 static int registryHandlerHelper(int key, String& value, bool valid, void *ctxt) {
 	IntercomCloudAPI *intercom_cloud_api = (IntercomCloudAPI*)ctxt;
@@ -108,6 +118,11 @@ IntercomCloudAPI::IntercomCloudAPI(PlfRegistry& registry) : _registry(registry) 
 
 	_registry.registerHandler(REG_KEY_MY_NAME, registryHandlerHelper, this);
 	_registry.registerHandler(REG_KEY_BUDDY_NAME, registryHandlerHelper, this);
+
+	Particle.subscribe("spark/", device_name_handler_helper);
+    Particle.publish("spark/device/name");
+
+    intercom_cloud_apip = this;
 }
 
 	
