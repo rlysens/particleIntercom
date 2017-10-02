@@ -5,7 +5,6 @@
 
 class Intercom_Incoming {
 private:
-  UDP _udp;
   Message_Handler& _message_handler;
 
   int _receive(int8_t *rx_data, int rx_data_length);
@@ -13,8 +12,10 @@ private:
 public:
   Intercom_Incoming(Message_Handler& message_handler);
 
-  int handle_message(Intercom_Message &msg, int payload_size);
   void drain(void);
+
+  /*private*/
+  int handle_message(Intercom_Message &msg, int payload_size);
 };
 
 #endif /*INTERCOM_INCOMING_H*/

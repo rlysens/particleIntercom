@@ -97,50 +97,6 @@ void test7(void) {
     }
 }
 
-static Intercom_Incoming *intercom_incomingp=0;
-static Intercom_Outgoing *intercom_outgoingp=0;
-static Message_Handler *message_handlerp=0;
-static Intercom_Controller *intercom_controllerp=0;
-
-void test8_setup(void) {
-  static IPAddress localIP = WiFi.localIP();
-  static PlfRegistry plf_registry;
-  static Message_Handler message_handler(50007 /*local_port*/,
-    IPAddress(52,26,112,44) /*remote_ip*/, 50007 /*remote port*/);
-  static Intercom_Incoming intercom_incoming(message_handler);
-  static Intercom_Outgoing intercom_outgoing(message_handler);
-  static Intercom_Controller intercom_controller(message_handler, intercom_outgoing, plf_registry);
-  static IntercomCloudAPI intercom_cloud_api(plf_registry);
-
-  intercom_incomingp = &intercom_incoming;
-  intercom_outgoingp = &intercom_outgoing;
-  message_handlerp = &message_handler;
-  intercom_controllerp = &intercom_controller;
-
-  plf_registry.go();
-}
-
-void test8_loop(void) {
-  if (message_handlerp) {
-    int res = message_handlerp->receive();
-    if (res != 0) {
-      PLF_PRINT(PRNTGRP_DFLT, "msg_hdlr rx code %d\n", res);
-    }
-  }
-
-  if (intercom_incomingp) {
-    intercom_incomingp->drain();
-  }
-
-  if ((intercom_outgoingp) && recordButtonPressed()) {
-    intercom_outgoingp->transfer();
-  }
-
-  if (intercom_controllerp) {
-    intercom_controllerp->tick();
-  }
-}
-
 #if 0
 void test9(void)
 {

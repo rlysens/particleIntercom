@@ -1,0 +1,3 @@
+[MessageHandler]
+[MSG_TABLE|MSG_ID->handler_fun]
+[Intercom]

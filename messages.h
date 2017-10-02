@@ -10,5 +10,7 @@
 #include "who_is_reply_t.h"
 #include "add_buddy_t.h"
 #include "del_buddy_t.h"
+#include "echo_request_t.h"
+#include "echo_reply_t.h"
 
 #endif /*MESSAGES_H*/

@@ -7,7 +7,7 @@
 
 class Intercom_Outgoing {
 private:
-	Message_Handler _message_handler;
+	Message_Handler& _message_handler;
 	int16_t _destination_id;
 	bool _destination_id_set;
 	int16_t _source_id;

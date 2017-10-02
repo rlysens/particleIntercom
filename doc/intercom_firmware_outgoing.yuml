@@ -1,0 +1,3 @@
+[Intercom_Outgoing|transfer();set_destination_id();set_source_id()]-send(VOICE_DATA)>[Message_Handler]
+[Intercom_Outgoing]-RecordBuf\nOutputBufferFillBytes>[VS1063_Codec]
+

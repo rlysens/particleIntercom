@@ -3,12 +3,12 @@
 
 #include "plf_registry.h"
 
-class IntercomCloudAPI {
+class Intercom_CloudAPI {
 private:
 	PlfRegistry& _registry;
 	
 public:
-	IntercomCloudAPI(PlfRegistry& registry);
+	Intercom_CloudAPI(PlfRegistry& registry);
 
 	int set_my_name(String name);
 	int set_buddy_name(String name);
@@ -16,6 +16,7 @@ public:
 	int enable_printgroup(String name);
 	int disable_printgroup(String name);
 
+	/*private*/
 	int update_vars(void);
 };
 

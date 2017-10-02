@@ -1,0 +1,3 @@
+[Message_Handler|send();receive();register_handler()]++-1>[UDP]
+[Message_Handler]-.->[Intercom_Message]
+

@@ -7,7 +7,6 @@
 #include "messages.h"
 
 #define CIRCULAR_BUFFER_SIZE (8192*2)
-#define UDP_PACKET_MAX_DATA_LENGTH (512)
 
 static uint8_t circularBuffer[CIRCULAR_BUFFER_SIZE];
 static PlfCircularBuf_t circularBufCtxt;

@@ -1,0 +1,5 @@
+[Intercom_Incoming|drain()]register_handler(VOICE_DATA)->[Message_Handler]
+[Intercom_Incoming]-.->[Intercom_Message|id;data]
+[Intercom_Incoming]-PlayBuf\nStreamBufferFreeBytes>[VS1063_Codec{bg:green}]
+[Intercom_Incoming]->[Plf_Circular_Buffer|reset();free_space();used_space();write();read_start();read_release(){bg:green}]
+

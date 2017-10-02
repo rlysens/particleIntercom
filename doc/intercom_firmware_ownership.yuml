@@ -1,0 +1,10 @@
+[Intercom_Root]++-1>[Plf_Registry]
+[Intercom_Root]++-1>[Message_Handler]
+[Intercom_Root]++-1>[Intercom_Incoming]
+[Intercom_Root]++-1>[Intercom_Outgoing]
+[Intercom_Root]++-1>[Intercom_Controller]
+[Intercom_Root]++-1>[Intercom_CloudAPI{bg:orange}]
+
+[Intercom_Incoming]++-1>[Plf_Circular_Buffer]
+
+[Message_Handler]++-1>[UDP]

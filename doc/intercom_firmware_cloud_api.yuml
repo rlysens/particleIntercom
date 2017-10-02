@@ -1,0 +1,2 @@
+[Intercom_CloudAPI|my_name;buddy_name;buddy_id|my_name();buddy_name();enable_printgroup();disable_printgroup(){bg:orange}]-set;get;registerHandler\n(MY_NAME BUDDY_NAME)>[Plf_Registry]
+[Intercom_CloudAPI]erase->[Plf_Registry]

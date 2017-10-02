@@ -80,9 +80,9 @@ class Intercom:
         self.msg_handler = msg_handler
         self.buddy_list = []
 
-    def sendTo(self, sender_id, voice_data_msg):
+    def sendTo(self, sender_id, msg, msg_id):
         if sender_id in self.buddy_list:
-            self.msg_handler.send(voice_data_msg, voice_data_t.voice_data_t.MSG_ID, self.address)
+            self.msg_handler.send(msg, msg_id, self.address)
         else:
             print "sender %d not in buddy list"%(sender_id)
 
@@ -94,11 +94,27 @@ class Intercom:
         if id in self.buddy_list:
             self.buddy_list.remove(id)
         
+def msg_echo_request_handler(msg_data, address, msg_handler):
+    echo_request = echo_request_t.echo_request_t.decode(msg_data)
+    if intercom_id_to_intercom_table.has_key(echo_request.destination_id):
+        intercom = intercom_id_to_intercom_table[echo_request.destination_id]
+        intercom.sendTo(echo_request.source_id, msg_data, echo_request_t.echo_request_t.MSG_ID)
+    else:
+        print "Unknown destination %d"%(echo_request.destination_id)
+
+def msg_echo_reply_handler(msg_data, address, msg_handler):
+    echo_reply = echo_reply_t.echo_reply_t.decode(msg_data)
+    if intercom_id_to_intercom_table.has_key(echo_reply.destination_id):
+        intercom = intercom_id_to_intercom_table[echo_reply.destination_id]
+        intercom.sendTo(echo_reply.source_id, msg_data, echo_reply_t.echo_reply_t.MSG_ID)
+    else:
+        print "Unknown destination %d"%(echo_reply.destination_id)
+
 def msg_voice_data_handler(msg_data, address, msg_handler):
     voice_data = voice_data_t.voice_data_t.decode(msg_data)
     if intercom_id_to_intercom_table.has_key(voice_data.destination_id):
         intercom = intercom_id_to_intercom_table[voice_data.destination_id]
-        intercom.sendTo(voice_data.source_id, msg_data)
+        intercom.sendTo(voice_data.source_id, msg_data, voice_data_t.voice_data_t.MSG_ID)
     else:
         print "Unknown destination %d"%(voice_data.destination_id)
 
@@ -157,7 +173,9 @@ MSG_TABLE = {
     i_am_t.i_am_t.MSG_ID : msg_i_am_handler,
     who_is_t.who_is_t.MSG_ID : msg_who_is_handler,
     add_buddy_t.add_buddy_t.MSG_ID : add_buddy_handler,
-    del_buddy_t.del_buddy_t.MSG_ID : del_buddy_handler
+    del_buddy_t.del_buddy_t.MSG_ID : del_buddy_handler,
+    echo_request_t.echo_request_t.MSG_ID : msg_echo_request_handler,
+    echo_reply_t.echo_reply_t.MSG_ID : msg_echo_reply_handler
 }
 
 try:

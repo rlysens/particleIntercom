@@ -8,8 +8,9 @@ void test4_loop(void);
 void test5_loop(void);
 void test6(void);
 void test7(void);
-void test8_setup(void);
-void test8_loop(void);
+
+#if 0
 void test9(void);
+#endif
 
 #endif /*VS1063A_CODEC_TESTS_H*/

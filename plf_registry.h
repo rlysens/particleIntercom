@@ -5,6 +5,7 @@
 
 #define REG_KEY_MY_NAME 0
 #define REG_KEY_BUDDY_NAME 1
+#define REG_KEY_BUDDY_ID 2
 
 #define MAX_NUM_FUNS_PER_KEY 8
 

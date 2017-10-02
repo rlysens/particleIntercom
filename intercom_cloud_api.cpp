@@ -4,19 +4,10 @@
 
 static String my_name;
 static String buddy_name;
-static IntercomCloudAPI *intercom_cloud_apip = 0;
-
-// Open a serial terminal and see the device name printed out
-static void device_name_handler_helper(const char *topic, const char *data) {
-    Serial.println("received " + String(topic) + ": " + String(data));
-
-    if (intercom_cloud_apip) {
-    	intercom_cloud_apip->set_my_name(String(data));
-    }
-}
+static String buddy_id;
 
 static int registryHandlerHelper(int key, String& value, bool valid, void *ctxt) {
-	IntercomCloudAPI *intercom_cloud_api = (IntercomCloudAPI*)ctxt;
+	Intercom_CloudAPI *intercom_cloud_api = (Intercom_CloudAPI*)ctxt;
 
 	plf_assert("icom_cloud_api NULL ptr", intercom_cloud_api);
 
@@ -25,22 +16,25 @@ static int registryHandlerHelper(int key, String& value, bool valid, void *ctxt)
 	return 0;
 }
 
-int IntercomCloudAPI::set_my_name(String name) {
+int Intercom_CloudAPI::set_my_name(String name) {
 	_registry.set(REG_KEY_MY_NAME, name, true);
   	return 0;
 }
 
-int IntercomCloudAPI::set_buddy_name(String name) {
+int Intercom_CloudAPI::set_buddy_name(String name) {
+	String dummy_id = "-1";
+	/*Erase buddy_id when setting a new name*/
+	_registry.set(REG_KEY_BUDDY_ID, dummy_id, false);
 	_registry.set(REG_KEY_BUDDY_NAME, name, true);
 	return 0;
 }
 
-int IntercomCloudAPI::erase(String name) {
+int Intercom_CloudAPI::erase(String name) {
 	_registry.erase();
 	return 0;
 }
 
-int IntercomCloudAPI::update_vars(void) {
+int Intercom_CloudAPI::update_vars(void) {
 	bool valid;
 	
 	_registry.get(REG_KEY_MY_NAME, my_name, valid);
@@ -53,10 +47,15 @@ int IntercomCloudAPI::update_vars(void) {
 		buddy_name = String();
 	}
 
+	_registry.get(REG_KEY_BUDDY_ID, buddy_id, valid);
+	if (!valid) {
+		buddy_id = String();
+	}
+
 	return 0;
 }
 
-int IntercomCloudAPI::enable_printgroup(String name) {
+int Intercom_CloudAPI::enable_printgroup(String name) {
 	int print_group;
 
 	if (name.startsWith(String("default"))) {
@@ -78,7 +77,7 @@ int IntercomCloudAPI::enable_printgroup(String name) {
 	return 0;
 }
 
-int IntercomCloudAPI::disable_printgroup(String name) {
+int Intercom_CloudAPI::disable_printgroup(String name) {
 	int print_group;
 
 	if (name.startsWith(String("default"))) {
@@ -100,29 +99,26 @@ int IntercomCloudAPI::disable_printgroup(String name) {
 	return 0;
 }
 
-IntercomCloudAPI::IntercomCloudAPI(PlfRegistry& registry) : _registry(registry) {
+Intercom_CloudAPI::Intercom_CloudAPI(PlfRegistry& registry) : _registry(registry) {
 	int res;
-	res = Particle.function("my_name", &IntercomCloudAPI::set_my_name, this);
+	res = Particle.function("my_name", &Intercom_CloudAPI::set_my_name, this);
 	PLF_PRINT(PRNTGRP_DFLT, "Cloud function my_name register result: %d\n", res);
-	res = Particle.function("buddy_name", &IntercomCloudAPI::set_buddy_name, this);
+	res = Particle.function("buddy_name", &Intercom_CloudAPI::set_buddy_name, this);
 	PLF_PRINT(PRNTGRP_DFLT, "Cloud function buddy_name register result: %d\n", res);
-	res = Particle.function("erase", &IntercomCloudAPI::erase, this);
+	res = Particle.function("erase", &Intercom_CloudAPI::erase, this);
 	PLF_PRINT(PRNTGRP_DFLT, "Cloud function erase register result: %d\n", res);
-	res = Particle.function("en_prntgrp", &IntercomCloudAPI::enable_printgroup, this);
+	res = Particle.function("en_prntgrp", &Intercom_CloudAPI::enable_printgroup, this);
 	PLF_PRINT(PRNTGRP_DFLT, "Cloud function enable_printgroup register result: %d\n", res);
-	res = Particle.function("dis_prntgrp", &IntercomCloudAPI::disable_printgroup, this);
+	res = Particle.function("dis_prntgrp", &Intercom_CloudAPI::disable_printgroup, this);
 	PLF_PRINT(PRNTGRP_DFLT, "Cloud function disable_printgroup register result: %d\n", res);
 
 	Particle.variable("my_name", my_name);
 	Particle.variable("buddy_name", buddy_name);
+	Particle.variable("buddy_id", buddy_id);
 
 	_registry.registerHandler(REG_KEY_MY_NAME, registryHandlerHelper, this);
 	_registry.registerHandler(REG_KEY_BUDDY_NAME, registryHandlerHelper, this);
-
-	Particle.subscribe("spark/", device_name_handler_helper);
-    Particle.publish("spark/device/name");
-
-    intercom_cloud_apip = this;
+	_registry.registerHandler(REG_KEY_BUDDY_ID, registryHandlerHelper, this);
 }
 
 	
