@@ -3,7 +3,7 @@
 
 #define VALID_KEY_VAL 0x10D0BABA
 
-int PlfRegistry::set(int key, String& value, bool valid) {
+int PlfRegistry::set(int key, String& value, bool valid, bool persistent) {
 	RegistryEntry_t reg_entry;
 	String old_value;
 	bool old_valid;
@@ -19,12 +19,16 @@ int PlfRegistry::set(int key, String& value, bool valid) {
 	reg_entry.value[sizeof(reg_entry.value)-1] = 0;
 	reg_entry.validKey = valid ? VALID_KEY_VAL : 0;
 
-	EEPROM.put(key*sizeof(RegistryEntry_t), reg_entry);
+	_registryShadow[key] = reg_entry;
 
-	/*Invoked handler for this key if there's a change*/
+	/*(Possibly) put into persistent memory and invoke handler for this key if there's a change*/
 	if ( _live &&
 		((old_valid != valid) || (!old_value.equals(value))) &&
 		(_regHandlers[key].fun!=0)) {
+		if (persistent) {
+			EEPROM.put(key*sizeof(RegistryEntry_t), reg_entry);
+		}
+
 		PLF_PRINT(PRNTGRP_DFLT, "Registry change: key %d, value %s, valid %d\n", key, reg_entry.value, (int)valid);
 		_invokeHandler(key, value, valid);
 	}
@@ -33,15 +37,15 @@ int PlfRegistry::set(int key, String& value, bool valid) {
 }
 
 int PlfRegistry::get(int key, String& value, bool& valid) {
-	RegistryEntry_t reg_entry;
+	RegistryEntry_t *reg_entryp=0;
 
 	plf_assert("Out of range registry key",key<=VALID_KEY_VAL);
 	plf_assert("Out of range registry key",key>=0);
 
-	EEPROM.get(key*sizeof(RegistryEntry_t), reg_entry);
+	reg_entryp = &_registryShadow[key];
 
-	if (reg_entry.validKey == VALID_KEY_VAL) {
-		value = String((const char*)reg_entry.value);
+	if (reg_entryp->validKey == VALID_KEY_VAL) {
+		value = String((const char*)(reg_entryp->value));
 		valid = true;
 	}
 	else {
@@ -103,6 +107,7 @@ int PlfRegistry::go(void) {
 
 int PlfRegistry::erase(void) {
 	EEPROM.clear();
+	memset(_registryShadow, 0, sizeof(_registryShadow));
 	_walkHandlers();
 
 	return 0;
@@ -110,5 +115,15 @@ int PlfRegistry::erase(void) {
 
 
 PlfRegistry::PlfRegistry() : _live(false) {
+	int key;
+
 	memset(_regHandlers, 0, sizeof(_regHandlers));
+
+	/*Read persistent copy of registry into the shadow copy*/
+
+	for (key=0; key<=MAX_KEY_VAL; key++) {
+		RegistryEntry_t reg_entry;
+
+		EEPROM.get(key*sizeof(RegistryEntry_t), _registryShadow[key]);
+	}
 }

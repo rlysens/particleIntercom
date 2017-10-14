@@ -21,9 +21,9 @@ uint64_t __echo_reply_t_hash_recursive(const __lcm_hash_ptr *p)
     cp.v = (void*)__echo_reply_t_get_hash;
     (void) cp;
 
-    uint64_t hash = (uint64_t)0x18f1ed839291afecLL
-         + __int16_t_hash_recursive(&cp)
-         + __int16_t_hash_recursive(&cp)
+    uint64_t hash = (uint64_t)0x18f1ed95b691afecLL
+         + __int32_t_hash_recursive(&cp)
+         + __int32_t_hash_recursive(&cp)
         ;
 
     return (hash<<1) + ((hash>>63)&1);
@@ -46,10 +46,10 @@ int __echo_reply_t_encode_array(void *buf, int offset, int maxlen, const echo_re
 
     for (element = 0; element < elements; element++) {
 
-        thislen = __int16_t_encode_array(buf, offset + pos, maxlen - pos, &(p[element].source_id), 1);
+        thislen = __int32_t_encode_array(buf, offset + pos, maxlen - pos, &(p[element].source_id), 1);
         if (thislen < 0) return thislen; else pos += thislen;
 
-        thislen = __int16_t_encode_array(buf, offset + pos, maxlen - pos, &(p[element].destination_id), 1);
+        thislen = __int32_t_encode_array(buf, offset + pos, maxlen - pos, &(p[element].destination_id), 1);
         if (thislen < 0) return thislen; else pos += thislen;
 
     }
@@ -75,9 +75,9 @@ int __echo_reply_t_encoded_array_size(const echo_reply_t *p, int elements)
     int size = 0, element;
     for (element = 0; element < elements; element++) {
 
-        size += __int16_t_encoded_array_size(&(p[element].source_id), 1);
+        size += __int32_t_encoded_array_size(&(p[element].source_id), 1);
 
-        size += __int16_t_encoded_array_size(&(p[element].destination_id), 1);
+        size += __int32_t_encoded_array_size(&(p[element].destination_id), 1);
 
     }
     return size;
@@ -94,10 +94,10 @@ int __echo_reply_t_decode_array(const void *buf, int offset, int maxlen, echo_re
 
     for (element = 0; element < elements; element++) {
 
-        thislen = __int16_t_decode_array(buf, offset + pos, maxlen - pos, &(p[element].source_id), 1);
+        thislen = __int32_t_decode_array(buf, offset + pos, maxlen - pos, &(p[element].source_id), 1);
         if (thislen < 0) return thislen; else pos += thislen;
 
-        thislen = __int16_t_decode_array(buf, offset + pos, maxlen - pos, &(p[element].destination_id), 1);
+        thislen = __int32_t_decode_array(buf, offset + pos, maxlen - pos, &(p[element].destination_id), 1);
         if (thislen < 0) return thislen; else pos += thislen;
 
     }
@@ -109,9 +109,9 @@ int __echo_reply_t_decode_array_cleanup(echo_reply_t *p, int elements)
     int element;
     for (element = 0; element < elements; element++) {
 
-        __int16_t_decode_array_cleanup(&(p[element].source_id), 1);
+        __int32_t_decode_array_cleanup(&(p[element].source_id), 1);
 
-        __int16_t_decode_array_cleanup(&(p[element].destination_id), 1);
+        __int32_t_decode_array_cleanup(&(p[element].destination_id), 1);
 
     }
     return 0;
@@ -143,9 +143,9 @@ int __echo_reply_t_clone_array(const echo_reply_t *p, echo_reply_t *q, int eleme
     int element;
     for (element = 0; element < elements; element++) {
 
-        __int16_t_clone_array(&(p[element].source_id), &(q[element].source_id), 1);
+        __int32_t_clone_array(&(p[element].source_id), &(q[element].source_id), 1);
 
-        __int16_t_clone_array(&(p[element].destination_id), &(q[element].destination_id), 1);
+        __int32_t_clone_array(&(p[element].destination_id), &(q[element].destination_id), 1);
 
     }
     return 0;

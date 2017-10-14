@@ -10,6 +10,7 @@ class Intercom_Controller {
 private:
 	Message_Handler& _message_handler;
 	Intercom_Outgoing& _intercom_outgoing;
+	int32_t _fsm_state;
 	int32_t _my_id;
 	bool _my_id_is_known;
 	unsigned long _prev_millis;

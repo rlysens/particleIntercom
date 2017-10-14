@@ -12,7 +12,7 @@ import struct
 class echo_reply_t(object):
     __slots__ = ["source_id", "destination_id"]
 
-    MSG_ID = 9
+    MSG_ID = 8
 
     def __init__(self):
         self.source_id = 0
@@ -25,7 +25,7 @@ class echo_reply_t(object):
         return buf.getvalue()
 
     def _encode_one(self, buf):
-        buf.write(struct.pack(">hh", self.source_id, self.destination_id))
+        buf.write(struct.pack(">ii", self.source_id, self.destination_id))
 
     def decode(data):
         if hasattr(data, 'read'):
@@ -39,14 +39,14 @@ class echo_reply_t(object):
 
     def _decode_one(buf):
         self = echo_reply_t()
-        self.source_id, self.destination_id = struct.unpack(">hh", buf.read(4))
+        self.source_id, self.destination_id = struct.unpack(">ii", buf.read(8))
         return self
     _decode_one = staticmethod(_decode_one)
 
     _hash = None
     def _get_hash_recursive(parents):
         if echo_reply_t in parents: return 0
-        tmphash = (0x18f1ed839291afec) & 0xffffffffffffffff
+        tmphash = (0x18f1ed95b691afec) & 0xffffffffffffffff
         tmphash  = (((tmphash<<1)&0xffffffffffffffff)  + (tmphash>>63)) & 0xffffffffffffffff
         return tmphash
     _get_hash_recursive = staticmethod(_get_hash_recursive)

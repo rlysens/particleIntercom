@@ -19,10 +19,10 @@ extern "C" {
 typedef struct _voice_data_t voice_data_t;
 struct _voice_data_t
 {
-    int16_t    source_id;
-    int16_t    destination_id;
+    int32_t    source_id;
+    int32_t    destination_id;
     int16_t    data_size;
-    int8_t     data[494];
+    int8_t     data[486];
 };
 
 /**

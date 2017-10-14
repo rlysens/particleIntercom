@@ -4,6 +4,9 @@
 #define INTERCOM_CONTROLLER_TICK_INTER_MS 2000
 #define BUDDY_LISTENING_LED D7
 
+#define FSM_ENCRYPTION_DISABLED 0
+#define FSM_ENCRYPTION_ENABLED 1
+
 static Intercom_Message intercom_message;
 
 static int message_handler_helper(Intercom_Message &msg, 
@@ -31,8 +34,7 @@ void Intercom_Controller::_i_am(void) {
 	num_encoded_bytes = i_am_t_encode(intercom_message.data, 0, sizeof(intercom_message.data), &i_am);
 	plf_assert("Msg Encode Error", num_encoded_bytes>=0);
 
-	intercom_message.id = I_AM_T_MSG_ID;
-	_message_handler.send(intercom_message, num_encoded_bytes);
+	_message_handler.send(intercom_message, I_AM_T_MSG_ID, num_encoded_bytes, false);
 }
 
 void Intercom_Controller::_buddy_listening_led(bool on) {
@@ -60,8 +62,7 @@ void Intercom_Controller::_tx_echo_req(void) {
 	num_encoded_bytes = echo_request_t_encode(intercom_message.data, 0, sizeof(intercom_message.data), &echo_request);
 	plf_assert("Msg Encode Error", num_encoded_bytes>=0);
 
-	intercom_message.id = ECHO_REQUEST_T_MSG_ID;
-	_message_handler.send(intercom_message, num_encoded_bytes);
+	_message_handler.send(intercom_message, ECHO_REQUEST_T_MSG_ID, num_encoded_bytes, true);
 }
 
 void Intercom_Controller::_whois(void) {
@@ -79,8 +80,7 @@ void Intercom_Controller::_whois(void) {
 	num_encoded_bytes = who_is_t_encode(intercom_message.data, 0, sizeof(intercom_message.data), &who_is);
 	plf_assert("Msg Encode Error", num_encoded_bytes>=0);
 
-	intercom_message.id = WHO_IS_T_MSG_ID;
-	_message_handler.send(intercom_message, num_encoded_bytes);
+	_message_handler.send(intercom_message, WHO_IS_T_MSG_ID, num_encoded_bytes, true);
 }
 
 int Intercom_Controller::_rx_echo_request(Intercom_Message& msg, int payload_size) {
@@ -95,21 +95,20 @@ int Intercom_Controller::_rx_echo_request(Intercom_Message& msg, int payload_siz
 	if (!_my_id_is_known)
 		return -1;
 
-	echo_reply.source_id = echo_request.destination_id;
+	echo_reply.source_id = _my_id;
 	echo_reply.destination_id = echo_request.source_id;
 
 	num_encoded_bytes = echo_reply_t_encode(intercom_message.data, 0, sizeof(intercom_message.data), &echo_reply);
 	plf_assert("Msg Encode Error", num_encoded_bytes>=0);
 
-	intercom_message.id = ECHO_REPLY_T_MSG_ID;
-	_message_handler.send(intercom_message, num_encoded_bytes);
+	_message_handler.send(intercom_message, ECHO_REPLY_T_MSG_ID, num_encoded_bytes, true);
 
 	return 0;
 }
 
 int Intercom_Controller::_whois_reply(Intercom_Message& msg, int payload_size) {
 	static who_is_reply_t who_is_reply;
-	static add_buddy_t add_buddy;
+	static set_buddy_t set_buddy;
 	String buddy_name;
 	String buddy_id_s;
 	int buddy_id_i;
@@ -137,40 +136,20 @@ int Intercom_Controller::_whois_reply(Intercom_Message& msg, int payload_size) {
 		PLF_PRINT(PRNTGRP_DFLT, "Buddy id received %d\n", (int)who_is_reply.id);
 	}
 
-	if (buddy_id_is_known) {
-		buddy_id_i = buddy_id_s.toInt();
-		/*Did buddy id change?*/
-		if (buddy_id_i != who_is_reply.id) {
-			if (_my_id_is_known) {
-				del_buddy_t del_buddy;
-
-				/*Remove old buddy server side*/
-				del_buddy.my_id = _my_id;
-				del_buddy.buddy_id = who_is_reply.id;
-
-				num_encoded_bytes = del_buddy_t_encode(intercom_message.data, 0, sizeof(intercom_message.data), &del_buddy);
-				plf_assert("Msg Encode Error", num_encoded_bytes>=0);
-
-				intercom_message.id = DEL_BUDDY_T_MSG_ID;
-				_message_handler.send(intercom_message, num_encoded_bytes);
-			}
-		}
-	}
 
 	/*Put a string version of the buddy_id in the registry*/
 	buddy_id_s = String(who_is_reply.id);
-	_registry.set(REG_KEY_BUDDY_ID, buddy_id_s, true);
+	_registry.set(REG_KEY_BUDDY_ID, buddy_id_s, true /*validity*/, false /*persistency*/);
 
 	if (_my_id_is_known) {
-		/*Add my buddy to list server side*/
-		add_buddy.my_id = _my_id;
-		add_buddy.buddy_id = who_is_reply.id;
+		/*Set my buddy server side. Keep in mind that this code runs periodically. So if one message gets lost, no problem.*/
+		set_buddy.my_id = _my_id;
+		set_buddy.buddy_id = who_is_reply.id;
 
-		num_encoded_bytes = add_buddy_t_encode(intercom_message.data, 0, sizeof(intercom_message.data), &add_buddy);
+		num_encoded_bytes = set_buddy_t_encode(intercom_message.data, 0, sizeof(intercom_message.data), &set_buddy);
 		plf_assert("Msg Encode Error", num_encoded_bytes>=0);
 
-		intercom_message.id = ADD_BUDDY_T_MSG_ID;
-		_message_handler.send(intercom_message, num_encoded_bytes);
+		_message_handler.send(intercom_message, SET_BUDDY_T_MSG_ID, num_encoded_bytes, true);
 	}
 
 	_intercom_outgoing.set_destination_id(who_is_reply.id);
@@ -208,6 +187,10 @@ int Intercom_Controller::_i_am_reply(Intercom_Message& msg, int payload_size) {
 	_my_id = i_am_reply.id;
 
 	_intercom_outgoing.set_source_id(i_am_reply.id);
+	_message_handler.set_source_id(i_am_reply.id);
+
+	_message_handler.set_encryption_key((uint8_t*)(i_am_reply.key));
+	_fsm_state = FSM_ENCRYPTION_ENABLED;
 
 	return 0;
 }
@@ -219,7 +202,7 @@ int Intercom_Controller::_echo_reply(Intercom_Message& msg, int payload_size) {
 }
 
 int Intercom_Controller::handle_message(Intercom_Message& msg, int payload_size) {
-	switch (msg.id) {
+	switch (msg.msg_id) {
     case WHO_IS_REPLY_T_MSG_ID:
     	return _whois_reply(msg, payload_size);
 
@@ -252,21 +235,26 @@ void Intercom_Controller::tick(void) {
 
 	if (millis_delta > INTERCOM_CONTROLLER_TICK_INTER_MS) {
 		_prev_millis = cur_millis;
-		_i_am();
-		_whois();
-		_tx_echo_req();
+
+		if (_fsm_state == FSM_ENCRYPTION_DISABLED) {
+			_i_am();
+		}
+		else { /*FSM_ENCRYPTION_ENABLED*/
+			_whois();
+			_tx_echo_req();
+		}
 	}
 }
 
 Intercom_Controller::Intercom_Controller(Message_Handler& message_handler, 
 	Intercom_Outgoing& intercom_outgoing, PlfRegistry &registry) : 
 	_message_handler(message_handler), _intercom_outgoing(intercom_outgoing),
- 	_my_id_is_known(false), _prev_millis(0),
+	_fsm_state(FSM_ENCRYPTION_DISABLED), _my_id_is_known(false), _prev_millis(0),
  	_registry(registry) {
-	_message_handler.register_handler(WHO_IS_REPLY_T_MSG_ID, message_handler_helper, this);
-	_message_handler.register_handler(I_AM_REPLY_T_MSG_ID, message_handler_helper, this);
-	_message_handler.register_handler(ECHO_REPLY_T_MSG_ID, message_handler_helper, this);
-	_message_handler.register_handler(ECHO_REQUEST_T_MSG_ID, message_handler_helper, this);
+	_message_handler.register_handler(WHO_IS_REPLY_T_MSG_ID, message_handler_helper, this, true);
+	_message_handler.register_handler(I_AM_REPLY_T_MSG_ID, message_handler_helper, this, false);
+	_message_handler.register_handler(ECHO_REPLY_T_MSG_ID, message_handler_helper, this, true);
+	_message_handler.register_handler(ECHO_REQUEST_T_MSG_ID, message_handler_helper, this, true);
 
 	pinMode(BUDDY_LISTENING_LED, OUTPUT);
 }

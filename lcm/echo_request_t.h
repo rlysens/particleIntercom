@@ -14,13 +14,13 @@
 extern "C" {
 #endif
 
-#define ECHO_REQUEST_T_MSG_ID 8
+#define ECHO_REQUEST_T_MSG_ID 7
 
 typedef struct _echo_request_t echo_request_t;
 struct _echo_request_t
 {
-    int16_t    source_id;
-    int16_t    destination_id;
+    int32_t    source_id;
+    int32_t    destination_id;
 };
 
 /**

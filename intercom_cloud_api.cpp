@@ -17,15 +17,15 @@ static int registryHandlerHelper(int key, String& value, bool valid, void *ctxt)
 }
 
 int Intercom_CloudAPI::set_my_name(String name) {
-	_registry.set(REG_KEY_MY_NAME, name, true);
+	_registry.set(REG_KEY_MY_NAME, name, true /*validity*/, true /*persistency*/);
   	return 0;
 }
 
 int Intercom_CloudAPI::set_buddy_name(String name) {
 	String dummy_id = "-1";
 	/*Erase buddy_id when setting a new name*/
-	_registry.set(REG_KEY_BUDDY_ID, dummy_id, false);
-	_registry.set(REG_KEY_BUDDY_NAME, name, true);
+	_registry.set(REG_KEY_BUDDY_ID, dummy_id, false /*validity*/, false /*persistency*/);
+	_registry.set(REG_KEY_BUDDY_NAME, name, true /*validity*/, true /*persistency*/);
 	return 0;
 }
 

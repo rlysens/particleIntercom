@@ -41,9 +41,8 @@ void Intercom_Outgoing::transfer(void) {
     num_encoded_bytes = voice_data_t_encode(intercom_message.data, 
       0, sizeof(intercom_message.data), &voice_data);
 
-    intercom_message.id = VOICE_DATA_T_MSG_ID;
-
-    if (_message_handler.send(intercom_message, num_encoded_bytes)) {
+    if (_message_handler.send(intercom_message, VOICE_DATA_T_MSG_ID, 
+      num_encoded_bytes, true)) {
       PLF_PRINT(PRNTGRP_DFLT, ("Voice data send failed\n"));
       return;
     }

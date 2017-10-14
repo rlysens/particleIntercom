@@ -21,8 +21,10 @@ uint64_t __i_am_reply_t_hash_recursive(const __lcm_hash_ptr *p)
     cp.v = (void*)__i_am_reply_t_get_hash;
     (void) cp;
 
-    uint64_t hash = (uint64_t)0x4a63db5ad5c6199aLL
+    uint64_t hash = (uint64_t)0x3e039de7b81219e7LL
          + __int32_t_hash_recursive(&cp)
+         + __int8_t_hash_recursive(&cp)
+         + __int8_t_hash_recursive(&cp)
          + __int8_t_hash_recursive(&cp)
         ;
 
@@ -52,6 +54,12 @@ int __i_am_reply_t_encode_array(void *buf, int offset, int maxlen, const i_am_re
         thislen = __int8_t_encode_array(buf, offset + pos, maxlen - pos, p[element].name, 32);
         if (thislen < 0) return thislen; else pos += thislen;
 
+        thislen = __int8_t_encode_array(buf, offset + pos, maxlen - pos, p[element].key, 16);
+        if (thislen < 0) return thislen; else pos += thislen;
+
+        thislen = __int8_t_encode_array(buf, offset + pos, maxlen - pos, p[element].padding, 4);
+        if (thislen < 0) return thislen; else pos += thislen;
+
     }
     return pos;
 }
@@ -79,6 +87,10 @@ int __i_am_reply_t_encoded_array_size(const i_am_reply_t *p, int elements)
 
         size += __int8_t_encoded_array_size(p[element].name, 32);
 
+        size += __int8_t_encoded_array_size(p[element].key, 16);
+
+        size += __int8_t_encoded_array_size(p[element].padding, 4);
+
     }
     return size;
 }
@@ -100,6 +112,12 @@ int __i_am_reply_t_decode_array(const void *buf, int offset, int maxlen, i_am_re
         thislen = __int8_t_decode_array(buf, offset + pos, maxlen - pos, p[element].name, 32);
         if (thislen < 0) return thislen; else pos += thislen;
 
+        thislen = __int8_t_decode_array(buf, offset + pos, maxlen - pos, p[element].key, 16);
+        if (thislen < 0) return thislen; else pos += thislen;
+
+        thislen = __int8_t_decode_array(buf, offset + pos, maxlen - pos, p[element].padding, 4);
+        if (thislen < 0) return thislen; else pos += thislen;
+
     }
     return pos;
 }
@@ -112,6 +130,10 @@ int __i_am_reply_t_decode_array_cleanup(i_am_reply_t *p, int elements)
         __int32_t_decode_array_cleanup(&(p[element].id), 1);
 
         __int8_t_decode_array_cleanup(p[element].name, 32);
+
+        __int8_t_decode_array_cleanup(p[element].key, 16);
+
+        __int8_t_decode_array_cleanup(p[element].padding, 4);
 
     }
     return 0;
@@ -146,6 +168,10 @@ int __i_am_reply_t_clone_array(const i_am_reply_t *p, i_am_reply_t *q, int eleme
         __int32_t_clone_array(&(p[element].id), &(q[element].id), 1);
 
         __int8_t_clone_array(p[element].name, q[element].name, 32);
+
+        __int8_t_clone_array(p[element].key, q[element].key, 16);
+
+        __int8_t_clone_array(p[element].padding, q[element].padding, 4);
 
     }
     return 0;

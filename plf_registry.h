@@ -26,7 +26,9 @@ typedef struct RegHandlerEntry_t {
 
 class PlfRegistry {
 private:
+	RegistryEntry_t _registryShadow[MAX_KEY_VAL+1];
 	RegHandlerEntry_t _regHandlers[MAX_KEY_VAL+1];
+
 	bool _live;
 
 	void _walkHandlers(void);
@@ -35,7 +37,7 @@ private:
 public:
 	PlfRegistry();
 
-	int set(int key, String& value, bool valid);
+	int set(int key, String& value, bool valid, bool persistent);
 	int get(int key, String& value, bool& valid);
 	int registerHandler(int key, RegistryHandlerFunType *fun, void* ctxt);
 	int go(void);

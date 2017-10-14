@@ -9,52 +9,52 @@ except ImportError:
     from io import BytesIO
 import struct
 
-class echo_reply_t(object):
-    __slots__ = ["source_id", "destination_id"]
+class set_buddy_t(object):
+    __slots__ = ["my_id", "buddy_id"]
 
-    MSG_ID = 8
+    MSG_ID = 6
 
     def __init__(self):
-        self.source_id = 0
-        self.destination_id = 0
+        self.my_id = 0
+        self.buddy_id = 0
 
     def encode(self):
         buf = BytesIO()
-        buf.write(echo_reply_t._get_packed_fingerprint())
+        buf.write(set_buddy_t._get_packed_fingerprint())
         self._encode_one(buf)
         return buf.getvalue()
 
     def _encode_one(self, buf):
-        buf.write(struct.pack(">ii", self.source_id, self.destination_id))
+        buf.write(struct.pack(">ii", self.my_id, self.buddy_id))
 
     def decode(data):
         if hasattr(data, 'read'):
             buf = data
         else:
             buf = BytesIO(data)
-        if buf.read(8) != echo_reply_t._get_packed_fingerprint():
+        if buf.read(8) != set_buddy_t._get_packed_fingerprint():
             raise ValueError("Decode error")
-        return echo_reply_t._decode_one(buf)
+        return set_buddy_t._decode_one(buf)
     decode = staticmethod(decode)
 
     def _decode_one(buf):
-        self = echo_reply_t()
-        self.source_id, self.destination_id = struct.unpack(">ii", buf.read(8))
+        self = set_buddy_t()
+        self.my_id, self.buddy_id = struct.unpack(">ii", buf.read(8))
         return self
     _decode_one = staticmethod(_decode_one)
 
     _hash = None
     def _get_hash_recursive(parents):
-        if echo_reply_t in parents: return 0
-        tmphash = (0x18f1ed95b691afec) & 0xffffffffffffffff
+        if set_buddy_t in parents: return 0
+        tmphash = (0x6fcc050df82c6a63) & 0xffffffffffffffff
         tmphash  = (((tmphash<<1)&0xffffffffffffffff)  + (tmphash>>63)) & 0xffffffffffffffff
         return tmphash
     _get_hash_recursive = staticmethod(_get_hash_recursive)
     _packed_fingerprint = None
 
     def _get_packed_fingerprint():
-        if echo_reply_t._packed_fingerprint is None:
-            echo_reply_t._packed_fingerprint = struct.pack(">Q", echo_reply_t._get_hash_recursive([]))
-        return echo_reply_t._packed_fingerprint
+        if set_buddy_t._packed_fingerprint is None:
+            set_buddy_t._packed_fingerprint = struct.pack(">Q", set_buddy_t._get_hash_recursive([]))
+        return set_buddy_t._packed_fingerprint
     _get_packed_fingerprint = staticmethod(_get_packed_fingerprint)
 

@@ -14,13 +14,13 @@
 extern "C" {
 #endif
 
-#define ECHO_REPLY_T_MSG_ID 9
+#define ECHO_REPLY_T_MSG_ID 8
 
 typedef struct _echo_reply_t echo_reply_t;
 struct _echo_reply_t
 {
-    int16_t    source_id;
-    int16_t    destination_id;
+    int32_t    source_id;
+    int32_t    destination_id;
 };
 
 /**

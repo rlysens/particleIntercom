@@ -29,7 +29,7 @@ static int message_handler_helper(Intercom_Message &msg,
 
 int Intercom_Incoming::handle_message(Intercom_Message &msg, int payload_size) {
   
-  switch (msg.id) {
+  switch (msg.msg_id) {
     case VOICE_DATA_T_MSG_ID:
     {
       static voice_data_t voice_data;
@@ -135,5 +135,5 @@ _message_handler(message_handler) {
   PLF_COUNT_MIN_INIT(BYTES_SENT_TO_DECODER_MIN);
   PLF_COUNT_MIN_INIT(CIRCULAR_BUF_MIN);
 
-  _message_handler.register_handler(VOICE_DATA_T_MSG_ID, message_handler_helper, this);
+  _message_handler.register_handler(VOICE_DATA_T_MSG_ID, message_handler_helper, this, true);
 }

@@ -24,13 +24,16 @@ import time
 import getopt
 import select
 import pdb
+import xtea
+import random
+import string
 
 from messages import *
 
 HOST = ''
 HOST_PORT = 50007
 
-id_counter = 0
+id_counter = 1
 
 intercom_name_to_id_table = {}
 
@@ -41,16 +44,27 @@ class Message_Handler:
         self._sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self._sock.bind((HOST, HOST_PORT))
         self._msg_table = msg_table
+        self.source_id = 0 #Server is 0
 
-    def send(self, payload_data, id, address):
+    def send(self, payload_data, msg_id, address, cryptoCodec=None):
 
-        print "Tx Msg: %d"%(id)
+        print "Tx Msg: %d"%(msg_id)
+
+        if cryptoCodec:
+            payload_data = cryptoCodec.encrypt(payload_data)
+            cryptoCodec.IV = payload_data[-8:]
+                
         msg = []
         
-        msg.append(chr(id&0xff))
-        msg.append(chr((id>>8)&0xff))
-        msg.append(chr((id>>16)&0xff))
-        msg.append(chr((id>>24)&0xff))
+        msg.append(chr(msg_id&0xff))
+        msg.append(chr((msg_id>>8)&0xff))
+        msg.append(chr((msg_id>>16)&0xff))
+        msg.append(chr((msg_id>>24)&0xff))
+
+        msg.append(chr(self.source_id&0xff))
+        msg.append(chr((self.source_id>>8)&0xff))
+        msg.append(chr((self.source_id>>16)&0xff))
+        msg.append(chr((self.source_id>>24)&0xff))
 
         msg.extend(payload_data)
 
@@ -63,14 +77,35 @@ class Message_Handler:
             return False
 
         msg_id = ord(data[0])+(ord(data[1])<<8)+(ord(data[2])<<16)+(ord(data[3])<<24)
+        source_id = ord(data[4])+(ord(data[5])<<8)+(ord(data[6])<<16)+(ord(data[7])<<24)
         if not self._msg_table.has_key(msg_id):
             print "Unknown Message %d"%(msg_id)
             return
 
+        intercom = None
+        if intercom_id_to_intercom_table.has_key(source_id):
+            intercom = intercom_id_to_intercom_table[source_id]
+
         #Invoke the handler
-        print "Rx Msg: %d"%(msg_id)
-        fun = self._msg_table[msg_id]
-        fun(data[4:], address, self)
+        print "Rx Msg: %d Src: %d"%(msg_id, source_id)
+        fun, decrypt = self._msg_table[msg_id]
+
+        msg_payload = None        
+        if decrypt:
+            if intercom:
+                cryptoCodec = intercom.getDecoderCryptoCodec()
+                msg_payload = cryptoCodec.decrypt(data[8:])
+                cryptoCodec.IV = data[-8:]
+            else:
+                print "Can't decrypt msg_id %d source_id %d"%(msg_id, source_id)
+        else:
+            msg_payload = data[8:]
+
+        if msg_payload:
+            try: #A decode failure will trigger a ValueError exception
+                fun(msg_payload, address, self, intercom)
+            except ValueError:
+                print "Can't decode msg_id %d source_id %d"%(msg_id, source_id)
 
 class Intercom:
     def __init__(self, name, id, address, msg_handler):
@@ -78,47 +113,67 @@ class Intercom:
         self.id = id
         self.address = address
         self.msg_handler = msg_handler
-        self.buddy_list = []
+        self.buddy_list = [0,0,0,0]
+        self.key = None
+        self.keyString = None
+        self.encCrypto = None
+        self.decCrypto = None
 
-    def sendTo(self, sender_id, msg, msg_id):
+    def genCryptoKey(self):
+        self.key = [random.SystemRandom().randint(0,127) for _ in range(16)]
+        self.keyString = ''.join([chr(x) for x in self.key])
+        self.encCrypto = xtea.new(self.keyString, mode=xtea.MODE_CBC, IV="\0"*8)
+        self.decCrypto = xtea.new(self.keyString, mode=xtea.MODE_CBC, IV="\0"*8)
+        
+        return self.key
+
+    def getEncoderCryptoCodec(self):
+        return self.encCrypto
+
+    def getDecoderCryptoCodec(self):
+        return self.decCrypto
+
+    def sendTo(self, sender_id, msg, msg_id, encrypt):
         if sender_id in self.buddy_list:
-            self.msg_handler.send(msg, msg_id, self.address)
+            if encrypt:
+                self.msg_handler.send(msg, msg_id, self.address, self.encCrypto)
+            else:
+                self.msg_handler.send(msg, msg_id, self.address)
         else:
             print "sender %d not in buddy list"%(sender_id)
 
-    def addBuddy(self, id):
+    def setBuddy(self, id):
         if id not in self.buddy_list:
-            self.buddy_list.append(id)
-
-    def delBuddy(self, id):
-        if id in self.buddy_list:
-            self.buddy_list.remove(id)
+            self.buddy_list[0] = id
         
-def msg_echo_request_handler(msg_data, address, msg_handler):
+def msg_echo_request_handler(msg_data, address, msg_handler, intercom):
     echo_request = echo_request_t.echo_request_t.decode(msg_data)
     if intercom_id_to_intercom_table.has_key(echo_request.destination_id):
-        intercom = intercom_id_to_intercom_table[echo_request.destination_id]
-        intercom.sendTo(echo_request.source_id, msg_data, echo_request_t.echo_request_t.MSG_ID)
+        buddy_intercom = intercom_id_to_intercom_table[echo_request.destination_id]
+        buddy_intercom.sendTo(echo_request.source_id, msg_data, 
+            echo_request_t.echo_request_t.MSG_ID, True)
     else:
         print "Unknown destination %d"%(echo_request.destination_id)
 
-def msg_echo_reply_handler(msg_data, address, msg_handler):
+def msg_echo_reply_handler(msg_data, address, msg_handler, intercom):
     echo_reply = echo_reply_t.echo_reply_t.decode(msg_data)
     if intercom_id_to_intercom_table.has_key(echo_reply.destination_id):
-        intercom = intercom_id_to_intercom_table[echo_reply.destination_id]
-        intercom.sendTo(echo_reply.source_id, msg_data, echo_reply_t.echo_reply_t.MSG_ID)
+        buddy_intercom = intercom_id_to_intercom_table[echo_reply.destination_id]
+        buddy_intercom.sendTo(echo_reply.source_id, msg_data, 
+            echo_reply_t.echo_reply_t.MSG_ID, True)
     else:
         print "Unknown destination %d"%(echo_reply.destination_id)
 
-def msg_voice_data_handler(msg_data, address, msg_handler):
+def msg_voice_data_handler(msg_data, address, msg_handler, intercom):
     voice_data = voice_data_t.voice_data_t.decode(msg_data)
     if intercom_id_to_intercom_table.has_key(voice_data.destination_id):
-        intercom = intercom_id_to_intercom_table[voice_data.destination_id]
-        intercom.sendTo(voice_data.source_id, msg_data, voice_data_t.voice_data_t.MSG_ID)
+        buddy_intercom = intercom_id_to_intercom_table[voice_data.destination_id]
+        buddy_intercom.sendTo(voice_data.source_id, msg_data, 
+            voice_data_t.voice_data_t.MSG_ID, True)
     else:
         print "Unknown destination %d"%(voice_data.destination_id)
 
-def msg_i_am_handler(msg_data, address, msg_handler):
+def msg_i_am_handler(msg_data, address, msg_handler, intercom):
     global id_counter
 
     i_am = i_am_t.i_am_t.decode(msg_data)
@@ -136,10 +191,11 @@ def msg_i_am_handler(msg_data, address, msg_handler):
         i_am_reply = i_am_reply_t.i_am_reply_t()
         i_am_reply.id = intercom_name_to_id_table[i_am.name]
         i_am_reply.name = [ord(x) for x in i_am.name]
+        i_am_reply.key = intercom_id_to_intercom_table[i_am_reply.id].genCryptoKey()
         data = i_am_reply.encode()
         msg_handler.send(data, i_am_reply_t.i_am_reply_t.MSG_ID, address)
 
-def msg_who_is_handler(msg_data, address, msg_handler):
+def msg_who_is_handler(msg_data, address, msg_handler, intercom):
     who_is = who_is_t.who_is_t.decode(msg_data)
     who_is.name = ''.join([chr(x) for x in who_is.name])
     #Known name?
@@ -150,32 +206,26 @@ def msg_who_is_handler(msg_data, address, msg_handler):
         who_is_reply.name = [ord(x) for x in who_is.name]
         who_is_reply.id = id
         data = who_is_reply.encode()
-        msg_handler.send(data, who_is_reply_t.who_is_reply_t.MSG_ID, address)
+        assert intercom
+        cryptoCodec = intercom.getEncoderCryptoCodec()
+        msg_handler.send(data, who_is_reply_t.who_is_reply_t.MSG_ID, address,
+            cryptoCodec)
 
-def add_buddy_handler(msg_data, address, msg_handler):
-    add_buddy = add_buddy_t.add_buddy_t.decode(msg_data)
-    if intercom_id_to_intercom_table.has_key(add_buddy.my_id):
-        intercom = intercom_id_to_intercom_table[add_buddy.my_id]
-        intercom.addBuddy(add_buddy.buddy_id)
+def set_buddy_handler(msg_data, address, msg_handler, intercom):
+    set_buddy = set_buddy_t.set_buddy_t.decode(msg_data)
+    if intercom_id_to_intercom_table.has_key(set_buddy.my_id):
+        assert intercom
+        intercom.setBuddy(set_buddy.buddy_id)
     else:
         print "add_buddy.my_id unknown %d"%(add_buddy.buddy_id)
 
-def del_buddy_handler(msg_data, address, msg_handler):
-    del_buddy = del_buddy_t.del_buddy_t.decode(msg_data)
-    if intercom_id_to_intercom_table.has_key(del_buddy.my_id):
-        intercom = intercom_id_to_intercom_table[del_buddy.my_id]
-        intercom.delBuddy(del_buddy.buddy_id)
-    else:
-        print "del_buddy.my_id unknown %d"%(del_buddy.buddy_id)
-
 MSG_TABLE = {
-    voice_data_t.voice_data_t.MSG_ID : msg_voice_data_handler,
-    i_am_t.i_am_t.MSG_ID : msg_i_am_handler,
-    who_is_t.who_is_t.MSG_ID : msg_who_is_handler,
-    add_buddy_t.add_buddy_t.MSG_ID : add_buddy_handler,
-    del_buddy_t.del_buddy_t.MSG_ID : del_buddy_handler,
-    echo_request_t.echo_request_t.MSG_ID : msg_echo_request_handler,
-    echo_reply_t.echo_reply_t.MSG_ID : msg_echo_reply_handler
+    voice_data_t.voice_data_t.MSG_ID : (msg_voice_data_handler, True),
+    i_am_t.i_am_t.MSG_ID : (msg_i_am_handler, False),
+    who_is_t.who_is_t.MSG_ID : (msg_who_is_handler, True),
+    set_buddy_t.set_buddy_t.MSG_ID : (set_buddy_handler, True),
+    echo_request_t.echo_request_t.MSG_ID : (msg_echo_request_handler, True),
+    echo_reply_t.echo_reply_t.MSG_ID : (msg_echo_reply_handler, True)
 }
 
 try:
