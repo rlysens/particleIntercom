@@ -5,6 +5,7 @@
 static String my_name;
 static String buddy_name;
 static String buddy_id;
+static String secret_key;
 
 static int registryHandlerHelper(int key, String& value, bool valid, void *ctxt) {
 	Intercom_CloudAPI *intercom_cloud_api = (Intercom_CloudAPI*)ctxt;
@@ -50,6 +51,11 @@ int Intercom_CloudAPI::update_vars(void) {
 	_registry.get(REG_KEY_BUDDY_ID, buddy_id, valid);
 	if (!valid) {
 		buddy_id = String();
+	}
+
+	_registry.get(REG_KEY_SECRET_KEY, secret_key, valid);
+	if (!valid) {
+		secret_key = String();
 	}
 
 	return 0;
@@ -99,6 +105,11 @@ int Intercom_CloudAPI::disable_printgroup(String name) {
 	return 0;
 }
 
+int Intercom_CloudAPI::set_key(String key_val) {
+	_registry.set(REG_KEY_SECRET_KEY, key_val, true /*validity*/, true /*persistency*/);
+  	return 0;
+}
+
 Intercom_CloudAPI::Intercom_CloudAPI(PlfRegistry& registry) : _registry(registry) {
 	int res;
 	res = Particle.function("my_name", &Intercom_CloudAPI::set_my_name, this);
@@ -111,14 +122,18 @@ Intercom_CloudAPI::Intercom_CloudAPI(PlfRegistry& registry) : _registry(registry
 	PLF_PRINT(PRNTGRP_DFLT, "Cloud function enable_printgroup register result: %d\n", res);
 	res = Particle.function("dis_prntgrp", &Intercom_CloudAPI::disable_printgroup, this);
 	PLF_PRINT(PRNTGRP_DFLT, "Cloud function disable_printgroup register result: %d\n", res);
+	res = Particle.function("set_key", &Intercom_CloudAPI::set_key, this);
+	PLF_PRINT(PRNTGRP_DFLT, "Cloud function key register result: %d\n", res);
 
 	Particle.variable("my_name", my_name);
 	Particle.variable("buddy_name", buddy_name);
 	Particle.variable("buddy_id", buddy_id);
+	Particle.variable("secret_key", secret_key);
 
 	_registry.registerHandler(REG_KEY_MY_NAME, registryHandlerHelper, this);
 	_registry.registerHandler(REG_KEY_BUDDY_NAME, registryHandlerHelper, this);
 	_registry.registerHandler(REG_KEY_BUDDY_ID, registryHandlerHelper, this);
+	_registry.registerHandler(REG_KEY_SECRET_KEY, registryHandlerHelper, this);
 }
 
 	

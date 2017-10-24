@@ -2,7 +2,7 @@
 [Intercom_Message]^-[echo_request|source_id;destination_id{bg:yellow}],
 [Intercom_Message]^-[echo_reply|source_id;destination_id{bg:yellow}],
 [Intercom_Message]^-[i_am|name{bg:yellow}]
-[Intercom_Message]^-[i_am_reply|id;name;key{bg:yellow}]
+[Intercom_Message]^-[i_am_reply|id;name{bg:yellow}]
 [Intercom_Message]^-[who_is|name{bg:yellow}]
 [Intercom_Message]^-[who_is_reply|id;name{bg:yellow}]
 [Intercom_Message]^-[set_buddy|my_id;buddy_id{bg:yellow}]

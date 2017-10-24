@@ -4,9 +4,6 @@
 #define INTERCOM_CONTROLLER_TICK_INTER_MS 2000
 #define BUDDY_LISTENING_LED D7
 
-#define FSM_ENCRYPTION_DISABLED 0
-#define FSM_ENCRYPTION_ENABLED 1
-
 static Intercom_Message intercom_message;
 
 static int message_handler_helper(Intercom_Message &msg, 
@@ -163,20 +160,20 @@ int Intercom_Controller::_i_am_reply(Intercom_Message& msg, int payload_size) {
 	int num_decoded_bytes = i_am_reply_t_decode(msg.data, 0, payload_size, &i_am_reply);
 
 	if (num_decoded_bytes < 0) {
-		return -1;
+		return -10;
 	}
 
 	_registry.get(REG_KEY_MY_NAME, my_name, my_name_is_set);
 	if (!my_name_is_set) {
 		PLF_PRINT(PRNTGRP_DFLT, "i_am_reply received while my_name not set\n");
-		return -3;
+		return -11;
 	}
 
 	if (!String((const char*)i_am_reply.name).equals(my_name)) {
 		PLF_PRINT(PRNTGRP_DFLT, "i_am_reply string mismatch\n");
 		Serial.println(String((const char*)i_am_reply.name));
 		Serial.println(my_name);
-		return -2;
+		return -12;
 	}
 
 	if (!_my_id_is_known) {
@@ -188,9 +185,6 @@ int Intercom_Controller::_i_am_reply(Intercom_Message& msg, int payload_size) {
 
 	_intercom_outgoing.set_source_id(i_am_reply.id);
 	_message_handler.set_source_id(i_am_reply.id);
-
-	_message_handler.set_encryption_key((uint8_t*)(i_am_reply.key));
-	_fsm_state = FSM_ENCRYPTION_ENABLED;
 
 	return 0;
 }
@@ -236,10 +230,8 @@ void Intercom_Controller::tick(void) {
 	if (millis_delta > INTERCOM_CONTROLLER_TICK_INTER_MS) {
 		_prev_millis = cur_millis;
 
-		if (_fsm_state == FSM_ENCRYPTION_DISABLED) {
-			_i_am();
-		}
-		else { /*FSM_ENCRYPTION_ENABLED*/
+		_i_am();
+		if (_my_id_is_known) {
 			_whois();
 			_tx_echo_req();
 		}
@@ -249,10 +241,10 @@ void Intercom_Controller::tick(void) {
 Intercom_Controller::Intercom_Controller(Message_Handler& message_handler, 
 	Intercom_Outgoing& intercom_outgoing, PlfRegistry &registry) : 
 	_message_handler(message_handler), _intercom_outgoing(intercom_outgoing),
-	_fsm_state(FSM_ENCRYPTION_DISABLED), _my_id_is_known(false), _prev_millis(0),
+	_my_id_is_known(false), _prev_millis(0),
  	_registry(registry) {
 	_message_handler.register_handler(WHO_IS_REPLY_T_MSG_ID, message_handler_helper, this, true);
-	_message_handler.register_handler(I_AM_REPLY_T_MSG_ID, message_handler_helper, this, false);
+	_message_handler.register_handler(I_AM_REPLY_T_MSG_ID, message_handler_helper, this, true);
 	_message_handler.register_handler(ECHO_REPLY_T_MSG_ID, message_handler_helper, this, true);
 	_message_handler.register_handler(ECHO_REQUEST_T_MSG_ID, message_handler_helper, this, true);
 

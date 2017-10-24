@@ -8,15 +8,15 @@ int PlfRegistry::set(int key, String& value, bool valid, bool persistent) {
 	String old_value;
 	bool old_valid;
 
-	plf_assert("Out of range registry key",key<=VALID_KEY_VAL);
+	plf_assert("Out of range registry key",key<=MAX_KEY_VAL);
 	plf_assert("Out of range registry key",key>=0);
 
 	get(key, old_value, old_valid);
 
+	/*returns a zero terminated string*/
 	value.getBytes(reg_entry.value, sizeof(reg_entry.value));
 	
 	/*zero terminate*/
-	reg_entry.value[sizeof(reg_entry.value)-1] = 0;
 	reg_entry.validKey = valid ? VALID_KEY_VAL : 0;
 
 	_registryShadow[key] = reg_entry;
@@ -39,7 +39,7 @@ int PlfRegistry::set(int key, String& value, bool valid, bool persistent) {
 int PlfRegistry::get(int key, String& value, bool& valid) {
 	RegistryEntry_t *reg_entryp=0;
 
-	plf_assert("Out of range registry key",key<=VALID_KEY_VAL);
+	plf_assert("Out of range registry key",key<=MAX_KEY_VAL);
 	plf_assert("Out of range registry key",key>=0);
 
 	reg_entryp = &_registryShadow[key];
@@ -58,7 +58,7 @@ int PlfRegistry::get(int key, String& value, bool& valid) {
 int PlfRegistry::registerHandler(int key, RegistryHandlerFunType *fun, void* ctxt) {
 	RegHandlerEntry_t *regHandlerEntryp;
 
-	plf_assert("Out of range registry key",key<=VALID_KEY_VAL);
+	plf_assert("Out of range registry key",key<=MAX_KEY_VAL);
 	plf_assert("Out of range registry key",key>=0);
 
 	regHandlerEntryp = &_regHandlers[key];

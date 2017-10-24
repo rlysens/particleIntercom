@@ -21,7 +21,6 @@ struct _i_am_reply_t
 {
     int32_t    id;
     int8_t     name[32];
-    int8_t     key[16];
     int8_t     padding[4];
 };
 

@@ -15,6 +15,7 @@ public:
 	int erase(String name);
 	int enable_printgroup(String name);
 	int disable_printgroup(String name);
+	int set_key(String key_val);
 
 	/*private*/
 	int update_vars(void);

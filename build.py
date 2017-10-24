@@ -1,7 +1,8 @@
 import getopt, sys, subprocess, glob, pdb
+import json
 
 def usage():
-	print "build.py --device Intercom1/Intercom2/all [--flash]"
+	print "build.py --device device_id/all [--flash]"
 
 def build():
 	cpp_files = ' '.join(glob.glob("*.cpp"))
@@ -11,6 +12,7 @@ def build():
 def flash_dev(device):
     cpp_files = ' '.join(glob.glob("*.cpp"))
     h_files = ' '.join(glob.glob("*.h"))
+    print "particle flash %s intercom.ino %s %s"%(device, cpp_files, h_files)
     subprocess.call("particle flash %s intercom.ino %s %s"%(device, cpp_files, h_files), shell=True)
 
 def genMessages():

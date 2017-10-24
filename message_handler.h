@@ -3,6 +3,7 @@
 
 #include "Particle.h"
 #include "message_handler.h"
+#include "plf_registry.h"
 #include "xtea.h"
 
 #define MESSAGE_DATA_LENGTH 508
@@ -34,19 +35,22 @@ private:
 	unsigned char _iv_enc[8];
 	unsigned char _iv_dec[8];
 	uint32_t _source_id;
+	PlfRegistry& _registry;
+	bool _encryption_key_set;
 
-	void _encrypt_msg(Intercom_Message &msg, int payload_size);
-	void _decrypt_msg(Intercom_Message &msg, int payload_size);
+	int _encrypt_msg(Intercom_Message &msg, int payload_size);
+	int _decrypt_msg(Intercom_Message &msg, int payload_size);
 
 public:
-	Message_Handler(int local_port, IPAddress remote_ip_address, int remote_port);
+	Message_Handler(int local_port, IPAddress remote_ip_address, int remote_port,
+		PlfRegistry& registry);
 
 	void set_source_id(uint32_t source_id);
-	void set_encryption_key(uint8_t key[16]);
 	int send(Intercom_Message &msg, uint32_t msg_id, int payload_size, bool encrypted);
 	int receive(void);
 	int register_handler(uint16_t id, MessageHandlerFunType *fun,
 		void *ctxt, bool encrypted);
+	void set_encryption_key(uint8_t key[16]);
 };
 
 #endif /*MESSAGE_HANDLER_H*/

@@ -1,0 +1,1 @@
+scp -r -i amazonec3.pem python/*.json ec2-user@52.26.112.44:/home/ec2-user/python

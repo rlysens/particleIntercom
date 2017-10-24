@@ -27,17 +27,26 @@ import pdb
 import xtea
 import random
 import string
+import json
 
 from messages import *
 
 HOST = ''
 HOST_PORT = 50007
+NAME_KEYS = None
 
 id_counter = 1
 
 intercom_name_to_id_table = {}
 
 intercom_id_to_intercom_table = {}
+
+def trimString(s):
+    zeroPos = s.find('\0')
+    if zeroPos == -1:
+        return s
+    else:
+        return s[:zeroPos]
 
 class Message_Handler:
     def __init__(self, msg_table):
@@ -97,7 +106,7 @@ class Message_Handler:
                 msg_payload = cryptoCodec.decrypt(data[8:])
                 cryptoCodec.IV = data[-8:]
             else:
-                print "Can't decrypt msg_id %d source_id %d"%(msg_id, source_id)
+                print "Can't decrypt msg_id %d source_id %x"%(msg_id, source_id)
         else:
             msg_payload = data[8:]
 
@@ -105,27 +114,20 @@ class Message_Handler:
             try: #A decode failure will trigger a ValueError exception
                 fun(msg_payload, address, self, intercom)
             except ValueError:
-                print "Can't decode msg_id %d source_id %d"%(msg_id, source_id)
+                print "Can't decode msg_id %d source_id %x"%(msg_id, source_id)
 
 class Intercom:
     def __init__(self, name, id, address, msg_handler):
+        global NAME_KEYS
         self.name = name
         self.id = id
         self.address = address
         self.msg_handler = msg_handler
         self.buddy_list = [0,0,0,0]
-        self.key = None
-        self.keyString = None
-        self.encCrypto = None
-        self.decCrypto = None
-
-    def genCryptoKey(self):
-        self.key = [random.SystemRandom().randint(0,127) for _ in range(16)]
-        self.keyString = ''.join([chr(x) for x in self.key])
+        #This could raise an exception
+        self.keyString = NAME_KEYS[trimString(self.name)]
         self.encCrypto = xtea.new(self.keyString, mode=xtea.MODE_CBC, IV="\0"*8)
         self.decCrypto = xtea.new(self.keyString, mode=xtea.MODE_CBC, IV="\0"*8)
-        
-        return self.key
 
     def getEncoderCryptoCodec(self):
         return self.encCrypto
@@ -178,22 +180,29 @@ def msg_i_am_handler(msg_data, address, msg_handler, intercom):
 
     i_am = i_am_t.i_am_t.decode(msg_data)
     i_am.name = ''.join([chr(x) for x in i_am.name])
+
     #Known name or new name?
     if not intercom_name_to_id_table.has_key(i_am.name):
         print "New name %s"%i_am.name
         id = id_counter
         id_counter += 1
         intercom_name_to_id_table[i_am.name] = id
-        intercom_id_to_intercom_table[id] = Intercom(i_am.name, id, address, msg_handler)
+        try:
+            intercom = Intercom(i_am.name, id, address, msg_handler)
+            intercom_id_to_intercom_table[id] = intercom
+        except:
+            print "Could not create Intercom %s. Name not recognized."%(i_am.name)
+            pass
 
     #Send response
     if intercom_name_to_id_table.has_key(i_am.name):
         i_am_reply = i_am_reply_t.i_am_reply_t()
         i_am_reply.id = intercom_name_to_id_table[i_am.name]
         i_am_reply.name = [ord(x) for x in i_am.name]
-        i_am_reply.key = intercom_id_to_intercom_table[i_am_reply.id].genCryptoKey()
         data = i_am_reply.encode()
-        msg_handler.send(data, i_am_reply_t.i_am_reply_t.MSG_ID, address)
+        intercom = intercom_id_to_intercom_table[i_am_reply.id]
+        cryptoCodec = intercom.getEncoderCryptoCodec()
+        msg_handler.send(data, i_am_reply_t.i_am_reply_t.MSG_ID, address, cryptoCodec)
 
 def msg_who_is_handler(msg_data, address, msg_handler, intercom):
     who_is = who_is_t.who_is_t.decode(msg_data)
@@ -234,6 +243,10 @@ except NameError:
     this_file = "intercom_server.py"
 
 def main(argv):
+    global NAME_KEYS
+    nameKeyJsonFile = open('name_key.json','r')
+    NAME_KEYS = json.load(nameKeyJsonFile)
+    nameKeyJsonFile.close()
 
     msg_handler = Message_Handler(MSG_TABLE)
 

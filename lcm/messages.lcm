@@ -19,7 +19,6 @@ struct i_am_reply_t
 	const int32_t MSG_ID=3;
 	int32_t id;
 	int8_t name[32];
-	int8_t key[16];
 	int8_t padding[4];
 }
 

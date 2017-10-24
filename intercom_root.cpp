@@ -3,7 +3,7 @@
 #include "intercom_buttons.h"
 
 Intercom_Root::Intercom_Root(void) :
-	_message_handler(LOCAL_PORT, REMOTE_IP, REMOTE_PORT),
+	_message_handler(LOCAL_PORT, REMOTE_IP, REMOTE_PORT, _plf_registry),
 	_intercom_incoming(_message_handler),
 	_intercom_outgoing(_message_handler),
 	_intercom_controller(_message_handler, _intercom_outgoing, _plf_registry),
