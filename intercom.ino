@@ -7,6 +7,7 @@
 #include "plf_utils.h"
 #include "plf_event_counter.h"
 #include "intercom_buttons.h"
+#include "SparkFunMAX17043.h"
 
 PRODUCT_ID(3891);
 PRODUCT_VERSION(1);
@@ -26,9 +27,7 @@ void setup() {
   /*Only enable default printgroup by default*/
   printGroupEnable(PRNTGRP_DFLT, true);
 
-#if 0
-  while (!recordButtonPressed());
-#endif
+  recordButtonInit();
 
   PLF_PRINT(PRNTGRP_DFLT, "Entered setup()");
   Serial.println(localIP);
@@ -45,6 +44,17 @@ void setup() {
   VS1063PrintState();
 
   Particle.connect();
+
+  // Set up the MAX17043 LiPo fuel gauge:
+  lipo.begin(); // Initialize the MAX17043 LiPo fuel gauge
+
+  // Quick start restarts the MAX17043 in hopes of getting a more accurate
+  // guess for the SOC.
+  lipo.quickStart();
+
+  // We can set an interrupt to alert when the battery SoC gets too low.
+  // We can alert at anywhere between 1% - 32%:
+  lipo.setThreshold(20); // Set alert threshold to 20%.
 
   {
     static Intercom_Root intercom_root;
