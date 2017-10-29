@@ -145,8 +145,7 @@ class Intercom:
             print "sender %d not in buddy list"%(sender_id)
 
     def setBuddy(self, id):
-        if id not in self.buddy_list:
-            self.buddy_list[0] = id
+        self.buddy_list[0] = id
         
 def msg_echo_request_handler(msg_data, address, msg_handler, intercom):
     echo_request = echo_request_t.echo_request_t.decode(msg_data)

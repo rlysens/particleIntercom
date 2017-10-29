@@ -18,6 +18,7 @@ private:
 
 	void _i_am(void);
 	void _whois(void);
+	void _setBuddy(void);
 	int _whois_reply(Intercom_Message &msg, int payload_size);
 	int _i_am_reply(Intercom_Message& msg, int payload_size);
 	void _buddy_listening_led(bool on);

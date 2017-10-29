@@ -62,6 +62,31 @@ void Intercom_Controller::_tx_echo_req(void) {
 	_message_handler.send(intercom_message, ECHO_REQUEST_T_MSG_ID, num_encoded_bytes, true);
 }
 
+void Intercom_Controller::_setBuddy(void) {
+	bool buddy_id_is_known;
+	String buddy_id_s;
+	int buddy_id = 0;
+	int num_encoded_bytes;
+	static set_buddy_t set_buddy;
+
+	plf_assert("My id unknown.", _my_id_is_known);
+
+	_registry.get(REG_KEY_BUDDY_ID, buddy_id_s, buddy_id_is_known);
+
+	if (buddy_id_is_known) {
+		buddy_id = buddy_id_s.toInt();
+	}
+
+	/*Set my buddy server side. Keep in mind that this code runs periodically. So if one message gets lost, no problem.*/
+	set_buddy.my_id = _my_id;
+	set_buddy.buddy_id = buddy_id; /*Note that this is 0 if buddy_id is unknown*/
+
+	num_encoded_bytes = set_buddy_t_encode(intercom_message.data, 0, sizeof(intercom_message.data), &set_buddy);
+	plf_assert("Msg Encode Error", num_encoded_bytes>=0);
+
+	_message_handler.send(intercom_message, SET_BUDDY_T_MSG_ID, num_encoded_bytes, true);
+}
+
 void Intercom_Controller::_whois(void) {
 	int num_encoded_bytes;
 	static who_is_t who_is;
@@ -105,13 +130,10 @@ int Intercom_Controller::_rx_echo_request(Intercom_Message& msg, int payload_siz
 
 int Intercom_Controller::_whois_reply(Intercom_Message& msg, int payload_size) {
 	static who_is_reply_t who_is_reply;
-	static set_buddy_t set_buddy;
 	String buddy_name;
 	String buddy_id_s;
 	int buddy_id_i;
-	bool buddy_id_is_known;
-	bool buddy_name_is_set;
-	int num_encoded_bytes;
+	bool buddy_name_is_set, buddy_id_is_known;
 	int num_decoded_bytes = who_is_reply_t_decode(msg.data, 0, payload_size, &who_is_reply);
 
 	if (num_decoded_bytes < 0)
@@ -133,21 +155,9 @@ int Intercom_Controller::_whois_reply(Intercom_Message& msg, int payload_size) {
 		PLF_PRINT(PRNTGRP_DFLT, "Buddy id received %d\n", (int)who_is_reply.id);
 	}
 
-
 	/*Put a string version of the buddy_id in the registry*/
 	buddy_id_s = String(who_is_reply.id);
 	_registry.set(REG_KEY_BUDDY_ID, buddy_id_s, true /*validity*/, false /*persistency*/);
-
-	if (_my_id_is_known) {
-		/*Set my buddy server side. Keep in mind that this code runs periodically. So if one message gets lost, no problem.*/
-		set_buddy.my_id = _my_id;
-		set_buddy.buddy_id = who_is_reply.id;
-
-		num_encoded_bytes = set_buddy_t_encode(intercom_message.data, 0, sizeof(intercom_message.data), &set_buddy);
-		plf_assert("Msg Encode Error", num_encoded_bytes>=0);
-
-		_message_handler.send(intercom_message, SET_BUDDY_T_MSG_ID, num_encoded_bytes, true);
-	}
 
 	_intercom_outgoing.set_destination_id(who_is_reply.id);
 	return 0;
@@ -232,6 +242,7 @@ void Intercom_Controller::tick(void) {
 
 		_i_am();
 		if (_my_id_is_known) {
+			_setBuddy();
 			_whois();
 			_tx_echo_req();
 		}
