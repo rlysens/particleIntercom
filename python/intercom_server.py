@@ -180,26 +180,39 @@ def msg_i_am_handler(msg_data, address, msg_handler, intercom):
     i_am = i_am_t.i_am_t.decode(msg_data)
     i_am.name = ''.join([chr(x) for x in i_am.name])
 
-    #Known name or new name?
+    createNewIntercom = False
+    id = None
+
     if not intercom_name_to_id_table.has_key(i_am.name):
+        #Not known yet. Add it to name->id table
         print "New name %s"%i_am.name
         id = id_counter
         id_counter += 1
         intercom_name_to_id_table[i_am.name] = id
+        createNewIntercom = True
+    else:
+        id = intercom_name_to_id_table[i_am.name]
+
+    assert id is not None
+
+    if i_am.restarted != 0:
+        #If the intercom indicates it's just been restarted, also create a fresh object
+        createNewIntercom = True
+        
+    if createNewIntercom:
         try:
-            intercom = Intercom(i_am.name, id, address, msg_handler)
-            intercom_id_to_intercom_table[id] = intercom
+            intercom_id_to_intercom_table[id] = Intercom(i_am.name, id, address, msg_handler)
         except:
             print "Could not create Intercom %s. Name not recognized."%(i_am.name)
             pass
 
     #Send response
-    if intercom_name_to_id_table.has_key(i_am.name):
+    intercom = intercom_id_to_intercom_table.get(id)
+    if intercom:
         i_am_reply = i_am_reply_t.i_am_reply_t()
-        i_am_reply.id = intercom_name_to_id_table[i_am.name]
+        i_am_reply.id = id
         i_am_reply.name = [ord(x) for x in i_am.name]
         data = i_am_reply.encode()
-        intercom = intercom_id_to_intercom_table[i_am_reply.id]
         cryptoCodec = intercom.getEncoderCryptoCodec()
         msg_handler.send(data, i_am_reply_t.i_am_reply_t.MSG_ID, address, cryptoCodec)
 

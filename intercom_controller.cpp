@@ -4,6 +4,9 @@
 #define INTERCOM_CONTROLLER_TICK_INTER_MS 2000
 #define BUDDY_LISTENING_LED D7
 
+#define INTERCOM_FSM_STATE_RESTARTED 0
+#define INTERCOM_FSM_STATE_STEADY 1
+
 static Intercom_Message intercom_message;
 
 static int message_handler_helper(Intercom_Message &msg, 
@@ -27,6 +30,8 @@ void Intercom_Controller::_i_am(void) {
 		return;
 
 	my_name.getBytes((unsigned char*)i_am.name, sizeof(i_am.name));
+
+	i_am.restarted = (_fsm_state == INTERCOM_FSM_STATE_RESTARTED) ? 1 : 0;
 
 	num_encoded_bytes = i_am_t_encode(intercom_message.data, 0, sizeof(intercom_message.data), &i_am);
 	plf_assert("Msg Encode Error", num_encoded_bytes>=0);
@@ -196,6 +201,8 @@ int Intercom_Controller::_i_am_reply(Intercom_Message& msg, int payload_size) {
 	_intercom_outgoing.set_source_id(i_am_reply.id);
 	_message_handler.set_source_id(i_am_reply.id);
 
+	_fsm_state = INTERCOM_FSM_STATE_STEADY;
+	
 	return 0;
 }
 
@@ -252,6 +259,7 @@ void Intercom_Controller::tick(void) {
 Intercom_Controller::Intercom_Controller(Message_Handler& message_handler, 
 	Intercom_Outgoing& intercom_outgoing, PlfRegistry &registry) : 
 	_message_handler(message_handler), _intercom_outgoing(intercom_outgoing),
+	_fsm_state(INTERCOM_FSM_STATE_RESTARTED),
 	_my_id_is_known(false), _prev_millis(0),
  	_registry(registry) {
 	_message_handler.register_handler(WHO_IS_REPLY_T_MSG_ID, message_handler_helper, this, true);

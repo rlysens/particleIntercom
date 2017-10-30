@@ -19,7 +19,9 @@ extern "C" {
 typedef struct _i_am_t i_am_t;
 struct _i_am_t
 {
+    int32_t    restarted;
     int8_t     name[32];
+    int8_t     padding[4];
 };
 
 /**

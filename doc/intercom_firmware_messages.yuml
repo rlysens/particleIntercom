@@ -1,7 +1,7 @@
 [Intercom_Message|id;data]^-[voice_data|source_id;destination_id;data_size;data{bg:yellow}],
 [Intercom_Message]^-[echo_request|source_id;destination_id{bg:yellow}],
 [Intercom_Message]^-[echo_reply|source_id;destination_id{bg:yellow}],
-[Intercom_Message]^-[i_am|name{bg:yellow}]
+[Intercom_Message]^-[i_am|name;restarted{bg:yellow}]
 [Intercom_Message]^-[i_am_reply|id;name{bg:yellow}]
 [Intercom_Message]^-[who_is|name{bg:yellow}]
 [Intercom_Message]^-[who_is_reply|id;name{bg:yellow}]

@@ -21,7 +21,9 @@ uint64_t __i_am_t_hash_recursive(const __lcm_hash_ptr *p)
     cp.v = (void*)__i_am_t_get_hash;
     (void) cp;
 
-    uint64_t hash = (uint64_t)0x15224fec212ef02cLL
+    uint64_t hash = (uint64_t)0x302a258f84d1fcdeLL
+         + __int32_t_hash_recursive(&cp)
+         + __int8_t_hash_recursive(&cp)
          + __int8_t_hash_recursive(&cp)
         ;
 
@@ -45,7 +47,13 @@ int __i_am_t_encode_array(void *buf, int offset, int maxlen, const i_am_t *p, in
 
     for (element = 0; element < elements; element++) {
 
+        thislen = __int32_t_encode_array(buf, offset + pos, maxlen - pos, &(p[element].restarted), 1);
+        if (thislen < 0) return thislen; else pos += thislen;
+
         thislen = __int8_t_encode_array(buf, offset + pos, maxlen - pos, p[element].name, 32);
+        if (thislen < 0) return thislen; else pos += thislen;
+
+        thislen = __int8_t_encode_array(buf, offset + pos, maxlen - pos, p[element].padding, 4);
         if (thislen < 0) return thislen; else pos += thislen;
 
     }
@@ -71,7 +79,11 @@ int __i_am_t_encoded_array_size(const i_am_t *p, int elements)
     int size = 0, element;
     for (element = 0; element < elements; element++) {
 
+        size += __int32_t_encoded_array_size(&(p[element].restarted), 1);
+
         size += __int8_t_encoded_array_size(p[element].name, 32);
+
+        size += __int8_t_encoded_array_size(p[element].padding, 4);
 
     }
     return size;
@@ -88,7 +100,13 @@ int __i_am_t_decode_array(const void *buf, int offset, int maxlen, i_am_t *p, in
 
     for (element = 0; element < elements; element++) {
 
+        thislen = __int32_t_decode_array(buf, offset + pos, maxlen - pos, &(p[element].restarted), 1);
+        if (thislen < 0) return thislen; else pos += thislen;
+
         thislen = __int8_t_decode_array(buf, offset + pos, maxlen - pos, p[element].name, 32);
+        if (thislen < 0) return thislen; else pos += thislen;
+
+        thislen = __int8_t_decode_array(buf, offset + pos, maxlen - pos, p[element].padding, 4);
         if (thislen < 0) return thislen; else pos += thislen;
 
     }
@@ -100,7 +118,11 @@ int __i_am_t_decode_array_cleanup(i_am_t *p, int elements)
     int element;
     for (element = 0; element < elements; element++) {
 
+        __int32_t_decode_array_cleanup(&(p[element].restarted), 1);
+
         __int8_t_decode_array_cleanup(p[element].name, 32);
+
+        __int8_t_decode_array_cleanup(p[element].padding, 4);
 
     }
     return 0;
@@ -132,7 +154,11 @@ int __i_am_t_clone_array(const i_am_t *p, i_am_t *q, int elements)
     int element;
     for (element = 0; element < elements; element++) {
 
+        __int32_t_clone_array(&(p[element].restarted), &(q[element].restarted), 1);
+
         __int8_t_clone_array(p[element].name, q[element].name, 32);
+
+        __int8_t_clone_array(p[element].padding, q[element].padding, 4);
 
     }
     return 0;

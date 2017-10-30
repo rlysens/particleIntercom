@@ -11,7 +11,9 @@ struct voice_data_t
 struct i_am_t
 {
 	const int32_t MSG_ID=2;
+	int32_t restarted;
 	int8_t name[32];
+	int8_t padding[4];
 }
 
 struct i_am_reply_t
