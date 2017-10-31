@@ -1,11 +1,15 @@
 #include "intercom_cloud_api.h"
 #include "Particle.h"
 #include "plf_utils.h"
+#include "SparkFunMAX17043.h"
+
+#define INTERCOM_CLOUD_API_TICK_INTER_MS 5000
 
 static String my_name;
 static String buddy_name;
 static String buddy_id;
 static String secret_key;
+static String battery_lvl;
 
 static int registryHandlerHelper(int key, String& value, bool valid, void *ctxt) {
 	Intercom_CloudAPI *intercom_cloud_api = (Intercom_CloudAPI*)ctxt;
@@ -35,9 +39,26 @@ int Intercom_CloudAPI::erase(String name) {
 	return 0;
 }
 
+void Intercom_CloudAPI::tick(void) {
+	unsigned long cur_millis = millis();
+	unsigned long millis_delta;
+
+	if (cur_millis < _prev_millis) {
+		millis_delta = (~0UL) - _prev_millis + cur_millis;
+	}
+	else {
+		millis_delta = cur_millis - _prev_millis;
+	}
+
+	if (millis_delta > INTERCOM_CLOUD_API_TICK_INTER_MS) {
+		_prev_millis = cur_millis;
+		update_vars();
+	}
+}
+
 int Intercom_CloudAPI::update_vars(void) {
 	bool valid;
-	
+
 	_registry.get(REG_KEY_MY_NAME, my_name, valid);
 	if (!valid) {
 		my_name = String();
@@ -57,6 +78,8 @@ int Intercom_CloudAPI::update_vars(void) {
 	if (!valid) {
 		secret_key = String();
 	}
+
+	battery_lvl = String((int)lipo.getSOC());
 
 	return 0;
 }
@@ -110,7 +133,7 @@ int Intercom_CloudAPI::set_key(String key_val) {
   	return 0;
 }
 
-Intercom_CloudAPI::Intercom_CloudAPI(PlfRegistry& registry) : _registry(registry) {
+Intercom_CloudAPI::Intercom_CloudAPI(PlfRegistry& registry) : _registry(registry),_prev_millis(0) {
 	int res;
 	res = Particle.function("my_name", &Intercom_CloudAPI::set_my_name, this);
 	PLF_PRINT(PRNTGRP_DFLT, "Cloud function my_name register result: %d\n", res);
@@ -129,6 +152,7 @@ Intercom_CloudAPI::Intercom_CloudAPI(PlfRegistry& registry) : _registry(registry
 	Particle.variable("buddy_name", buddy_name);
 	Particle.variable("buddy_id", buddy_id);
 	Particle.variable("secret_key", secret_key);
+	Particle.variable("battery_lvl", battery_lvl);
 
 	_registry.registerHandler(REG_KEY_MY_NAME, registryHandlerHelper, this);
 	_registry.registerHandler(REG_KEY_BUDDY_NAME, registryHandlerHelper, this);

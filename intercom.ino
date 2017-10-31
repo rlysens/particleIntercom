@@ -43,8 +43,6 @@ void setup() {
 
   VS1063PrintState();
 
-  Particle.connect();
-
   // Set up the MAX17043 LiPo fuel gauge:
   lipo.begin(); // Initialize the MAX17043 LiPo fuel gauge
 
@@ -55,6 +53,8 @@ void setup() {
   // We can set an interrupt to alert when the battery SoC gets too low.
   // We can alert at anywhere between 1% - 32%:
   lipo.setThreshold(20); // Set alert threshold to 20%.
+
+  Particle.connect();
 
   {
     static Intercom_Root intercom_root;

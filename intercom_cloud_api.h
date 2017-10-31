@@ -6,6 +6,7 @@
 class Intercom_CloudAPI {
 private:
 	PlfRegistry& _registry;
+	unsigned long _prev_millis;
 	
 public:
 	Intercom_CloudAPI(PlfRegistry& registry);
@@ -16,6 +17,8 @@ public:
 	int enable_printgroup(String name);
 	int disable_printgroup(String name);
 	int set_key(String key_val);
+
+	void tick(void);
 
 	/*private*/
 	int update_vars(void);

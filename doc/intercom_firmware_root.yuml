@@ -4,3 +4,4 @@
 [Intercom_Root]-drain>[Intercom_Incoming]
 [Intercom_Root]-transfer>[Intercom_Outgoing]
 [Intercom_Root]-tick>[Intercom_Controller]
+[Intercom_Root]-tick>[Intercom_CloudAPI]

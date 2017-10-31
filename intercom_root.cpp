@@ -25,4 +25,5 @@ void Intercom_Root::loop(void) {
     }
 
     _intercom_controller.tick();
+    _intercom_cloud_api.tick();
 }
