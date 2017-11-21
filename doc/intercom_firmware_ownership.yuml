@@ -6,6 +6,10 @@
 [Intercom_Root]++-1>[Intercom_Outgoing]
 [Intercom_Root]++-1>[Intercom_Controller]
 [Intercom_Root]++-1>[Intercom_CloudAPI{bg:orange}]
+[Intercom_Root]++-1>[IntercomButtonsAndLeds]
+
+[IntercomButtonsAndLeds]++-n>[IntercomLed]
+[IntercomButtonsAndLeds]++-1>[SX1509]
 
 [Intercom_Incoming]++-1>[Plf_Circular_Buffer]
 

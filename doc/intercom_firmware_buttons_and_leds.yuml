@@ -1,0 +1,3 @@
+[IntercomButtonsAndLeds|incVolumeIsPressed();decVolumeIsPressed();buddyButtonIsPressed();getBuddyLed();reset()]++-n>[IntercomLed|analogWrite();blink();breathe();init()]
+[IntercomButtonsAndLeds]++-1>[SX1509]
+[IntercomLed]->[SX1509]

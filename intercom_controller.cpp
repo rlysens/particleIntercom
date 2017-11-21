@@ -137,7 +137,6 @@ int Intercom_Controller::_whois_reply(Intercom_Message& msg, int payload_size) {
 	static who_is_reply_t who_is_reply;
 	String buddy_name;
 	String buddy_id_s;
-	int buddy_id_i;
 	bool buddy_name_is_set, buddy_id_is_known;
 	int num_decoded_bytes = who_is_reply_t_decode(msg.data, 0, payload_size, &who_is_reply);
 

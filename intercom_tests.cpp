@@ -8,7 +8,6 @@
 #include "plf_utils.h"
 #include "plf_registry.h"
 #include "intercom_cloud_api.h"
-#include "intercom_buttons.h"
 
 #if 0
 #include "platform.h"

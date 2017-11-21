@@ -60,7 +60,6 @@ MAX17043::MAX17043()
 
 uint8_t MAX17043::begin()
 {
-  Wire.begin();
   return 1;
 }
 

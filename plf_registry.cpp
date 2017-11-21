@@ -122,8 +122,6 @@ PlfRegistry::PlfRegistry() : _live(false) {
 	/*Read persistent copy of registry into the shadow copy*/
 
 	for (key=0; key<=MAX_KEY_VAL; key++) {
-		RegistryEntry_t reg_entry;
-
 		EEPROM.get(key*sizeof(RegistryEntry_t), _registryShadow[key]);
 	}
 }

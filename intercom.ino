@@ -6,8 +6,8 @@
 #include "intercom_root.h"
 #include "plf_utils.h"
 #include "plf_event_counter.h"
-#include "intercom_buttons.h"
 #include "SparkFunMAX17043.h"
+#include "SparkFunSX1509.h"
 
 PRODUCT_ID(3891);
 PRODUCT_VERSION(1);
@@ -27,7 +27,8 @@ void setup() {
   /*Only enable default printgroup by default*/
   printGroupEnable(PRNTGRP_DFLT, true);
 
-  recordButtonInit();
+  // Begin I2C
+  Wire.begin();
 
   PLF_PRINT(PRNTGRP_DFLT, "Entered setup()");
   Serial.println(localIP);

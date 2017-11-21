@@ -7,6 +7,7 @@
 #include "intercom_controller.h"
 #include "plf_registry.h"
 #include "intercom_cloud_api.h"
+#include "intercom_buttons_and_leds.h"
 
 #define LOCAL_PORT 50007
 #define REMOTE_PORT 50007
@@ -20,6 +21,8 @@ private:
 	Intercom_Outgoing _intercom_outgoing;
 	Intercom_Controller _intercom_controller;
 	Intercom_CloudAPI _intercom_cloud_api;
+	IntercomButtonsAndLeds _intercomButtonsAndLeds;
+	
 public:
 	Intercom_Root(void);
 

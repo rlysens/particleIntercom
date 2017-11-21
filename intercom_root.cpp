@@ -1,6 +1,5 @@
 #include "intercom_root.h"
 #include "plf_utils.h"
-#include "intercom_buttons.h"
 
 Intercom_Root::Intercom_Root(void) :
 	_message_handler(LOCAL_PORT, REMOTE_IP, REMOTE_PORT, _plf_registry),
@@ -14,13 +13,14 @@ Intercom_Root::Intercom_Root(void) :
 
 void Intercom_Root::loop(void) {
 	int res = _message_handler.receive();
+
     if (res != 0) {
       PLF_PRINT(PRNTGRP_DFLT, "msg_hdlr rx code %d\n", res);
     }	
 
     _intercom_incoming.drain();
 
-    if (recordButtonPressed()) {
+    if (_intercomButtonsAndLeds.buddyButtonIsPressed(BUDDY_0_IDX)) {
     	_intercom_outgoing.transfer();
     }
 

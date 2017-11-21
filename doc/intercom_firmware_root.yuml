@@ -5,3 +5,4 @@
 [Intercom_Root]-transfer>[Intercom_Outgoing]
 [Intercom_Root]-tick>[Intercom_Controller]
 [Intercom_Root]-tick>[Intercom_CloudAPI]
+[Intercom_Root]-buddyButtonIsPressed>[IntercomButtonsAndLeds]
