@@ -9,6 +9,7 @@ int PlfRegistry::set(int key, String& value, bool valid, bool persistent) {
 	bool old_valid;
 
 	plf_assert("Out of range registry key",key<=MAX_KEY_VAL);
+	plf_assert("Out of range registry key",(key<=MAX_PERSISTENT_KEY_VAL)||(!persistent));
 	plf_assert("Out of range registry key",key>=0);
 
 	get(key, old_value, old_valid);
@@ -22,7 +23,7 @@ int PlfRegistry::set(int key, String& value, bool valid, bool persistent) {
 	_registryShadow[key] = reg_entry;
 
 	/*(Possibly) put into persistent memory and invoke handler for this key if there's a change*/
-	if ( _live &&
+	if (_live &&
 		((old_valid != valid) || (!old_value.equals(value))) &&
 		(_regHandlers[key].fun!=0)) {
 		if (persistent) {
@@ -63,6 +64,8 @@ int PlfRegistry::registerHandler(int key, RegistryHandlerFunType *fun, void* ctx
 
 	regHandlerEntryp = &_regHandlers[key];
 
+	plf_assert("Too many handlers", regHandlerEntryp->top_index<MAX_NUM_FUNS_PER_KEY);
+	
 	regHandlerEntryp->fun[regHandlerEntryp->top_index] = fun;
 	regHandlerEntryp->ctxt[regHandlerEntryp->top_index] = ctxt;
 	++(regHandlerEntryp->top_index);
@@ -118,10 +121,11 @@ PlfRegistry::PlfRegistry() : _live(false) {
 	int key;
 
 	memset(_regHandlers, 0, sizeof(_regHandlers));
+	memset(_registryShadow, 0, sizeof(_registryShadow));
 
 	/*Read persistent copy of registry into the shadow copy*/
 
-	for (key=0; key<=MAX_KEY_VAL; key++) {
+	for (key=0; key<=MAX_PERSISTENT_KEY_VAL; key++) {
 		EEPROM.get(key*sizeof(RegistryEntry_t), _registryShadow[key]);
 	}
 }

@@ -2,6 +2,7 @@
 #define PLF_EVENT_COUNTER_H
 
 #include "Particle.h"
+#include "plf_utils.h"
 
 #define PLF_EVENT_COUNTER_PERIOD (10000)
 

@@ -53,10 +53,15 @@ def manuf_config(skipClaim, skipFlash, imageFilename):
 
 		name, keyString = nameKeys[port]
 		buddyName, buddyKeyString = nameKeys[otherPort]
-		print "Setting name, key and buddy..."
+		print "Erasing..."
+
+		particleCloud.call_function(particleId, "erase", "")
+		time.sleep(5)
+
+		print "Setting name (%s), key (%s) and buddy (%s)..."%(name, keyString, buddyName)
 		particleCloud.call_function(particleId, "my_name", name)
 		particleCloud.call_function(particleId, "set_key", keyString)
-		particleCloud.call_function(particleId, "buddy_name", buddyName)
+		particleCloud.call_function(particleId, "buddy_0_name", buddyName)
 		if not skipClaim:
 			print "Unclaiming device..."
 			particleCloud.unclaim_device(particleId)

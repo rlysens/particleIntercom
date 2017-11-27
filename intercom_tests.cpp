@@ -1,6 +1,7 @@
+#if 0
+
 #include "intercom_tests.h"
 #include "message_handler.h"
-#include "intercom_outgoing.h"
 #include "intercom_incoming.h"
 #include "intercom_controller.h"
 #include "vs1063a_codec.h"
@@ -9,11 +10,9 @@
 #include "plf_registry.h"
 #include "intercom_cloud_api.h"
 
-#if 0
 #include "platform.h"
 #include "platform_peripheral.h"
 #include "plf_utils.h"
-#endif
 
 /*RL port complete*/
 void test1(void) {
@@ -96,7 +95,6 @@ void test7(void) {
     }
 }
 
-#if 0
 void test9(void)
 {
     VS1063RecordInit();

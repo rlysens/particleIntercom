@@ -2,6 +2,8 @@
 #include "plf_utils.h"
 #include "plf_event_counter.h"
 
+Intercom_Message intercom_message; /*Shared by all message_handler users*/
+
 static int registryHandlerHelper(int key, String& value, bool valid, void *ctxt) {
   Message_Handler *msg_handlerp = (Message_Handler*)ctxt;
 
@@ -50,6 +52,10 @@ int Message_Handler::_decrypt_msg(Intercom_Message &msg, int payload_size) {
       _iv_dec,
       msg.data,
       msg.data);
+
+    if (result!=0) {
+      PLF_PRINT(PRNTGRP_MSGS, "Decrypt failed, res=%d.\n", result);
+    }
   }
   else {
     PLF_PRINT(PRNTGRP_MSGS, "Encryption key not set.\n");
@@ -58,8 +64,12 @@ int Message_Handler::_decrypt_msg(Intercom_Message &msg, int payload_size) {
   return result;
 }
 
-void Message_Handler::set_source_id(uint32_t source_id) {
-  _source_id = source_id;
+void Message_Handler::setMyId(uint32_t my_id) {
+  _my_id = my_id;
+}
+
+uint32_t Message_Handler::getMyId(void) {
+  return _my_id;
 }
 
 int Message_Handler::send(Intercom_Message &msg, uint32_t msg_id, int payload_size, bool encrypted) {
@@ -67,7 +77,7 @@ int Message_Handler::send(Intercom_Message &msg, uint32_t msg_id, int payload_si
   PLF_PRINT(PRNTGRP_MSGS, "Tx Msg %d\n", (int)msg_id);
 
   msg.msg_id = msg_id;
-  msg.source_id = _source_id;
+  msg.source_id = _my_id;
 
 #if 0
   {
@@ -102,6 +112,8 @@ int Message_Handler::receive(void) {
 	static Intercom_Message msg;
   int rx_data_length = _udp.receivePacket((uint8_t*)&msg, sizeof(msg));
   int payload_size;
+  MessageHandlerTableElement *msgEntryp = &_msgTable[msg.msg_id];
+  int ii;
 
   if (rx_data_length < 8)
     return 0;
@@ -111,18 +123,22 @@ int Message_Handler::receive(void) {
 
   payload_size = rx_data_length - 8;
 
-  if (_msgTable[msg.msg_id].fun == 0) {
-  	return -1;
-  }
+  if (msgEntryp->top_index==0)
+    return -100; /*No handlers for this message*/
 
-  if (_msgTable[msg.msg_id].encrypted) {
+  if (msgEntryp->encrypted) {
     if (_decrypt_msg(msg, payload_size) != 0) {
-      return -2;
+      return -101;
     }
   }
 
-  /*Dispatch*/
-  return _msgTable[msg.msg_id].fun(msg, payload_size, _msgTable[msg.msg_id].ctxt);
+  for (ii=0; ii<msgEntryp->top_index; ++ii) {
+    if (msgEntryp->fun[ii]) {
+  	  msgEntryp->fun[ii](msg, payload_size, msgEntryp->ctxt[ii]);
+    }
+  }
+
+  return 0;
 }
 
 int Message_Handler::register_handler(uint16_t id, 
@@ -130,9 +146,14 @@ int Message_Handler::register_handler(uint16_t id,
 
 	plf_assert("Msg ID too large", id <= MAX_MESSAGE_ID);
 
-	_msgTable[id].fun = fun;
-	_msgTable[id].ctxt = ctxt;
-  _msgTable[id].encrypted = encrypted;
+  MessageHandlerTableElement *msgEntryp = &_msgTable[id];
+
+  plf_assert("Too many handlers", msgEntryp->top_index<MAX_NUM_FUNS_PER_MSG);
+
+	msgEntryp->fun[msgEntryp->top_index] = fun;
+	msgEntryp->ctxt[msgEntryp->top_index] = ctxt;
+  msgEntryp->encrypted = encrypted;
+  ++(msgEntryp->top_index);
 
   return 0;
 }
@@ -140,7 +161,7 @@ int Message_Handler::register_handler(uint16_t id,
 Message_Handler::Message_Handler(int local_port, 
 	IPAddress remote_ip_address, int remote_port, PlfRegistry& registry) : 
 	_remote_ip_address(remote_ip_address),
-	_remote_port(remote_port), _msgTable(), _source_id(~0UL), _registry(registry),
+	_remote_port(remote_port), _msgTable(), _my_id(ID_UNKNOWN), _registry(registry),
   _encryption_key_set(false) {
 
 	if (!_udp.setBuffer(sizeof(Intercom_Message))) {

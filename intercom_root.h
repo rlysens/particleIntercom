@@ -2,12 +2,13 @@
 #define INTERCOM_ROOT_H
 
 #include "message_handler.h"
-#include "intercom_outgoing.h"
 #include "intercom_incoming.h"
 #include "intercom_controller.h"
+#include "intercom_buddy.h"
 #include "plf_registry.h"
 #include "intercom_cloud_api.h"
 #include "intercom_buttons_and_leds.h"
+#include "intercom_outgoing.h"
 
 #define LOCAL_PORT 50007
 #define REMOTE_PORT 50007
@@ -22,7 +23,8 @@ private:
 	Intercom_Controller _intercom_controller;
 	Intercom_CloudAPI _intercom_cloud_api;
 	IntercomButtonsAndLeds _intercomButtonsAndLeds;
-	
+	IntercomBuddy _intercom_buddies[NUM_BUDDIES];
+
 public:
 	Intercom_Root(void);
 

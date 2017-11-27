@@ -34,6 +34,7 @@ from messages import *
 HOST = ''
 HOST_PORT = 50007
 NAME_KEYS = None
+MAX_NUM_BUDDIES = 3
 
 id_counter = 1
 
@@ -123,7 +124,8 @@ class Intercom:
         self.id = id
         self.address = address
         self.msg_handler = msg_handler
-        self.buddy_list = [0,0,0,0]
+        self.buddy_list = [0,0,0]
+        self.next_buddy_idx = 0
         #This could raise an exception
         self.keyString = NAME_KEYS[trimString(self.name)]
         self.encCrypto = xtea.new(self.keyString, mode=xtea.MODE_CBC, IV="\0"*8)
@@ -145,7 +147,11 @@ class Intercom:
             print "sender %d not in buddy list"%(sender_id)
 
     def setBuddy(self, id):
-        self.buddy_list[0] = id
+        if (id not in self.buddy_list):
+            self.buddy_list[self.next_buddy_idx] = id
+            self.next_buddy_idx += 1
+            if self.next_buddy_idx >= 3:
+                self.next_buddy_idx =0 
         
 def msg_echo_request_handler(msg_data, address, msg_handler, intercom):
     echo_request = echo_request_t.echo_request_t.decode(msg_data)

@@ -7,6 +7,7 @@ import string
 import shutil
 
 NAME_KEYS_FILENAME = 'name_key.json'
+MAX_NAME_LEN = 19
 
 class NameKeyGenerator:
 	def __init__(self):
@@ -31,7 +32,7 @@ class NameKeyGenerator:
 			#load generator data from language file
 			generator = NameGen('./namegen/Languages/' + languageFilename)
 			candidate = generator.gen_word()
-			if not self.nameKeys.has_key(candidate):
+			if (len(candidate)<=MAX_NAME_LEN) and (not self.nameKeys.has_key(candidate)):
 				name = candidate
 
 		keyString = ''.join([self.rnd.choice(string.ascii_letters+string.digits) for _ in range(16)])

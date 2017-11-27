@@ -6,8 +6,12 @@
 #define INTERCOM_CLOUD_API_TICK_INTER_MS 5000
 
 static String my_name;
-static String buddy_name;
-static String buddy_id;
+static String buddy_0_name;
+static String buddy_0_id;
+static String buddy_1_name;
+static String buddy_1_id;
+static String buddy_2_name;
+static String buddy_2_id;
 static String secret_key;
 static String battery_lvl;
 
@@ -26,11 +30,27 @@ int Intercom_CloudAPI::set_my_name(String name) {
   	return 0;
 }
 
-int Intercom_CloudAPI::set_buddy_name(String name) {
+int Intercom_CloudAPI::set_buddy_0_name(String name) {
 	String dummy_id = "-1";
 	/*Erase buddy_id when setting a new name*/
-	_registry.set(REG_KEY_BUDDY_ID, dummy_id, false /*validity*/, false /*persistency*/);
-	_registry.set(REG_KEY_BUDDY_NAME, name, true /*validity*/, true /*persistency*/);
+	_registry.set(REG_KEY_BUDDY_0_ID, dummy_id, false /*validity*/, false /*persistency*/);
+	_registry.set(REG_KEY_BUDDY_0_NAME, name, true /*validity*/, true /*persistency*/);
+	return 0;
+}
+
+int Intercom_CloudAPI::set_buddy_1_name(String name) {
+	String dummy_id = "-1";
+	/*Erase buddy_id when setting a new name*/
+	_registry.set(REG_KEY_BUDDY_1_ID, dummy_id, false /*validity*/, false /*persistency*/);
+	_registry.set(REG_KEY_BUDDY_1_NAME, name, true /*validity*/, true /*persistency*/);
+	return 0;
+}
+
+int Intercom_CloudAPI::set_buddy_2_name(String name) {
+	String dummy_id = "-1";
+	/*Erase buddy_id when setting a new name*/
+	_registry.set(REG_KEY_BUDDY_2_ID, dummy_id, false /*validity*/, false /*persistency*/);
+	_registry.set(REG_KEY_BUDDY_2_NAME, name, true /*validity*/, true /*persistency*/);
 	return 0;
 }
 
@@ -64,14 +84,34 @@ int Intercom_CloudAPI::update_vars(void) {
 		my_name = String();
 	}
 
-	_registry.get(REG_KEY_BUDDY_NAME, buddy_name, valid);
+	_registry.get(REG_KEY_BUDDY_0_NAME, buddy_0_name, valid);
 	if (!valid) {
-		buddy_name = String();
+		buddy_0_name = String();
 	}
 
-	_registry.get(REG_KEY_BUDDY_ID, buddy_id, valid);
+	_registry.get(REG_KEY_BUDDY_0_ID, buddy_0_id, valid);
 	if (!valid) {
-		buddy_id = String();
+		buddy_0_id = String();
+	}
+
+	_registry.get(REG_KEY_BUDDY_1_NAME, buddy_1_name, valid);
+	if (!valid) {
+		buddy_1_name = String();
+	}
+
+	_registry.get(REG_KEY_BUDDY_1_ID, buddy_1_id, valid);
+	if (!valid) {
+		buddy_1_id = String();
+	}
+
+	_registry.get(REG_KEY_BUDDY_2_NAME, buddy_2_name, valid);
+	if (!valid) {
+		buddy_2_name = String();
+	}
+
+	_registry.get(REG_KEY_BUDDY_2_ID, buddy_2_id, valid);
+	if (!valid) {
+		buddy_2_id = String();
 	}
 
 	_registry.get(REG_KEY_SECRET_KEY, secret_key, valid);
@@ -137,8 +177,12 @@ Intercom_CloudAPI::Intercom_CloudAPI(PlfRegistry& registry) : _registry(registry
 	int res;
 	res = Particle.function("my_name", &Intercom_CloudAPI::set_my_name, this);
 	PLF_PRINT(PRNTGRP_DFLT, "Cloud function my_name register result: %d\n", res);
-	res = Particle.function("buddy_name", &Intercom_CloudAPI::set_buddy_name, this);
-	PLF_PRINT(PRNTGRP_DFLT, "Cloud function buddy_name register result: %d\n", res);
+	res = Particle.function("buddy_0_name", &Intercom_CloudAPI::set_buddy_0_name, this);
+	PLF_PRINT(PRNTGRP_DFLT, "Cloud function buddy_0_name register result: %d\n", res);
+	res = Particle.function("buddy_1_name", &Intercom_CloudAPI::set_buddy_1_name, this);
+	PLF_PRINT(PRNTGRP_DFLT, "Cloud function buddy_1_name register result: %d\n", res);
+	res = Particle.function("buddy_2_name", &Intercom_CloudAPI::set_buddy_2_name, this);
+	PLF_PRINT(PRNTGRP_DFLT, "Cloud function buddy_2_name register result: %d\n", res);
 	res = Particle.function("erase", &Intercom_CloudAPI::erase, this);
 	PLF_PRINT(PRNTGRP_DFLT, "Cloud function erase register result: %d\n", res);
 	res = Particle.function("en_prntgrp", &Intercom_CloudAPI::enable_printgroup, this);
@@ -149,14 +193,22 @@ Intercom_CloudAPI::Intercom_CloudAPI(PlfRegistry& registry) : _registry(registry
 	PLF_PRINT(PRNTGRP_DFLT, "Cloud function key register result: %d\n", res);
 
 	Particle.variable("my_name", my_name);
-	Particle.variable("buddy_name", buddy_name);
-	Particle.variable("buddy_id", buddy_id);
+	Particle.variable("buddy_0_name", buddy_0_name);
+	Particle.variable("buddy_0_id", buddy_0_id);
+	Particle.variable("buddy_1_name", buddy_1_name);
+	Particle.variable("buddy_1_id", buddy_1_id);
+	Particle.variable("buddy_2_name", buddy_2_name);
+	Particle.variable("buddy_2_id", buddy_2_id);
 	Particle.variable("secret_key", secret_key);
 	Particle.variable("battery_lvl", battery_lvl);
 
 	_registry.registerHandler(REG_KEY_MY_NAME, registryHandlerHelper, this);
-	_registry.registerHandler(REG_KEY_BUDDY_NAME, registryHandlerHelper, this);
-	_registry.registerHandler(REG_KEY_BUDDY_ID, registryHandlerHelper, this);
+	_registry.registerHandler(REG_KEY_BUDDY_0_NAME, registryHandlerHelper, this);
+	_registry.registerHandler(REG_KEY_BUDDY_0_ID, registryHandlerHelper, this);
+	_registry.registerHandler(REG_KEY_BUDDY_1_NAME, registryHandlerHelper, this);
+	_registry.registerHandler(REG_KEY_BUDDY_1_ID, registryHandlerHelper, this);
+	_registry.registerHandler(REG_KEY_BUDDY_2_NAME, registryHandlerHelper, this);
+	_registry.registerHandler(REG_KEY_BUDDY_2_ID, registryHandlerHelper, this);
 	_registry.registerHandler(REG_KEY_SECRET_KEY, registryHandlerHelper, this);
 }
 

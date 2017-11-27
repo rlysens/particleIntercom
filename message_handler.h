@@ -2,13 +2,13 @@
 #define MESSAGE_HANDLER_H
 
 #include "Particle.h"
-#include "message_handler.h"
 #include "plf_registry.h"
 #include "xtea.h"
 
 #define MESSAGE_DATA_LENGTH 508
 #define MAX_MESSAGE_ID 255
-
+#define ID_UNKNOWN (~0UL)
+#define MAX_NUM_FUNS_PER_MSG 8
 typedef struct {
 	uint32_t msg_id;
 	uint32_t source_id;
@@ -16,12 +16,15 @@ typedef struct {
 
 } Intercom_Message;
 
+extern Intercom_Message intercom_message;
+
 typedef int (MessageHandlerFunType)(Intercom_Message &msg, 
 	int payload_size, void *ctxt);
 
 typedef struct {
-	MessageHandlerFunType *fun;
-	void *ctxt;
+	MessageHandlerFunType *fun[MAX_NUM_FUNS_PER_MSG];
+	int top_index;
+	void *ctxt[MAX_NUM_FUNS_PER_MSG];
 	bool encrypted;
 } MessageHandlerTableElement;
 
@@ -34,7 +37,7 @@ private:
 	mbedtls_xtea_context _xtea_ctxt;
 	unsigned char _iv_enc[8];
 	unsigned char _iv_dec[8];
-	uint32_t _source_id;
+	uint32_t _my_id;
 	PlfRegistry& _registry;
 	bool _encryption_key_set;
 
@@ -45,7 +48,9 @@ public:
 	Message_Handler(int local_port, IPAddress remote_ip_address, int remote_port,
 		PlfRegistry& registry);
 
-	void set_source_id(uint32_t source_id);
+	void setMyId(uint32_t my_id);
+	uint32_t getMyId(void); /*Returns ID_UNKNOWN if unknown*/
+
 	int send(Intercom_Message &msg, uint32_t msg_id, int payload_size, bool encrypted);
 	int receive(void);
 	int register_handler(uint16_t id, MessageHandlerFunType *fun,

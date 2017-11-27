@@ -1,4 +1,4 @@
-[Message_Handler|send();receive();register_handler()]++-1>[UDP]
+[Message_Handler|setMyId();send();receive();register_handler()]++-1>[UDP]
 [Message_Handler]-.->[Intercom_Message]
 [Message_Handler]-register_handler\n(SECRET_KEY)>[Plf_Registry]
 

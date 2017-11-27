@@ -1,6 +1,5 @@
 
-[Intercom_Controller|tick()]send(I_AM WHO_IS DEL_BUDDY ADD_BUDDY ECHO_REQUEST ECHO_REPLY)\nregisterHandler(WHO_IS_REPLY I_AM_REPLY ECHO_REQUEST ECHO_REPLY)->[Message_Handler]
-[Intercom_Controller]-set_source_id\nset_destination_id>[Intercom_Outgoing]
-[Intercom_Controller]-registerHandler\n(MY_NAME BUDDY_NAME)>[Plf_Registry]
+[Intercom_Controller|tick()]send(I_AM ECHO_REPLY);registerHandler(I_AM_REPLY ECHO_REQUEST);setMyId()->[Message_Handler]
+[Intercom_Controller]-get(MY_NAME)>[Plf_Registry]
 [Intercom_Controller]-.->[Intercom_Message]
 

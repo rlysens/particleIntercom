@@ -7,13 +7,11 @@
 #define BUDDY_1_IDX 1
 #define BUDDY_2_IDX 2
 
-#define NUM_BUDDIES 3
-
 #define NUM_LEDS 3
 
 class IntercomLed {
 private:
-	SX1509* _io;
+	SX1509* _iop;
 	byte _pin;
 
 public:

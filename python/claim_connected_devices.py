@@ -53,7 +53,7 @@ def claimConnectedDevices():
 			credentials['particle_username'],
 			credentials['particle_password'])
 		
-	for ii in range(2):
+	for ii in range(len(serialPorts)):
 		port = serialPorts[ii]
 		otherPort = serialPorts[(ii+1)%2]
 		print "Identifying device..."

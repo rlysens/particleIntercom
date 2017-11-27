@@ -1,13 +1,11 @@
 #include "intercom_controller.h"
 #include "messages.h"
+#include "plf_utils.h"
 
 #define INTERCOM_CONTROLLER_TICK_INTER_MS 2000
-#define BUDDY_LISTENING_LED D7
 
-#define INTERCOM_FSM_STATE_RESTARTED 0
-#define INTERCOM_FSM_STATE_STEADY 1
-
-static Intercom_Message intercom_message;
+#define INTERCOM_CONTROLLER_FSM_STATE_RESTARTED 0
+#define INTERCOM_CONTROLLER_FSM_STATE_STEADY 1
 
 static int message_handler_helper(Intercom_Message &msg, 
   int payload_size, void *ctxt) {
@@ -20,7 +18,6 @@ static int message_handler_helper(Intercom_Message &msg,
 
 void Intercom_Controller::_i_am(void) {
 	int num_encoded_bytes;
-	static Intercom_Message intercom_message;
 	static i_am_t i_am;
 	bool my_name_is_set;
 	String my_name;
@@ -31,7 +28,7 @@ void Intercom_Controller::_i_am(void) {
 
 	my_name.getBytes((unsigned char*)i_am.name, sizeof(i_am.name));
 
-	i_am.restarted = (_fsm_state == INTERCOM_FSM_STATE_RESTARTED) ? 1 : 0;
+	i_am.restarted = (_fsm_state == INTERCOM_CONTROLLER_FSM_STATE_RESTARTED) ? 1 : 0;
 
 	num_encoded_bytes = i_am_t_encode(intercom_message.data, 0, sizeof(intercom_message.data), &i_am);
 	plf_assert("Msg Encode Error", num_encoded_bytes>=0);
@@ -39,90 +36,20 @@ void Intercom_Controller::_i_am(void) {
 	_message_handler.send(intercom_message, I_AM_T_MSG_ID, num_encoded_bytes, false);
 }
 
-void Intercom_Controller::_buddy_listening_led(bool on) {
-	digitalWrite(BUDDY_LISTENING_LED, on ? HIGH : LOW); 
-}
-
-void Intercom_Controller::_tx_echo_req(void) {
-	int num_encoded_bytes;
-	static echo_request_t echo_request;
-	bool buddy_id_is_set;
-	String buddy_id_s;
-
-	_buddy_listening_led(false); /*led off. Echo response will turn it back on.*/
-
-	if (!_my_id_is_known)
-		return;
-
-	_registry.get(REG_KEY_BUDDY_ID, buddy_id_s, buddy_id_is_set);
-	if (!buddy_id_is_set)	
-		return;
-
-	echo_request.source_id = _my_id;
-	echo_request.destination_id = buddy_id_s.toInt();
-
-	num_encoded_bytes = echo_request_t_encode(intercom_message.data, 0, sizeof(intercom_message.data), &echo_request);
-	plf_assert("Msg Encode Error", num_encoded_bytes>=0);
-
-	_message_handler.send(intercom_message, ECHO_REQUEST_T_MSG_ID, num_encoded_bytes, true);
-}
-
-void Intercom_Controller::_setBuddy(void) {
-	bool buddy_id_is_known;
-	String buddy_id_s;
-	int buddy_id = 0;
-	int num_encoded_bytes;
-	static set_buddy_t set_buddy;
-
-	plf_assert("My id unknown.", _my_id_is_known);
-
-	_registry.get(REG_KEY_BUDDY_ID, buddy_id_s, buddy_id_is_known);
-
-	if (buddy_id_is_known) {
-		buddy_id = buddy_id_s.toInt();
-	}
-
-	/*Set my buddy server side. Keep in mind that this code runs periodically. So if one message gets lost, no problem.*/
-	set_buddy.my_id = _my_id;
-	set_buddy.buddy_id = buddy_id; /*Note that this is 0 if buddy_id is unknown*/
-
-	num_encoded_bytes = set_buddy_t_encode(intercom_message.data, 0, sizeof(intercom_message.data), &set_buddy);
-	plf_assert("Msg Encode Error", num_encoded_bytes>=0);
-
-	_message_handler.send(intercom_message, SET_BUDDY_T_MSG_ID, num_encoded_bytes, true);
-}
-
-void Intercom_Controller::_whois(void) {
-	int num_encoded_bytes;
-	static who_is_t who_is;
-	String buddy_name;
-	bool buddy_name_is_set;
-
-	_registry.get(REG_KEY_BUDDY_NAME, buddy_name, buddy_name_is_set);
-	if (!buddy_name_is_set)
-		return;
-
-	buddy_name.getBytes((unsigned char*)who_is.name, sizeof(who_is.name));
-
-	num_encoded_bytes = who_is_t_encode(intercom_message.data, 0, sizeof(intercom_message.data), &who_is);
-	plf_assert("Msg Encode Error", num_encoded_bytes>=0);
-
-	_message_handler.send(intercom_message, WHO_IS_T_MSG_ID, num_encoded_bytes, true);
-}
-
 int Intercom_Controller::_rx_echo_request(Intercom_Message& msg, int payload_size) {
 	static echo_request_t echo_request;
 	static echo_reply_t echo_reply;
 	int num_encoded_bytes;
 	int num_decoded_bytes = echo_request_t_decode(msg.data, 0, payload_size, &echo_request);
+	uint32_t my_id = _message_handler.getMyId();
 
 	if (num_decoded_bytes < 0)
 		return -1;
 
-	if (!_my_id_is_known)
+	if (my_id==ID_UNKNOWN)
 		return -1;
 
-	echo_reply.source_id = _my_id;
+	echo_reply.source_id = my_id;
 	echo_reply.destination_id = echo_request.source_id;
 
 	num_encoded_bytes = echo_reply_t_encode(intercom_message.data, 0, sizeof(intercom_message.data), &echo_reply);
@@ -130,40 +57,6 @@ int Intercom_Controller::_rx_echo_request(Intercom_Message& msg, int payload_siz
 
 	_message_handler.send(intercom_message, ECHO_REPLY_T_MSG_ID, num_encoded_bytes, true);
 
-	return 0;
-}
-
-int Intercom_Controller::_whois_reply(Intercom_Message& msg, int payload_size) {
-	static who_is_reply_t who_is_reply;
-	String buddy_name;
-	String buddy_id_s;
-	bool buddy_name_is_set, buddy_id_is_known;
-	int num_decoded_bytes = who_is_reply_t_decode(msg.data, 0, payload_size, &who_is_reply);
-
-	if (num_decoded_bytes < 0)
-		return -1;
-
-	_registry.get(REG_KEY_BUDDY_NAME, buddy_name, buddy_name_is_set);
-	if (!buddy_name_is_set)
-		return -2;
-
-	/*zero terminate*/
-	who_is_reply.name[sizeof(who_is_reply.name)-1] = 0;
-
-	if (!String((const char*)who_is_reply.name).equals(buddy_name))
-		return -3;
-
-	_registry.get(REG_KEY_BUDDY_ID, buddy_id_s, buddy_id_is_known);
-
-	if (!buddy_id_is_known) {
-		PLF_PRINT(PRNTGRP_DFLT, "Buddy id received %d\n", (int)who_is_reply.id);
-	}
-
-	/*Put a string version of the buddy_id in the registry*/
-	buddy_id_s = String(who_is_reply.id);
-	_registry.set(REG_KEY_BUDDY_ID, buddy_id_s, true /*validity*/, false /*persistency*/);
-
-	_intercom_outgoing.set_destination_id(who_is_reply.id);
 	return 0;
 }
 
@@ -190,37 +83,22 @@ int Intercom_Controller::_i_am_reply(Intercom_Message& msg, int payload_size) {
 		return -12;
 	}
 
-	if (!_my_id_is_known) {
+	if (_message_handler.getMyId()==ID_UNKNOWN) {
 		PLF_PRINT(PRNTGRP_DFLT, "My id received %d\n", (int)i_am_reply.id);
 	}
 
-	_my_id_is_known = true;
-	_my_id = i_am_reply.id;
+	_message_handler.setMyId(i_am_reply.id);
 
-	_intercom_outgoing.set_source_id(i_am_reply.id);
-	_message_handler.set_source_id(i_am_reply.id);
-
-	_fsm_state = INTERCOM_FSM_STATE_STEADY;
+	_fsm_state = INTERCOM_CONTROLLER_FSM_STATE_STEADY;
 	
-	return 0;
-}
-
-int Intercom_Controller::_echo_reply(Intercom_Message& msg, int payload_size) {
-	_buddy_listening_led(true); /*Turn LED on*/
-
 	return 0;
 }
 
 int Intercom_Controller::handle_message(Intercom_Message& msg, int payload_size) {
 	switch (msg.msg_id) {
-    case WHO_IS_REPLY_T_MSG_ID:
-    	return _whois_reply(msg, payload_size);
 
     case I_AM_REPLY_T_MSG_ID:
     	return _i_am_reply(msg, payload_size);
-
-    case ECHO_REPLY_T_MSG_ID:
-    	return _echo_reply(msg, payload_size);
 
     case ECHO_REQUEST_T_MSG_ID:
     	return _rx_echo_request(msg, payload_size);
@@ -247,24 +125,13 @@ void Intercom_Controller::tick(void) {
 		_prev_millis = cur_millis;
 
 		_i_am();
-		if (_my_id_is_known) {
-			_setBuddy();
-			_whois();
-			_tx_echo_req();
-		}
 	}
 }
 
-Intercom_Controller::Intercom_Controller(Message_Handler& message_handler, 
-	Intercom_Outgoing& intercom_outgoing, PlfRegistry &registry) : 
-	_message_handler(message_handler), _intercom_outgoing(intercom_outgoing),
-	_fsm_state(INTERCOM_FSM_STATE_RESTARTED),
-	_my_id_is_known(false), _prev_millis(0),
+Intercom_Controller::Intercom_Controller(Message_Handler& message_handler, PlfRegistry &registry) : 
+	_message_handler(message_handler),
+	_fsm_state(INTERCOM_CONTROLLER_FSM_STATE_RESTARTED), _prev_millis(0),
  	_registry(registry) {
-	_message_handler.register_handler(WHO_IS_REPLY_T_MSG_ID, message_handler_helper, this, true);
 	_message_handler.register_handler(I_AM_REPLY_T_MSG_ID, message_handler_helper, this, true);
-	_message_handler.register_handler(ECHO_REPLY_T_MSG_ID, message_handler_helper, this, true);
 	_message_handler.register_handler(ECHO_REQUEST_T_MSG_ID, message_handler_helper, this, true);
-
-	pinMode(BUDDY_LISTENING_LED, OUTPUT);
 }

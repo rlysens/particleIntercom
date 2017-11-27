@@ -5,6 +5,7 @@
 [Intercom_Root]++-1>[Intercom_Incoming]
 [Intercom_Root]++-1>[Intercom_Outgoing]
 [Intercom_Root]++-1>[Intercom_Controller]
+[Intercom_Root]++-3>[Intercom_Buddy]
 [Intercom_Root]++-1>[Intercom_CloudAPI{bg:orange}]
 [Intercom_Root]++-1>[IntercomButtonsAndLeds]
 
