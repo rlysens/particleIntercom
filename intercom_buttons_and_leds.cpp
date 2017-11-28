@@ -1,23 +1,6 @@
 #include "intercom_buttons_and_leds.h"
-
 #include <Particle.h>
 #include "plf_utils.h"
-#include "intercom_buddy.h"
-
-// SX1509 I2C address (set by ADDR1 and ADDR0 (00 by default):
-#define SX1509_ADDRESS 0x3E  // SX1509 I2C address
-#define SX1509_RESET_PIN D0
-
-#define BUDDY_0_LED 4
-#define BUDDY_1_LED 5
-#define BUDDY_2_LED 6
-
-#define BUDDY_0_BUTTON 1
-#define BUDDY_1_BUTTON 2
-#define BUDDY_2_BUTTON 3
-
-#define VOL_DEC_BUTTON 8
-#define VOL_INC_BUTTON 9
 
 Intercom_Led::Intercom_Led() : _iop(0), _pin(255) {
 }

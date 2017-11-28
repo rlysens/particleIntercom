@@ -1,13 +1,12 @@
 #ifndef INTERCOM_BUTTONS_AND_LEDS_H
 #define INTERCOM_BUTTONS_AND_LEDS_H
 
+#include "board.h"
 #include "SparkFunSX1509.h" // Include SX1509 library
 
 #define BUDDY_0_IDX 0
 #define BUDDY_1_IDX 1
 #define BUDDY_2_IDX 2
-
-#define NUM_LEDS 3
 
 class Intercom_Led {
 private:

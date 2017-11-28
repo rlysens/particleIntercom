@@ -6,8 +6,7 @@
 #include "plf_registry.h"
 #include "intercom_buttons_and_leds.h"
 #include "intercom_outgoing.h"
-
-#define NUM_BUDDIES 3
+#include "board.h"
 
 class Intercom_Buddy {
 private:

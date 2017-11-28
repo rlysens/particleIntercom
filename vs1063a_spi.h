@@ -2,11 +2,7 @@
 #define VS1063A_SPI_H
 
 #include "Particle.h"
-
-#define INTERCOM_CODEC_XRESET A1
-#define INTERCOM_CODEC_XCS DAC
-#define INTERCOM_CODEC_XDCS A2
-#define INTERCOM_CODEC_DREQ A0
+#include "board.h"
 
 void WriteSci(uint8_t addr, uint16_t data);
 uint16_t ReadSci(uint8_t addr);
