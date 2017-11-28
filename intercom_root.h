@@ -1,7 +1,7 @@
 #ifndef INTERCOM_ROOT_H
 #define INTERCOM_ROOT_H
 
-#include "message_handler.h"
+#include "intercom_message_handler.h"
 #include "intercom_incoming.h"
 #include "intercom_controller.h"
 #include "intercom_buddy.h"
@@ -17,13 +17,13 @@
 class Intercom_Root {
 private:
 	PlfRegistry _plf_registry;
-	Message_Handler _message_handler;
+	Intercom_MessageHandler _messageHandler;
 	Intercom_Incoming _intercom_incoming;
 	Intercom_Outgoing _intercom_outgoing;
 	Intercom_Controller _intercom_controller;
 	Intercom_CloudAPI _intercom_cloud_api;
-	IntercomButtonsAndLeds _intercomButtonsAndLeds;
-	IntercomBuddy _intercom_buddies[NUM_BUDDIES];
+	Intercom_ButtonsAndLeds _intercom_buttonsAndLeds;
+	Intercom_Buddy _intercom_buddies[NUM_BUDDIES];
 
 public:
 	Intercom_Root(void);

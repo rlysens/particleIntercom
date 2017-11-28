@@ -1,5 +1,5 @@
 
-[Intercom_Controller|tick()]send(I_AM ECHO_REPLY);registerHandler(I_AM_REPLY ECHO_REQUEST);setMyId()->[Message_Handler]
+[Intercom_Controller|tick()]send(I_AM ECHO_REPLY);registerHandler(I_AM_REPLY ECHO_REQUEST);setMyId()->[Intercom_MessageHandler]
 [Intercom_Controller]-get(MY_NAME)>[Plf_Registry]
 [Intercom_Controller]-.->[Intercom_Message]
 

@@ -6,7 +6,7 @@
 
 EventTuple_t plfEventArray[PLF_EVENT_LAST];
 
-void plf_event_counter_tick(void) {
+void plf_eventCounterTick(void) {
     int eventIndex;
     static int counter=0;
     static unsigned long prevMillis=0;

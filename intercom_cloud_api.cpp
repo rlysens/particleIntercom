@@ -16,11 +16,11 @@ static String secret_key;
 static String battery_lvl;
 
 static int registryHandlerHelper(int key, String& value, bool valid, void *ctxt) {
-	Intercom_CloudAPI *intercom_cloud_api = (Intercom_CloudAPI*)ctxt;
+	Intercom_CloudAPI *intercom_cloudApi = (Intercom_CloudAPI*)ctxt;
 
-	plf_assert("icom_cloud_api NULL ptr", intercom_cloud_api);
+	plf_assert("icom_cloud_api NULL ptr", intercom_cloudApi);
 
-	intercom_cloud_api->update_vars();
+	intercom_cloudApi->updateVars();
 
 	return 0;
 }
@@ -31,25 +31,25 @@ int Intercom_CloudAPI::set_my_name(String name) {
 }
 
 int Intercom_CloudAPI::set_buddy_0_name(String name) {
-	String dummy_id = "-1";
+	String dummyId = "-1";
 	/*Erase buddy_id when setting a new name*/
-	_registry.set(REG_KEY_BUDDY_0_ID, dummy_id, false /*validity*/, false /*persistency*/);
+	_registry.set(REG_KEY_BUDDY_0_ID, dummyId, false /*validity*/, false /*persistency*/);
 	_registry.set(REG_KEY_BUDDY_0_NAME, name, true /*validity*/, true /*persistency*/);
 	return 0;
 }
 
 int Intercom_CloudAPI::set_buddy_1_name(String name) {
-	String dummy_id = "-1";
+	String dummyId = "-1";
 	/*Erase buddy_id when setting a new name*/
-	_registry.set(REG_KEY_BUDDY_1_ID, dummy_id, false /*validity*/, false /*persistency*/);
+	_registry.set(REG_KEY_BUDDY_1_ID, dummyId, false /*validity*/, false /*persistency*/);
 	_registry.set(REG_KEY_BUDDY_1_NAME, name, true /*validity*/, true /*persistency*/);
 	return 0;
 }
 
 int Intercom_CloudAPI::set_buddy_2_name(String name) {
-	String dummy_id = "-1";
+	String dummyId = "-1";
 	/*Erase buddy_id when setting a new name*/
-	_registry.set(REG_KEY_BUDDY_2_ID, dummy_id, false /*validity*/, false /*persistency*/);
+	_registry.set(REG_KEY_BUDDY_2_ID, dummyId, false /*validity*/, false /*persistency*/);
 	_registry.set(REG_KEY_BUDDY_2_NAME, name, true /*validity*/, true /*persistency*/);
 	return 0;
 }
@@ -60,23 +60,23 @@ int Intercom_CloudAPI::erase(String name) {
 }
 
 void Intercom_CloudAPI::tick(void) {
-	unsigned long cur_millis = millis();
-	unsigned long millis_delta;
+	unsigned long curMillis = millis();
+	unsigned long millisDelta;
 
-	if (cur_millis < _prev_millis) {
-		millis_delta = (~0UL) - _prev_millis + cur_millis;
+	if (curMillis < _prevMillis) {
+		millisDelta = (~0UL) - _prevMillis + curMillis;
 	}
 	else {
-		millis_delta = cur_millis - _prev_millis;
+		millisDelta = curMillis - _prevMillis;
 	}
 
-	if (millis_delta > INTERCOM_CLOUD_API_TICK_INTER_MS) {
-		_prev_millis = cur_millis;
-		update_vars();
+	if (millisDelta > INTERCOM_CLOUD_API_TICK_INTER_MS) {
+		_prevMillis = curMillis;
+		updateVars();
 	}
 }
 
-int Intercom_CloudAPI::update_vars(void) {
+int Intercom_CloudAPI::updateVars(void) {
 	bool valid;
 
 	_registry.get(REG_KEY_MY_NAME, my_name, valid);
@@ -125,45 +125,45 @@ int Intercom_CloudAPI::update_vars(void) {
 }
 
 int Intercom_CloudAPI::enable_printgroup(String name) {
-	int print_group;
+	int printgroup;
 
 	if (name.startsWith(String("default"))) {
-		print_group = PRNTGRP_DFLT;
+		printgroup = PRNTGRP_DFLT;
 	}
 	else if (name.startsWith(String("stats"))) {
-		print_group = PRNTGRP_STATS;
+		printgroup = PRNTGRP_STATS;
 	}
 	else if (name.startsWith(String("messages"))) {
-		print_group = PRNTGRP_MSGS;
+		printgroup = PRNTGRP_MSGS;
 	}
 	else {
-		PLF_PRINT(PRNTGRP_DFLT, "print_group fail\n");
+		PLF_PRINT(PRNTGRP_DFLT, "printgroup fail\n");
 		return -1;
 	}
 
-	printGroupEnable(print_group, true);
+	printGroupEnable(printgroup, true);
 
 	return 0;
 }
 
 int Intercom_CloudAPI::disable_printgroup(String name) {
-	int print_group;
+	int printgroup;
 
 	if (name.startsWith(String("default"))) {
-		print_group = PRNTGRP_DFLT;
+		printgroup = PRNTGRP_DFLT;
 	}
 	else if (name.startsWith(String("stats"))) {
-		print_group = PRNTGRP_STATS;
+		printgroup = PRNTGRP_STATS;
 	}
 	else if (name.startsWith(String("messages"))) {
-		print_group = PRNTGRP_MSGS;
+		printgroup = PRNTGRP_MSGS;
 	}
 	else {
-		PLF_PRINT(PRNTGRP_DFLT, "print_group fail\n");
+		PLF_PRINT(PRNTGRP_DFLT, "printgroup fail\n");
 		return -1;
 	}
 
-	printGroupEnable(print_group, false);
+	printGroupEnable(printgroup, false);
 
 	return 0;
 }
@@ -173,7 +173,7 @@ int Intercom_CloudAPI::set_key(String key_val) {
   	return 0;
 }
 
-Intercom_CloudAPI::Intercom_CloudAPI(PlfRegistry& registry) : _registry(registry),_prev_millis(0) {
+Intercom_CloudAPI::Intercom_CloudAPI(PlfRegistry& registry) : _registry(registry),_prevMillis(0) {
 	int res;
 	res = Particle.function("my_name", &Intercom_CloudAPI::set_my_name, this);
 	PLF_PRINT(PRNTGRP_DFLT, "Cloud function my_name register result: %d\n", res);

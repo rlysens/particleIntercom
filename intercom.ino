@@ -20,7 +20,7 @@ SYSTEM_MODE(SEMI_AUTOMATIC);
 
 void setup() {
   IPAddress localIP = WiFi.localIP();
-  String myID = System.deviceID();
+  String deviceID = System.deviceID();
 
   System.set(SYSTEM_CONFIG_SOFTAP_PREFIX, "Photon");
 
@@ -34,7 +34,7 @@ void setup() {
   Serial.println(localIP);
 
   // Prints out the device ID over Serial
-  Serial.println(myID);
+  Serial.println(deviceID);
 
   VS1063InitHardware();
   VS1063InitSoftware();
@@ -57,11 +57,9 @@ void setup() {
 
   Particle.connect();
 
-  {
-    static Intercom_Root intercom_root;
+  static Intercom_Root intercom_root;
 
-    intercom_rootp = &intercom_root;
-  }
+  intercom_rootp = &intercom_root;
 
   PLF_PRINT(PRNTGRP_DFLT, "Starting loop, exiting setup()");
 }
@@ -71,5 +69,5 @@ void loop() {
     intercom_rootp->loop();
   }
   
-  plf_event_counter_tick();
+  plf_eventCounterTick();
 }

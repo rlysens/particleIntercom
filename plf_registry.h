@@ -29,7 +29,7 @@ typedef int (RegistryHandlerFunType)(int key, String& value, bool valid, void *c
 typedef struct RegHandlerEntry_t {
 	RegistryHandlerFunType *fun[MAX_NUM_FUNS_PER_KEY];
 	void *ctxt[MAX_NUM_FUNS_PER_KEY];
-	int top_index;
+	int topIndex;
 } RegHandlerEntry_t;
 
 class PlfRegistry {

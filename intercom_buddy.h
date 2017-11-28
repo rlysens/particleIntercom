@@ -2,48 +2,48 @@
 #define INTERCOM_BUDDY_H
 
 #include "Particle.h"
-#include "message_handler.h"
+#include "intercom_message_handler.h"
 #include "plf_registry.h"
 #include "intercom_buttons_and_leds.h"
 #include "intercom_outgoing.h"
 
 #define NUM_BUDDIES 3
 
-class IntercomBuddy {
+class Intercom_Buddy {
 private:
 	Intercom_Outgoing *_intercom_outgoingp;
-	Message_Handler* _message_handlerp;
+	Intercom_MessageHandler* _messageHandlerp;
 	PlfRegistry* _registryp;
-	IntercomButtonsAndLeds* _intercomButtonsAndLedsp;
-	IntercomLed* _buddyLedp;
+	Intercom_ButtonsAndLeds* _intercom_buttonsAndLedsp;
+	Intercom_Led* _buddyLedp;
 
 	int _buddyIdx;
 	uint32_t _buddyId;
-	int32_t _fsm_state;
-	int32_t _echo_reply_acc;
-	unsigned long _prev_millis;
+	int32_t _fsmState;
+	int32_t _echoReplyAcc;
+	unsigned long _prevMillis;
 	bool _initialized;
 
 	void _txSetBuddy(void);
 	void _txEchoReq(void);
-	int _rxEchoRep(Intercom_Message& msg, int payload_size);
+	int _rxEchoRep(Intercom_Message& msg, int payloadSize);
 	void _txWhoIsReq(void);
-	int _rxWhoIsRep(Intercom_Message& msg, int payload_size);
+	int _rxWhoIsRep(Intercom_Message& msg, int payloadSize);
 	void _fsm(void);
 	
 
 public:
-	IntercomBuddy();
+	Intercom_Buddy();
 
-	void init(Intercom_Outgoing *intercom_outgoingp, Message_Handler* message_handlerp, 
-		PlfRegistry *registryp, IntercomButtonsAndLeds* intercomButtonsAndLedsp, int buddyIndex);
+	void init(Intercom_Outgoing *intercom_outgoingp, Intercom_MessageHandler* messageHandlerp, 
+		PlfRegistry *registryp, Intercom_ButtonsAndLeds* intercom_buttonsAndLedsp, int buddyIndex);
 
 	void tick(void);
 
 	bool checkButtonAndSend(void);
 
 	/*private*/
-	int handle_message(Intercom_Message &msg, int payload_size);
+	int handleMessage(Intercom_Message &msg, int payloadSize);
 };
 
 #endif /*INTERCOM_BUDDY_H*/

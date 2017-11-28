@@ -50,6 +50,6 @@ enum EventIds {
 
 #define PLF_COUNT_MIN_INIT(eventId) do {plfEventArray[eventId].initVal = 0x7fffffff; plfEventArray[eventId].eventCount = plfEventArray[eventId].initVal;} while (0)
 
-void plf_event_counter_tick(void);
+void plf_eventCounterTick(void);
 
 #endif /*PLF_EVENT_COUNTER_H*/

@@ -1,8 +1,8 @@
 
-[Intercom_Buddy|init();tick();checkButtonAndSend()]send(WHO_IS ECHO_REQUEST SET_BUDDY);registerHandler(WHO_IS_REPLY ECHO_REPLY)->[Message_Handler]
+[Intercom_Buddy|init();tick();checkButtonAndSend()]send(WHO_IS ECHO_REQUEST SET_BUDDY);registerHandler(WHO_IS_REPLY ECHO_REPLY)->[Intercom_MessageHandler]
 [Intercom_Buddy]-get(BUDDY_X_NAME);set(BUDDY_X_ID)>[Plf_Registry]
-[Intercom_Buddy]-getBuddyLed();buddyButtonIsPressed()>[IntercomButtonsAndLeds]
-[Intercom_Buddy]-breathe();analogWrite()>[IntercomLed]
+[Intercom_Buddy]-getBuddyLed();buddyButtonIsPressed()>[Intercom_ButtonsAndLeds]
+[Intercom_Buddy]-breathe();analogWrite()>[Intercom_Led]
 [Intercom_Buddy]-transfer()>[IntercomOutgoing]
 [Intercom_Buddy]-.->[Intercom_Message]
 

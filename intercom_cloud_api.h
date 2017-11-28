@@ -6,7 +6,7 @@
 class Intercom_CloudAPI {
 private:
 	PlfRegistry& _registry;
-	unsigned long _prev_millis;
+	unsigned long _prevMillis;
 	
 public:
 	Intercom_CloudAPI(PlfRegistry& registry);
@@ -23,7 +23,7 @@ public:
 	void tick(void);
 
 	/*private*/
-	int update_vars(void);
+	int updateVars(void);
 };
 
 #endif /*INTERCOM_CLOUD_API_H*/

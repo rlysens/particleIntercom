@@ -2,22 +2,22 @@
 #include "plf_utils.h"
 
 Intercom_Root::Intercom_Root(void) :
-	_message_handler(LOCAL_PORT, REMOTE_IP, REMOTE_PORT, _plf_registry),
-	_intercom_incoming(_message_handler),
-    _intercom_outgoing(_message_handler),
-	_intercom_controller(_message_handler, _plf_registry),
+	_messageHandler(LOCAL_PORT, REMOTE_IP, REMOTE_PORT, _plf_registry),
+	_intercom_incoming(_messageHandler),
+    _intercom_outgoing(_messageHandler),
+	_intercom_controller(_messageHandler, _plf_registry),
 	_intercom_cloud_api(_plf_registry) {
     int ii;
 
     for (ii=0; ii<NUM_BUDDIES; ++ii) {
-        _intercom_buddies[ii].init(&_intercom_outgoing, &_message_handler, &_plf_registry, &_intercomButtonsAndLeds, ii);
+        _intercom_buddies[ii].init(&_intercom_outgoing, &_messageHandler, &_plf_registry, &_intercom_buttonsAndLeds, ii);
     }
 
 	_plf_registry.go();
 }
 
 void Intercom_Root::loop(void) {
-	int res = _message_handler.receive();
+	int res = _messageHandler.receive();
     int ii;
 
     if (res != 0) {

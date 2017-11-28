@@ -2,14 +2,14 @@
 #define INTERCOM_OUTGOING_H
 
 #include "Particle.h"
-#include "message_handler.h"
+#include "intercom_message_handler.h"
 
 class Intercom_Outgoing {
 private:
-	Message_Handler& _message_handler;
+	Intercom_MessageHandler& _messageHandler;
 
 public:
-	Intercom_Outgoing(Message_Handler& message_handler);
+	Intercom_Outgoing(Intercom_MessageHandler& messageHandler);
 
 	void transfer(uint32_t buddyId);
 };

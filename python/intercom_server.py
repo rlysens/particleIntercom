@@ -49,7 +49,7 @@ def trimString(s):
     else:
         return s[:zeroPos]
 
-class Message_Handler:
+class Intercom_MessageHandler:
     def __init__(self, msg_table):
         self._sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self._sock.bind((HOST, HOST_PORT))
@@ -266,7 +266,7 @@ def main(argv):
     NAME_KEYS = json.load(nameKeyJsonFile)
     nameKeyJsonFile.close()
 
-    msg_handler = Message_Handler(MSG_TABLE)
+    msg_handler = Intercom_MessageHandler(MSG_TABLE)
 
     print "Entering receive loop."
     while True:

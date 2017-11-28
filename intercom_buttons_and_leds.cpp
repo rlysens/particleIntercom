@@ -19,32 +19,32 @@
 #define VOL_DEC_BUTTON 8
 #define VOL_INC_BUTTON 9
 
-IntercomLed::IntercomLed() : _iop(0), _pin(255) {
+Intercom_Led::Intercom_Led() : _iop(0), _pin(255) {
 }
 
-void IntercomLed::init(SX1509& io, byte pin) {
+void Intercom_Led::init(SX1509& io, byte pin) {
 	_iop = &io;
 	_pin = pin;
 	_iop->ledDriverInit(pin);
 }
 
-void IntercomLed::analogWrite(byte iOn) {
-	plf_assert("IntercomLed io=0", _iop);
+void Intercom_Led::analogWrite(byte iOn) {
+	plf_assert("Intercom_Led io=0", _iop);
 	_iop->analogWrite(_pin, iOn);
 }
 
-void IntercomLed::blink(unsigned long tOn, unsigned long tOff, byte onIntensity, byte offIntensity) {
-	plf_assert("IntercomLed io=0", _iop);
+void Intercom_Led::blink(unsigned long tOn, unsigned long tOff, byte onIntensity, byte offIntensity) {
+	plf_assert("Intercom_Led io=0", _iop);
 	_iop->blink(_pin, tOn, tOff, onIntensity, offIntensity);
 }
 
-void IntercomLed::breathe(unsigned long tOn, unsigned long tOff, unsigned long rise, unsigned long fall, 
+void Intercom_Led::breathe(unsigned long tOn, unsigned long tOff, unsigned long rise, unsigned long fall, 
 		byte onInt, byte offInt) {
-	plf_assert("IntercomLed io=0", _iop);
+	plf_assert("Intercom_Led io=0", _iop);
 	_iop->breathe(_pin, tOn, tOff, rise, fall, onInt, offInt);
 }
 
-IntercomButtonsAndLeds::IntercomButtonsAndLeds() {
+Intercom_ButtonsAndLeds::Intercom_ButtonsAndLeds() {
 	byte result;
 
 	result = _io.begin(SX1509_ADDRESS, SX1509_RESET_PIN);
@@ -64,25 +64,25 @@ IntercomButtonsAndLeds::IntercomButtonsAndLeds() {
 	_io.debounceTime(32 /*ms*/);
 }
 
-void IntercomButtonsAndLeds::reset(void) {
+void Intercom_ButtonsAndLeds::reset(void) {
 	_io.reset(true /*hardware*/);
 }
 
-bool IntercomButtonsAndLeds::incVolumeButtonIsPressed(void) {
+bool Intercom_ButtonsAndLeds::incVolumeButtonIsPressed(void) {
 	return _io.digitalRead(VOL_INC_BUTTON) == LOW;
 }
 
-bool IntercomButtonsAndLeds::decVolumeButtonIsPressed(void) {
+bool Intercom_ButtonsAndLeds::decVolumeButtonIsPressed(void) {
 	return _io.digitalRead(VOL_DEC_BUTTON) == LOW;
 }
 
-bool IntercomButtonsAndLeds::buddyButtonIsPressed(int buddyIndex) {
+bool Intercom_ButtonsAndLeds::buddyButtonIsPressed(int buddyIndex) {
 	plf_assert("buddyButtonIsPressed out of range", buddyIndex < NUM_BUDDIES);
 	static const byte pin[NUM_BUDDIES] = {BUDDY_0_BUTTON, BUDDY_1_BUTTON, BUDDY_2_BUTTON};
 	return _io.digitalRead(pin[buddyIndex]) == LOW;
 }
 
-IntercomLed& IntercomButtonsAndLeds::getBuddyLed(int buddyIndex) {
+Intercom_Led& Intercom_ButtonsAndLeds::getBuddyLed(int buddyIndex) {
 	plf_assert("getBuddyLed out of range", buddyIndex < NUM_BUDDIES);
 	return _leds[buddyIndex];	
 }

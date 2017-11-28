@@ -1,7 +1,7 @@
 #if 0
 
 #include "intercom_tests.h"
-#include "message_handler.h"
+#include "intercom_message_handler.h"
 #include "intercom_incoming.h"
 #include "intercom_controller.h"
 #include "vs1063a_codec.h"

@@ -3,13 +3,7 @@
 #include "vs1063a_codec.h"
 #include "plf_utils.h"
 #include "plf_event_counter.h"
-#include "plf_circular_buffer.h"
 #include "messages.h"
-
-#define CIRCULAR_BUFFER_SIZE (8192*2)
-
-static uint8_t circularBuffer[CIRCULAR_BUFFER_SIZE];
-static PlfCircularBuf_t circularBufCtxt;
 
 #define BUFFER_NEARLY_EMPTY (CIRCULAR_BUFFER_SIZE/8)
 #define BUFFER_HALF (CIRCULAR_BUFFER_SIZE/2)
@@ -18,57 +12,58 @@ static PlfCircularBuf_t circularBufCtxt;
 #define DRAIN_STATE_FILL 0
 #define DRAIN_STATE_DRAIN 1
 
-static int message_handler_helper(Intercom_Message &msg, 
-  int payload_size, void *ctxt) {
+static int messageHandlerHelper(Intercom_Message &msg, 
+  int payloadSize, void *ctxt) {
   Intercom_Incoming *intercom_incomingp = (Intercom_Incoming*)ctxt;
 
   plf_assert("NULL ctxt ptr", intercom_incomingp);
 
-  return intercom_incomingp->handle_message(msg, payload_size);
+  return intercom_incomingp->handleMessage(msg, payloadSize);
 }
 
-int Intercom_Incoming::handle_message(Intercom_Message &msg, int payload_size) {
+int Intercom_Incoming::handleMessage(Intercom_Message &msg, int payloadSize) {
   
   switch (msg.msg_id) {
     case VOICE_DATA_T_MSG_ID:
     {
       static voice_data_t voice_data;
-      int num_decoded_msg_bytes = voice_data_t_decode(msg.data, 0, payload_size, &voice_data);
+      int numDecodedMsgBytes = voice_data_t_decode(msg.data, 0, payloadSize, &voice_data);
 
-      if (num_decoded_msg_bytes < 0)
+      if (numDecodedMsgBytes < 0) {
         return -2;
+      }
 
       return _receive(voice_data.data, voice_data.data_size);
     }
 
     default:
-    return -1;
+      return -1;
   }
 
   return 0;
 }
 
 void Intercom_Incoming::drain(void) {
-  int numBytesBuffered = plf_circular_buf_used_space(&circularBufCtxt);
+  int numBytesBuffered = _circularBuf.usedSpace();
   uint8_t *decoderData;
   int numBytesForCodec, decoderAvlSpace;
-  static int drain_state = DRAIN_STATE_FILL;
+  static int drainState = DRAIN_STATE_FILL;
   static int discardNextByte=0;
 
   PLF_COUNT_MAX(CIRCULAR_BUF_MAX, numBytesBuffered);
   PLF_COUNT_MIN(CIRCULAR_BUF_MIN, numBytesBuffered);
 
-  if ((drain_state == DRAIN_STATE_FILL) && (numBytesBuffered >= BUFFER_NEARLY_FULL)) {
-    drain_state = DRAIN_STATE_DRAIN;
+  if ((drainState == DRAIN_STATE_FILL) && (numBytesBuffered >= BUFFER_NEARLY_FULL)) {
+    drainState = DRAIN_STATE_DRAIN;
   }
 
-  else if ((drain_state == DRAIN_STATE_DRAIN) && (numBytesBuffered < BUFFER_NEARLY_EMPTY)) {
-    drain_state = DRAIN_STATE_FILL;
+  else if ((drainState == DRAIN_STATE_DRAIN) && (numBytesBuffered < BUFFER_NEARLY_EMPTY)) {
+    drainState = DRAIN_STATE_FILL;
   }
 
   PLF_COUNT_VAL(DECODER_UNDERFLOW, VS1063aAudioBufferUnderflow());
 
-  if (drain_state == DRAIN_STATE_FILL) {
+  if (drainState == DRAIN_STATE_FILL) {
     static uint8_t zeroBuf[64]={0};
 
     decoderAvlSpace = VS1063aStreamBufferFreeBytes();
@@ -76,64 +71,62 @@ void Intercom_Incoming::drain(void) {
     VS1063PlayBuf(zeroBuf, numBytesForCodec);
   }
 
-  if (drain_state == DRAIN_STATE_DRAIN) {
+  if (drainState == DRAIN_STATE_DRAIN) {
     decoderAvlSpace = VS1063aStreamBufferFreeBytes();
-    numBytesBuffered = plf_circular_buf_used_space(&circularBufCtxt);
+    numBytesBuffered = _circularBuf.usedSpace();
     numBytesForCodec = MIN(decoderAvlSpace, numBytesBuffered);
 
     if (numBytesForCodec && discardNextByte) {
-      plf_circular_buf_read_start(&circularBufCtxt, &decoderData, 1);
-      plf_circular_buf_read_release(&circularBufCtxt, 1);
+      _circularBuf.readStart(&decoderData, 1);
+      _circularBuf.readRelease(1);
       discardNextByte = 0;
     }
 
-    numBytesBuffered = plf_circular_buf_used_space(&circularBufCtxt);
+    numBytesBuffered = _circularBuf.usedSpace();
     numBytesForCodec = MIN(decoderAvlSpace, numBytesBuffered);
-    numBytesForCodec = plf_circular_buf_read_start(&circularBufCtxt, &decoderData, numBytesForCodec);
+    numBytesForCodec = _circularBuf.readStart(&decoderData, numBytesForCodec);
 
     if (numBytesForCodec) {
       if ((numBytesForCodec&1)==0) {
         VS1063PlayBuf(decoderData, numBytesForCodec);
       }
-          else { /*uneven number of bytes, make it even for decoder*/
-      VS1063PlayBuf(decoderData, numBytesForCodec&0x7ffffffe);
-            /*discard next byte too to fall back into even alignment*/
-      discardNextByte=1;
+      else { /*uneven number of bytes, make it even for decoder*/
+        VS1063PlayBuf(decoderData, numBytesForCodec&0x7ffffffe);
+        /*discard next byte too to fall back into even alignment*/
+        discardNextByte=1;
+      }
+
+      _circularBuf.readRelease(numBytesForCodec);
+
+      PLF_COUNT_VAL(BYTES_SENT_TO_DECODER, numBytesForCodec);
+      PLF_COUNT_MAX(BYTES_SENT_TO_DECODER_MAX, numBytesForCodec);
+      PLF_COUNT_MIN(BYTES_SENT_TO_DECODER_MIN, numBytesForCodec);
     }
-
-    plf_circular_buf_read_release(&circularBufCtxt, numBytesForCodec);
-
-    PLF_COUNT_VAL(BYTES_SENT_TO_DECODER, numBytesForCodec);
-    PLF_COUNT_MAX(BYTES_SENT_TO_DECODER_MAX, numBytesForCodec);
-    PLF_COUNT_MIN(BYTES_SENT_TO_DECODER_MIN, numBytesForCodec);
   }
 }
-}
 
-int Intercom_Incoming::_receive(int8_t *rx_data, int rx_data_length)
+int Intercom_Incoming::_receive(int8_t *rxData, int rxDataLength)
 {
-  int free_space;
+  int freeSpace;
 
-  if (rx_data_length > 0) {
-    free_space = plf_circular_buf_free_space(&circularBufCtxt);
-    if (free_space < rx_data_length) {
+  if (rxDataLength > 0) {
+    freeSpace = _circularBuf.freeSpace();
+    if (freeSpace < rxDataLength) {
       PLF_COUNT_EVENT(CIRCULAR_BUF_OFL);
     }
     else {
-      plf_circular_buf_write(&circularBufCtxt, (uint8_t*)rx_data, rx_data_length);
+      _circularBuf.write((uint8_t*)rxData, rxDataLength);
     }
   }
 
   return 0;
 }
 
-Intercom_Incoming::Intercom_Incoming(Message_Handler& message_handler) :
-_message_handler(message_handler) {
-
-  plf_circular_buf_init(&circularBufCtxt, circularBuffer, CIRCULAR_BUFFER_SIZE);
+Intercom_Incoming::Intercom_Incoming(Intercom_MessageHandler& messageHandler) :
+  _circularBuf(_circularBuffer, CIRCULAR_BUFFER_SIZE), _messageHandler(messageHandler) {
 
   PLF_COUNT_MIN_INIT(BYTES_SENT_TO_DECODER_MIN);
   PLF_COUNT_MIN_INIT(CIRCULAR_BUF_MIN);
 
-  _message_handler.register_handler(VOICE_DATA_T_MSG_ID, message_handler_helper, this, true);
+  _messageHandler.registerHandler(VOICE_DATA_T_MSG_ID, messageHandlerHelper, this, true);
 }

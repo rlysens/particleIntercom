@@ -9,7 +9,7 @@
 
 #define NUM_LEDS 3
 
-class IntercomLed {
+class Intercom_Led {
 private:
 	SX1509* _iop;
 	byte _pin;
@@ -57,22 +57,22 @@ public:
 	/*private*/
 	void init(SX1509& io, byte pin);
 
-	IntercomLed();
+	Intercom_Led();
 };
 
-class IntercomButtonsAndLeds {
+class Intercom_ButtonsAndLeds {
 private:
 	SX1509 _io; 
-	IntercomLed _leds[NUM_LEDS];
+	Intercom_Led _leds[NUM_LEDS];
 public:
 	bool incVolumeButtonIsPressed(void);
 	bool decVolumeButtonIsPressed(void);
 
 	bool buddyButtonIsPressed(int buddyIndex);
-	IntercomLed& getBuddyLed(int buddyIndex);
+	Intercom_Led& getBuddyLed(int buddyIndex);
 	void reset(void);
 
-	IntercomButtonsAndLeds();
+	Intercom_ButtonsAndLeds();
 };
 
 #endif /*INTERCOM_BUTTONS_AND_LEDS_H*/

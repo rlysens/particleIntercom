@@ -1,108 +1,76 @@
 #include "plf_circular_buffer.h"
 
-void plf_circular_buf_init(OUT PlfCircularBuf_t *ctxt, IN uint8_t *bufPtr, int bufSizeBytes)
-{
-    plf_assert("NULL ptr", ctxt);
-    plf_assert("NULL ptr", bufPtr);
+Plf_CircularBuf::Plf_CircularBuf(IN uint8_t *bufPtr, int bufSizeBytes) : _bufStart(bufPtr), 
+    _bufSizeBytes(bufSizeBytes), _readPtr(bufPtr), _writePtr(bufPtr) {}
 
-    ctxt->bufStart = bufPtr;
-    ctxt->bufSizeBytes = bufSizeBytes;
-    ctxt->readPtr = bufPtr;
-    ctxt->writePtr = bufPtr;
-}
-
-void plf_circular_buf_reset(INOUT PlfCircularBuf_t *ctxt)
-{
-    plf_assert("NULL ptr", ctxt);
-
-    ctxt->readPtr = ctxt->bufStart;
-    ctxt->writePtr = ctxt->bufStart;
+void Plf_CircularBuf::reset(void) {
+    _readPtr = _bufStart;
+    _writePtr = _bufStart;
 }
 
 /*Returns free space in number of bytes*/
-int plf_circular_buf_free_space(IN PlfCircularBuf_t *ctxt)
-{
+int Plf_CircularBuf::freeSpace(void) {
     int freeSpace;
 
-    plf_assert("NULL ptr", ctxt);
-
-    if (ctxt->writePtr < ctxt->readPtr)
-    {
-        freeSpace = ctxt->readPtr - ctxt->writePtr - 1;
+    if (_writePtr < _readPtr) {
+        freeSpace = _readPtr - _writePtr - 1;
     }
-    else
-    {
-        freeSpace = ctxt->readPtr + ctxt->bufSizeBytes - ctxt->writePtr - 1;
+    else {
+        freeSpace = _readPtr + _bufSizeBytes - _writePtr - 1;
     }
 
     return freeSpace;
 }
 
 /*Returns used space in number of bytes*/
-int plf_circular_buf_used_space(IN PlfCircularBuf_t *ctxt)
-{
+int Plf_CircularBuf::usedSpace(void) {
     int usedSpace;
 
-    plf_assert("NULL ptr", ctxt);
-
-    if (ctxt->readPtr <= ctxt->writePtr)
+    if (_readPtr <= _writePtr)
     {
-        usedSpace = ctxt->writePtr - ctxt->readPtr;
+        usedSpace = _writePtr - _readPtr;
     }
     else
     {
-        usedSpace = ctxt->writePtr + ctxt->bufSizeBytes - ctxt->readPtr;
+        usedSpace = _writePtr + _bufSizeBytes - _readPtr;
     }
 
     return usedSpace;
 }
 
 /*Returns number of bytes successfully written. In case of overflow, may be less than requested*/
-int plf_circular_buf_write(INOUT PlfCircularBuf_t *ctxt, IN uint8_t *data, int numBytes)
-{
-    plf_assert("NULL ptr", ctxt);
-    plf_assert("NULL ptr", data);
-
-    if (ctxt->writePtr + numBytes > ctxt->bufStart + ctxt->bufSizeBytes)
+int Plf_CircularBuf::write(IN uint8_t *data, int numBytes) {
+    if (_writePtr + numBytes > _bufStart + _bufSizeBytes)
     {
         /*truncate*/
-        numBytes = ctxt->bufStart + ctxt->bufSizeBytes - ctxt->writePtr;
-        memcpy(ctxt->writePtr, data, numBytes);
-        ctxt->writePtr = ctxt->bufStart;
+        numBytes = _bufStart + _bufSizeBytes - _writePtr;
+        memcpy(_writePtr, data, numBytes);
+        _writePtr = _bufStart;
     }
     else
     {
-        memcpy(ctxt->writePtr, data, numBytes);
-        ctxt->writePtr += numBytes;
+        memcpy(_writePtr, data, numBytes);
+        _writePtr += numBytes;
     }
 
     return numBytes;
 }
 
 /*Returns size of data chunk returned in bytes. May be less than requested if a boundary is reached*/
-int plf_circular_buf_read_start(IN PlfCircularBuf_t *ctxt, OUT uint8_t **data, int numBytes)
-{
-    plf_assert("NULL ptr", ctxt);
-    plf_assert("NULL ptr", data);
-
-    if (ctxt->readPtr + numBytes > ctxt->bufStart + ctxt->bufSizeBytes)
-    {
+int Plf_CircularBuf::readStart(OUT uint8_t **data, int numBytes) {
+    if (_readPtr + numBytes > _bufStart + _bufSizeBytes) {
         /*truncate*/
-        numBytes = ctxt->bufStart + ctxt->bufSizeBytes - ctxt->readPtr;
+        numBytes = _bufStart + _bufSizeBytes - _readPtr;
     }
 
-    *data = ctxt->readPtr;
+    *data = _readPtr;
 
     return numBytes;
 }
 
-void plf_circular_buf_read_release(INOUT PlfCircularBuf_t *ctxt, int numBytes)
-{
-    plf_assert("NULL ptr", ctxt);
-
-    ctxt->readPtr += numBytes;
-    while (ctxt->readPtr >= ctxt->bufStart + ctxt->bufSizeBytes)
-    {
-        ctxt->readPtr -= ctxt->bufSizeBytes;
+void Plf_CircularBuf::readRelease(int numBytes) {
+    _readPtr += numBytes;
+    while (_readPtr >= _bufStart + _bufSizeBytes) {
+        _readPtr -= _bufSizeBytes;
     }
 }
