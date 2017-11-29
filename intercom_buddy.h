@@ -7,8 +7,9 @@
 #include "intercom_buttons_and_leds.h"
 #include "intercom_outgoing.h"
 #include "board.h"
+#include "plf_ticker_base.h"
 
-class Intercom_Buddy {
+class Intercom_Buddy : public Plf_TickerBase {
 private:
 	Intercom_Outgoing *_intercom_outgoingp;
 	Intercom_MessageHandler* _messageHandlerp;
@@ -30,14 +31,13 @@ private:
 	int _rxWhoIsRep(Intercom_Message& msg, int payloadSize);
 	void _fsm(void);
 	
+	virtual void _tickerHook(void);
 
 public:
 	Intercom_Buddy();
 
 	void init(Intercom_Outgoing *intercom_outgoingp, Intercom_MessageHandler* messageHandlerp, 
 		PlfRegistry *registryp, Intercom_ButtonsAndLeds* intercom_buttonsAndLedsp, int buddyIndex);
-
-	void tick(void);
 
 	bool checkButtonAndSend(void);
 

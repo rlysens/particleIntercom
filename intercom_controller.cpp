@@ -110,26 +110,12 @@ int Intercom_Controller::handleMessage(Intercom_Message& msg, int payloadSize) {
   return 0;
 }
 
-void Intercom_Controller::tick(void) {
-	unsigned long curMillis = millis();
-	unsigned long milisDelta;
-
-	if (curMillis < _prevMillis) {
-		milisDelta = (~0UL) - _prevMillis + curMillis;
-	}
-	else {
-		milisDelta = curMillis - _prevMillis;
-	}
-
-	if (milisDelta > INTERCOM_CONTROLLER_TICK_INTER_MS) {
-		_prevMillis = curMillis;
-
-		_i_am();
-	}
+void Intercom_Controller::_tickerHook(void) {
+	_i_am();
 }
 
 Intercom_Controller::Intercom_Controller(Intercom_MessageHandler& messageHandler, PlfRegistry &registry) : 
-	_messageHandler(messageHandler),
+	Plf_TickerBase(INTERCOM_CONTROLLER_TICK_INTER_MS), _messageHandler(messageHandler),
 	_fsmState(INTERCOM_CONTROLLER_FSM_STATE_RESTARTED), _prevMillis(0),
  	_registry(registry) {
 	_messageHandler.registerHandler(I_AM_REPLY_T_MSG_ID, messageHandlerHelper, this, true);

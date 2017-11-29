@@ -156,7 +156,16 @@ bool Intercom_Buddy::checkButtonAndSend(void) {
   	return buttonIsPressed;
 }
 
-Intercom_Buddy::Intercom_Buddy() : _initialized(false) {
+void Intercom_Buddy::_tickerHook(void) {
+	plf_assert("IntercomBuddy not initialized", _initialized);
+
+	_txSetBuddy();
+	_txWhoIsReq();
+	_txEchoReq();
+	_fsm();
+}
+
+Intercom_Buddy::Intercom_Buddy() : Plf_TickerBase(INTERCOM_BUDDY_TICK_INTER_MS), _initialized(false) {
 }
 
 void Intercom_Buddy::init(Intercom_Outgoing* intercom_outgoingp, Intercom_MessageHandler* messageHandlerp, PlfRegistry* registryp, 
@@ -202,27 +211,4 @@ int Intercom_Buddy::handleMessage(Intercom_Message& msg, int payloadSize) {
   }
 
   return 0;
-}
-
-void Intercom_Buddy::tick(void) {
-	unsigned long curMillis = millis();
-	unsigned long millisDelta;
-
-	plf_assert("IntercomBuddy not initialized", _initialized);
-
-	if (curMillis < _prevMillis) {
-		millisDelta = (~0UL) - _prevMillis + curMillis;
-	}
-	else {
-		millisDelta = curMillis - _prevMillis;
-	}
-
-	if (millisDelta > INTERCOM_BUDDY_TICK_INTER_MS) {
-		_prevMillis = curMillis;
-
-		_txSetBuddy();
-		_txWhoIsReq();
-		_txEchoReq();
-		_fsm();
-	}
 }

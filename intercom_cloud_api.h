@@ -2,12 +2,15 @@
 #define INTERCOM_CLOUD_API_H
 
 #include "plf_registry.h"
+#include "plf_ticker_base.h"
 
-class Intercom_CloudAPI {
+class Intercom_CloudAPI : public Plf_TickerBase {
 private:
 	PlfRegistry& _registry;
 	unsigned long _prevMillis;
 	
+	virtual void _tickerHook(void);
+
 public:
 	Intercom_CloudAPI(PlfRegistry& registry);
 
@@ -19,8 +22,6 @@ public:
 	int enable_printgroup(String name);
 	int disable_printgroup(String name);
 	int set_key(String key_val);
-
-	void tick(void);
 
 	/*private*/
 	int updateVars(void);

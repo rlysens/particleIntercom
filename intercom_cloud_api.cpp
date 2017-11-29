@@ -25,6 +25,10 @@ static int registryHandlerHelper(int key, String& value, bool valid, void *ctxt)
 	return 0;
 }
 
+void Intercom_CloudAPI::_tickerHook(void) {
+	updateVars();
+}
+
 int Intercom_CloudAPI::set_my_name(String name) {
 	_registry.set(REG_KEY_MY_NAME, name, true /*validity*/, true /*persistency*/);
   	return 0;
@@ -57,23 +61,6 @@ int Intercom_CloudAPI::set_buddy_2_name(String name) {
 int Intercom_CloudAPI::erase(String name) {
 	_registry.erase();
 	return 0;
-}
-
-void Intercom_CloudAPI::tick(void) {
-	unsigned long curMillis = millis();
-	unsigned long millisDelta;
-
-	if (curMillis < _prevMillis) {
-		millisDelta = (~0UL) - _prevMillis + curMillis;
-	}
-	else {
-		millisDelta = curMillis - _prevMillis;
-	}
-
-	if (millisDelta > INTERCOM_CLOUD_API_TICK_INTER_MS) {
-		_prevMillis = curMillis;
-		updateVars();
-	}
 }
 
 int Intercom_CloudAPI::updateVars(void) {
@@ -173,7 +160,8 @@ int Intercom_CloudAPI::set_key(String key_val) {
   	return 0;
 }
 
-Intercom_CloudAPI::Intercom_CloudAPI(PlfRegistry& registry) : _registry(registry),_prevMillis(0) {
+Intercom_CloudAPI::Intercom_CloudAPI(PlfRegistry& registry) : Plf_TickerBase(INTERCOM_CLOUD_API_TICK_INTER_MS), 
+	_registry(registry),_prevMillis(0) {
 	int res;
 	res = Particle.function("my_name", &Intercom_CloudAPI::set_my_name, this);
 	PLF_PRINT(PRNTGRP_DFLT, "Cloud function my_name register result: %d\n", res);
