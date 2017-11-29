@@ -3,6 +3,8 @@
 #include "plf_utils.h"
 #include "SparkFunMAX17043.h"
 
+#define MODULE_ID 300
+
 #define INTERCOM_CLOUD_API_TICK_INTER_MS 5000
 
 static String my_name;
@@ -125,7 +127,7 @@ int Intercom_CloudAPI::enable_printgroup(String name) {
 	}
 	else {
 		PLF_PRINT(PRNTGRP_DFLT, "printgroup fail\n");
-		return -1;
+		return -(MODULE_ID+1);
 	}
 
 	printGroupEnable(printgroup, true);
@@ -147,7 +149,7 @@ int Intercom_CloudAPI::disable_printgroup(String name) {
 	}
 	else {
 		PLF_PRINT(PRNTGRP_DFLT, "printgroup fail\n");
-		return -1;
+		return -(MODULE_ID+2);
 	}
 
 	printGroupEnable(printgroup, false);

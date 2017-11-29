@@ -1,6 +1,8 @@
 #include "plf_event_counter.h"
 #include "plf_utils.h"
 
+#define MODULE_ID 1000
+
 #define READ_RESET_MODE
 #define PRINT_PERIOD_MS (3000UL)
 

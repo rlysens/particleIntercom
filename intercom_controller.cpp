@@ -2,6 +2,8 @@
 #include "messages.h"
 #include "plf_utils.h"
 
+#define MODULE_ID 400
+
 #define INTERCOM_CONTROLLER_TICK_INTER_MS 2000
 
 #define INTERCOM_CONTROLLER_FSM_STATE_RESTARTED 0
@@ -44,10 +46,10 @@ int Intercom_Controller::_rx_echo_request(Intercom_Message& msg, int payloadSize
 	uint32_t myId = _messageHandler.getMyId();
 
 	if (numDecodedBytes < 0)
-		return -1;
+		return -(MODULE_ID+1);
 
 	if (myId==ID_UNKNOWN)
-		return -1;
+		return -(MODULE_ID+2);
 
 	echo_reply.source_id = myId;
 	echo_reply.destination_id = echo_request.source_id;
@@ -67,20 +69,20 @@ int Intercom_Controller::_i_am_reply(Intercom_Message& msg, int payloadSize) {
 	int numDecodedBytes = i_am_reply_t_decode(msg.data, 0, payloadSize, &i_am_reply);
 
 	if (numDecodedBytes < 0) {
-		return -10;
+		return -(MODULE_ID+3);
 	}
 
 	_registry.get(REG_KEY_MY_NAME, myName, myNameIsSet);
 	if (!myNameIsSet) {
 		PLF_PRINT(PRNTGRP_DFLT, "i_am_reply received while myName not set\n");
-		return -11;
+		return -(MODULE_ID+4);
 	}
 
 	if (!String((const char*)i_am_reply.name).equals(myName)) {
 		PLF_PRINT(PRNTGRP_DFLT, "i_am_reply string mismatch\n");
 		Serial.println(String((const char*)i_am_reply.name));
 		Serial.println(myName);
-		return -12;
+		return -(MODULE_ID+5);
 	}
 
 	if (_messageHandler.getMyId()==ID_UNKNOWN) {
@@ -104,7 +106,7 @@ int Intercom_Controller::handleMessage(Intercom_Message& msg, int payloadSize) {
     	return _rx_echo_request(msg, payloadSize);
 
     default:
-      return -1;
+      return -(MODULE_ID+6);
   }
 
   return 0;

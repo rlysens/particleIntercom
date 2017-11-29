@@ -3,6 +3,8 @@
 #include "vs1063a_codec.h"
 #include "messages.h"
 
+#define MODULE_ID 700
+
 Intercom_Outgoing::Intercom_Outgoing(Intercom_MessageHandler& messageHandler) : _messageHandler(messageHandler) {
 
 }

@@ -5,6 +5,8 @@
 #include "plf_event_counter.h"
 #include "messages.h"
 
+#define MODULE_ID 500
+
 #define BUFFER_NEARLY_EMPTY (CIRCULAR_BUFFER_SIZE/8)
 #define BUFFER_HALF (CIRCULAR_BUFFER_SIZE/2)
 #define BUFFER_NEARLY_FULL (CIRCULAR_BUFFER_SIZE - (CIRCULAR_BUFFER_SIZE/8))
@@ -30,14 +32,14 @@ int Intercom_Incoming::handleMessage(Intercom_Message &msg, int payloadSize) {
       int numDecodedMsgBytes = voice_data_t_decode(msg.data, 0, payloadSize, &voice_data);
 
       if (numDecodedMsgBytes < 0) {
-        return -2;
+        return -(MODULE_ID+1);
       }
 
       return _receive(voice_data.data, voice_data.data_size);
     }
 
     default:
-      return -1;
+      return -(MODULE_ID+2);
   }
 
   return 0;

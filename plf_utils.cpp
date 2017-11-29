@@ -1,5 +1,7 @@
 #include "plf_utils.h"
 
+#define MODULE_ID 1300
+
 static bool printGroupEnableFlag[NUM_PRINT_GROUPS];
 
 bool printGroupEnabled(int printGroup) {

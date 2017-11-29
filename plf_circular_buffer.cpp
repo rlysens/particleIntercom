@@ -1,5 +1,7 @@
 #include "plf_circular_buffer.h"
 
+#define MODULE_ID 900
+
 Plf_CircularBuf::Plf_CircularBuf(IN uint8_t *bufPtr, int bufSizeBytes) : _bufStart(bufPtr), 
     _bufSizeBytes(bufSizeBytes), _readPtr(bufPtr), _writePtr(bufPtr) {}
 

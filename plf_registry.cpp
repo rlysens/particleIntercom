@@ -1,6 +1,8 @@
 #include "plf_registry.h"
 #include "plf_utils.h"
 
+#define MODULE_ID 1100
+
 #define VALID_KEY_VAL 0x10D0BABA
 
 int PlfRegistry::set(int key, String& value, bool valid, bool persistent) {

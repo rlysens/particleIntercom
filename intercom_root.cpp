@@ -1,6 +1,8 @@
 #include "intercom_root.h"
 #include "plf_utils.h"
 
+#define MODULE_ID 800
+
 Intercom_Root::Intercom_Root(void) :
 	_messageHandler(LOCAL_PORT, REMOTE_IP, REMOTE_PORT, _plf_registry),
 	_intercom_incoming(_messageHandler),

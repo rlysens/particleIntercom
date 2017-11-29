@@ -1,5 +1,7 @@
 #include "plf_ticker_base.h"
 
+#define MODULE_ID 1200
+
 Plf_TickerBase::Plf_TickerBase(unsigned long periodMs) : _prevMillis(0), _periodMs(periodMs) {
 }
 

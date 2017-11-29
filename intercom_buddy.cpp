@@ -2,6 +2,8 @@
 #include "messages.h"
 #include "plf_utils.h"
 
+#define MODULE_ID 100
+
 #define INTERCOM_BUDDY_FSM_STATE_LISTENING 1 /*Buddy is listening*/
 #define INTERCOM_BUDDY_FSM_STATE_NOT_LISTENING 0 /*Buddy is not listening*/
 
@@ -62,7 +64,7 @@ int Intercom_Buddy::_rxEchoRep(Intercom_Message& msg, int payloadSize) {
 	int numDecodedBytes = echo_reply_t_decode(msg.data, 0, payloadSize, &echo_reply);
 
 	if (numDecodedBytes < 0)
-		return -1;
+		return -(MODULE_ID+1);
 
 	if (echo_reply.source_id == (int32_t)_buddyId) /*Did this buddy send it?*/
 		++_echoReplyAcc;
@@ -96,18 +98,18 @@ int Intercom_Buddy::_rxWhoIsRep(Intercom_Message& msg, int payloadSize) {
 	int numDecodedBytes = who_is_reply_t_decode(msg.data, 0, payloadSize, &who_is_reply);
 
 	if (numDecodedBytes < 0)
-		return -1;
+		return -(MODULE_ID+2);
 
 	_registryp->get(regKey_buddyName[_buddyIdx], buddyName, buddyNameIsSet);
 	if (!buddyNameIsSet) {
-		return -2;
+		return -(MODULE_ID+3);
 	}
 
 	/*zero terminate*/
 	who_is_reply.name[sizeof(who_is_reply.name)-1] = 0;
 
 	if (!String((const char*)who_is_reply.name).equals(buddyName))
-		return -3;
+		return -(MODULE_ID+4);
 
 	if (_buddyId == ID_UNKNOWN) {
 		PLF_PRINT(PRNTGRP_DFLT, "Buddy id received %d, buddyIdx %d\n", (int)who_is_reply.id, _buddyIdx);
@@ -207,7 +209,7 @@ int Intercom_Buddy::handleMessage(Intercom_Message& msg, int payloadSize) {
     	return _rxEchoRep(msg, payloadSize);
 
     default:
-      return -1;
+      return -(MODULE_ID+5);
   }
 
   return 0;

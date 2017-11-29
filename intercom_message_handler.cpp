@@ -2,6 +2,8 @@
 #include "plf_utils.h"
 #include "plf_event_counter.h"
 
+#define MODULE_ID 600
+
 Intercom_Message intercom_message; /*Shared by all message_handler users*/
 
 static int registryHandlerHelper(int key, String& value, bool valid, void *ctxt) {
@@ -43,7 +45,7 @@ int Intercom_MessageHandler::_encryptMsg(Intercom_Message &msg, int payloadSize)
 }
 
 int Intercom_MessageHandler::_decryptMsg(Intercom_Message &msg, int payloadSize) {
-  int result=-1;
+  int result=-(MODULE_ID+1);
 
   if (_encryptionKeyIsSet) {
     result = mbedtls_xtea_crypt_cbc(&_xteaCtxt,
@@ -92,7 +94,7 @@ int Intercom_MessageHandler::send(Intercom_Message &msg, uint32_t msgId, int pay
   
   if (encrypted) {
     if (_encryptMsg(msg, payloadSize)!=0) {
-      return -3;
+      return -(MODULE_ID+2);
     }
   }
 
@@ -100,7 +102,7 @@ int Intercom_MessageHandler::send(Intercom_Message &msg, uint32_t msgId, int pay
   if (_udp.sendPacket((uint8_t*)&msg, payloadSize+8, 
   		_remoteIpAddress, _remotePort) != payloadSize+8) {
       PLF_PRINT(PRNTGRP_DFLT, ("UDP packet send failed. Could not send all data\n"));
-      return -2;
+      return -(MODULE_ID+3);
   }
 
   PLF_COUNT_VAL(UDP_BYTES_TX, payloadSize);
@@ -124,7 +126,7 @@ int Intercom_MessageHandler::receive(void) {
   payloadSize = rxDataLength - 8;
 
   if (msgEntryp->topIndex==0)
-    return -100; /*No handlers for this message*/
+    return -(MODULE_ID+4); /*No handlers for this message*/
 
   if (msgEntryp->encrypted) {
     if (_decryptMsg(msg, payloadSize) != 0) {

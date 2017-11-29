@@ -2,6 +2,8 @@
 #include <Particle.h>
 #include "plf_utils.h"
 
+#define MODULE_ID 200
+
 Intercom_Led::Intercom_Led() : _iop(0), _pin(255) {
 }
 
