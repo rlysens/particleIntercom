@@ -49,39 +49,35 @@ void Intercom_Incoming::drain(void) {
   int numBytesBuffered = _circularBuf.usedSpace();
   uint8_t *decoderData;
   int numBytesForCodec, decoderAvlSpace;
-  static int drainState = DRAIN_STATE_FILL;
-  static int discardNextByte=0;
 
   PLF_COUNT_MAX(CIRCULAR_BUF_MAX, numBytesBuffered);
   PLF_COUNT_MIN(CIRCULAR_BUF_MIN, numBytesBuffered);
 
-  if ((drainState == DRAIN_STATE_FILL) && (numBytesBuffered >= BUFFER_NEARLY_FULL)) {
-    drainState = DRAIN_STATE_DRAIN;
+  if ((_drainState == DRAIN_STATE_FILL) && (numBytesBuffered >= BUFFER_NEARLY_FULL)) {
+    _drainState = DRAIN_STATE_DRAIN;
   }
-
-  else if ((drainState == DRAIN_STATE_DRAIN) && (numBytesBuffered < BUFFER_NEARLY_EMPTY)) {
-    drainState = DRAIN_STATE_FILL;
+  else if ((_drainState == DRAIN_STATE_DRAIN) && (numBytesBuffered < BUFFER_NEARLY_EMPTY)) {
+    _drainState = DRAIN_STATE_FILL;
   }
 
   PLF_COUNT_VAL(DECODER_UNDERFLOW, VS1063aAudioBufferUnderflow());
 
-  if (drainState == DRAIN_STATE_FILL) {
+  if (_drainState == DRAIN_STATE_FILL) {
     static uint8_t zeroBuf[64]={0};
 
     decoderAvlSpace = VS1063aStreamBufferFreeBytes();
     numBytesForCodec = MIN(decoderAvlSpace, (int)(sizeof(zeroBuf)&0x7ffffffe));
     VS1063PlayBuf(zeroBuf, numBytesForCodec);
   }
-
-  if (drainState == DRAIN_STATE_DRAIN) {
+  else if (_drainState == DRAIN_STATE_DRAIN) {
     decoderAvlSpace = VS1063aStreamBufferFreeBytes();
     numBytesBuffered = _circularBuf.usedSpace();
     numBytesForCodec = MIN(decoderAvlSpace, numBytesBuffered);
 
-    if (numBytesForCodec && discardNextByte) {
+    if (numBytesForCodec && _discardNextByte) {
       _circularBuf.readStart(&decoderData, 1);
       _circularBuf.readRelease(1);
-      discardNextByte = 0;
+      _discardNextByte = 0;
     }
 
     numBytesBuffered = _circularBuf.usedSpace();
@@ -95,7 +91,7 @@ void Intercom_Incoming::drain(void) {
       else { /*uneven number of bytes, make it even for decoder*/
         VS1063PlayBuf(decoderData, numBytesForCodec&0x7ffffffe);
         /*discard next byte too to fall back into even alignment*/
-        discardNextByte=1;
+        _discardNextByte=1;
       }
 
       _circularBuf.readRelease(numBytesForCodec);
@@ -125,7 +121,8 @@ int Intercom_Incoming::_receive(int8_t *rxData, int rxDataLength)
 }
 
 Intercom_Incoming::Intercom_Incoming(Intercom_MessageHandler& messageHandler) :
-  _circularBuf(_circularBuffer, CIRCULAR_BUFFER_SIZE), _messageHandler(messageHandler) {
+  _circularBuf(_circularBuffer, CIRCULAR_BUFFER_SIZE), _messageHandler(messageHandler),
+  _drainState(DRAIN_STATE_FILL), _discardNextByte(0) {
 
   PLF_COUNT_MIN_INIT(BYTES_SENT_TO_DECODER_MIN);
   PLF_COUNT_MIN_INIT(CIRCULAR_BUF_MIN);

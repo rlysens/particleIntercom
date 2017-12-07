@@ -5,6 +5,7 @@
 #include "vs10xx_uc.h"
 
 #define VS1063_SAMPLE_RATE 8000 /*Number of 8-bit samples per second*/
+#define MAX_VOL 255
 
 uint32_t ReadVS10xxMem32Counter(uint16_t addr);
 uint32_t ReadVS10xxMem32(uint16_t addr);
@@ -14,7 +15,7 @@ void WriteVS10xxMem32(uint16_t addr, uint32_t data);
 
 void VS1063PlayBuf(uint8_t *bufP, uint32_t bytesInBuffer);
 void VS1063PlayCancel(void);
-void VS1063SetVol(uint32_t vol);
+void VS1063SetVol(uint32_t vol); /*0=MAX, 255=MIN*/
 void VS1063RecordInit(void);
 
 /*Returns number of bytes recorder*/

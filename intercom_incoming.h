@@ -10,18 +10,19 @@ class Intercom_Incoming {
 private:
 	uint8_t _circularBuffer[CIRCULAR_BUFFER_SIZE];
 	Plf_CircularBuf _circularBuf;
+  	Intercom_MessageHandler& _messageHandler;
+	int _drainState;
+  	int _discardNextByte;
 
-  Intercom_MessageHandler& _messageHandler;
-
-  int _receive(int8_t *rxData, int rxDataLength);
+  	int _receive(int8_t *rxData, int rxDataLength);
 
 public:
-  Intercom_Incoming(Intercom_MessageHandler& messageHandler);
+  	Intercom_Incoming(Intercom_MessageHandler& messageHandler);
 
-  void drain(void);
+  	void drain(void);
 
-  /*private*/
-  int handleMessage(Intercom_Message &msg, int payloadSize);
+  	/*private*/
+  	int handleMessage(Intercom_Message &msg, int payloadSize);
 };
 
 #endif /*INTERCOM_INCOMING_H*/

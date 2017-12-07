@@ -8,7 +8,8 @@ Intercom_Root::Intercom_Root(void) :
 	_intercom_incoming(_messageHandler),
     _intercom_outgoing(_messageHandler),
 	_intercom_controller(_messageHandler, _plf_registry),
-	_intercom_cloud_api(_plf_registry) {
+	_intercom_cloud_api(_plf_registry),
+    _intercom_volumeControl(_intercom_buttonsAndLeds) {
     int ii;
 
     for (ii=0; ii<NUM_BUDDIES; ++ii) {
@@ -33,6 +34,8 @@ void Intercom_Root::loop(void) {
             _intercom_buddies[2].checkButtonAndSend();
         }
     }
+
+    _intercom_volumeControl.checkButtons();
 
     _intercom_controller.tick();
 

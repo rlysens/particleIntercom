@@ -8,6 +8,22 @@
 #define BUDDY_1_IDX 1
 #define BUDDY_2_IDX 2
 
+#define LED_BAR_MAX_LEVEL 5
+
+class Intercom_LedBar {
+private:
+	SX1509* _iop;
+	byte _pins[LED_BAR_MAX_LEVEL];
+
+public:
+	Intercom_LedBar();
+
+	void setLevel(int level);
+
+	/*private*/
+	void init(SX1509& io, byte pins[LED_BAR_MAX_LEVEL]);
+};
+
 class Intercom_Led {
 private:
 	SX1509* _iop;
@@ -63,12 +79,15 @@ class Intercom_ButtonsAndLeds {
 private:
 	SX1509 _io; 
 	Intercom_Led _leds[NUM_LEDS];
+	Intercom_LedBar _ledBar;
 public:
 	bool incVolumeButtonIsPressed(void);
 	bool decVolumeButtonIsPressed(void);
 
 	bool buddyButtonIsPressed(int buddyIndex);
 	Intercom_Led& getBuddyLed(int buddyIndex);
+	Intercom_LedBar& getLedBar(void);
+
 	void reset(void);
 
 	Intercom_ButtonsAndLeds();

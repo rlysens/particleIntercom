@@ -3,5 +3,6 @@
 [Intercom_Root]-receive()>[Intercom_MessageHandler]
 [Intercom_Root]-drain()>[Intercom_Incoming]
 [Intercom_Root]-init();tick();checkButtonAndSend()>[Intercom_Buddy]
+[Intercom_Root]-checkButtons()>[Intercom_VolumeControl]
 [Intercom_Root]-tick()>[Intercom_Controller]
 [Intercom_Root]-tick()>[Intercom_CloudAPI]

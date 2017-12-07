@@ -24,6 +24,11 @@
 #define VOL_DEC_BUTTON 8
 #define VOL_INC_BUTTON 9
 
+#define LED_BAR_0_LED 10
+#define LED_BAR_1_LED 11
+#define LED_BAR_2_LED 12
+#define LED_BAR_3_LED 13
+#define LED_BAR_4_LED 14
 
 #define INTERCOM_CODEC_XCS DAC
 #define INTERCOM_CODEC_SI A5

@@ -400,8 +400,8 @@ void VS1063PlayCancel(void) {
 
 /* RL port complete */
 void VS1063SetVol(uint32_t volLevel) {
-    if (volLevel > 255)
-        volLevel = 255;
+    if (volLevel > MAX_VOL)
+        volLevel = MAX_VOL;
 
     WriteSci(SCI_VOL, volLevel*0x101);
 }
@@ -412,7 +412,7 @@ void VS1063RecordInit(void) {
     WriteSci(SCI_RECRATE,    VS1063_SAMPLE_RATE /*Sample rate*/);
     WriteSci(SCI_RECGAIN, 1024); /* 1024 = gain 1 = best quality */
     WriteSci(SCI_RECMAXAUTO,  0); /* if RECGAIN = 0, define max auto gain */
-    WriteSci(SCI_RECMODE, RM_63_ADC_MODE_MONO | RM_63_FORMAT_G711_ALAW | RM_63_CODEC | RM_63_NO_RIFF);
+    WriteSci(SCI_RECMODE, RM_63_ADC_MODE_MONO | RM_63_FORMAT_G711_ULAW | RM_63_CODEC | RM_63_NO_RIFF);
     audioFormat = afRiff;
 
     WriteSci(SCI_MODE, ReadSci(SCI_MODE)| SM_ENCODE);
