@@ -10,6 +10,8 @@
 #define PARTICLE_SDA D0
 #define PARTICLE_SCL D1
 
+#define BATTERY_CHECK_BUTTON 0
+
 #define NUM_LEDS 3
 #define NUM_BUDDIES 3
 

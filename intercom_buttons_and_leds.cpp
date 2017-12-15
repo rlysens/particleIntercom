@@ -75,6 +75,8 @@ Intercom_ButtonsAndLeds::Intercom_ButtonsAndLeds() {
 
 	_ledBar.init(_io, pins);
 
+	_io.pinMode(BATTERY_CHECK_BUTTON, INPUT_PULLUP);
+
 	_io.pinMode(BUDDY_0_BUTTON, INPUT_PULLUP);
 	_io.pinMode(BUDDY_1_BUTTON, INPUT_PULLUP);
 	_io.pinMode(BUDDY_2_BUTTON, INPUT_PULLUP);
@@ -87,6 +89,10 @@ Intercom_ButtonsAndLeds::Intercom_ButtonsAndLeds() {
 
 void Intercom_ButtonsAndLeds::reset(void) {
 	_io.reset(true /*hardware*/);
+}
+
+bool Intercom_ButtonsAndLeds::batteryCheckButtonIsPressed(void) {
+	return _io.digitalRead(BATTERY_CHECK_BUTTON) == LOW;
 }
 
 bool Intercom_ButtonsAndLeds::incVolumeButtonIsPressed(void) {

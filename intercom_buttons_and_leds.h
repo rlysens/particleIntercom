@@ -81,6 +81,7 @@ private:
 	Intercom_Led _leds[NUM_LEDS];
 	Intercom_LedBar _ledBar;
 public:
+	bool batteryCheckButtonIsPressed(void);
 	bool incVolumeButtonIsPressed(void);
 	bool decVolumeButtonIsPressed(void);
 

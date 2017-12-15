@@ -3,11 +3,12 @@
 
 #include "intercom_buttons_and_leds.h"
 #include "Particle.h"
+#include "plf_ticker_base.h"
 
-class Intercom_VolumeControl {
+class Intercom_VolumeControl : public Plf_TickerBase {
 private:
 	Intercom_ButtonsAndLeds& _intercom_buttonsAndLeds;
-	uint32_t _curVol;
+	uint32_t _curAtt;
 	int32_t _fsm;
 	unsigned long _ledTurnOffTime;
 	bool _timerRunning;
@@ -19,6 +20,8 @@ private:
 	void _startTimer(void);
 	void _onTimeout(void);
 
+	virtual void _tickerHook(void);
+	
 public:
 	Intercom_VolumeControl(Intercom_ButtonsAndLeds& intercom_buttonsAndLeds);
 
