@@ -11,7 +11,7 @@ private:
 public:
 	Intercom_Outgoing(Intercom_MessageHandler& messageHandler);
 
-	void transfer(uint32_t buddyId);
+	int transfer(uint32_t buddyId);
 };
 
 #endif /*INTERCOM_OUTGOING_H*/

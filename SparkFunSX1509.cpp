@@ -62,7 +62,6 @@ byte SX1509::init(void)
 	unsigned int testRegisters = 0;
 	testRegisters = readWord(REG_INTERRUPT_MASK_A);	// This should return 0xFF00
 	
-	// Then read a byte that should be 0x00
 	if (testRegisters == 0xFF00)
 	{
 		// Set the clock to a default of 2MHz using internal
@@ -90,8 +89,9 @@ void SX1509::reset(bool hardware)
 		// Reset the SX1509, the pin is active low
 		pinMode(pinReset, OUTPUT);	// set reset pin as output
 		digitalWrite(pinReset, LOW);	// pull reset pin low
-		delay(1);	// Wait for the pin to settle
+		delay(10);	// Wait for the pin to settle
 		digitalWrite(pinReset, HIGH);	// pull reset pin back high
+		delay(10);
 	}
 	else
 	{

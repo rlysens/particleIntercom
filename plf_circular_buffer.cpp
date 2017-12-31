@@ -1,6 +1,32 @@
 #include "plf_circular_buffer.h"
+#include "plf_utils.h"
+#include "Particle.h"
 
 #define MODULE_ID 900
+
+#if 0
+void Plf_CircularBuf::_track(void) {
+    static int trackBuf[1000];
+    static int timestamps[1000];
+    static int trackBufIdx=0;
+
+    if (trackBufIdx<1000) {
+        trackBuf[trackBufIdx] = usedSpace();
+        timestamps[trackBufIdx++] = millis();
+    }
+    else {
+        int ii;
+
+        for (ii=0; ii<1000; ii++) {
+            PLF_PRINT(PRNTGRP_DFLT, "%d %d\n", timestamps[ii], trackBuf[ii]);
+        }
+
+        trackBufIdx=0;
+    }
+
+
+}
+#endif
 
 Plf_CircularBuf::Plf_CircularBuf(IN uint8_t *bufPtr, int bufSizeBytes) : _bufStart(bufPtr), 
     _bufSizeBytes(bufSizeBytes), _readPtr(bufPtr), _writePtr(bufPtr) {}
@@ -55,6 +81,10 @@ int Plf_CircularBuf::write(IN uint8_t *data, int numBytes) {
         _writePtr += numBytes;
     }
 
+#if 0
+    _track();
+#endif
+
     return numBytes;
 }
 
@@ -75,4 +105,8 @@ void Plf_CircularBuf::readRelease(int numBytes) {
     while (_readPtr >= _bufStart + _bufSizeBytes) {
         _readPtr -= _bufSizeBytes;
     }
+
+#if 0
+    _track();
+#endif
 }

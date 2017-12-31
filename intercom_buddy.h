@@ -21,7 +21,10 @@ private:
 	uint32_t _buddyId;
 	int32_t _fsmState;
 	int32_t _echoReplyAcc;
+	int32_t _echoRepliesMissed;
 	unsigned long _prevMillis;
+	int _numBytesTransferedAcc;
+	int _sendState;
 	bool _initialized;
 
 	void _txSetBuddy(void);

@@ -7,7 +7,12 @@
 #define INTERCOM_BUDDY_FSM_STATE_LISTENING 1 /*Buddy is listening*/
 #define INTERCOM_BUDDY_FSM_STATE_NOT_LISTENING 0 /*Buddy is not listening*/
 
+#define INTERCOM_BUDDY_SEND_STATE_NOT_SENDING 0
+#define INTERCOM_BUDDY_SEND_STATE_SENDING 1
+
 #define INTERCOM_BUDDY_TICK_INTER_MS 2000
+
+#define MIN_BYTES_TO_SEND (4096+1024)
 
 static const int regKey_buddyId[NUM_BUDDIES] = {REG_KEY_BUDDY_0_ID, REG_KEY_BUDDY_1_ID, REG_KEY_BUDDY_2_ID};
 static const int regKey_buddyName[NUM_BUDDIES] = {REG_KEY_BUDDY_0_NAME, REG_KEY_BUDDY_1_NAME, REG_KEY_BUDDY_2_NAME};
@@ -126,6 +131,13 @@ int Intercom_Buddy::_rxWhoIsRep(Intercom_Message& msg, int payloadSize) {
 void Intercom_Buddy::_fsm(void) {
 	if (_fsmState == INTERCOM_BUDDY_FSM_STATE_LISTENING) {
 		if (_echoReplyAcc == 0) {
+			++_echoRepliesMissed;
+		}
+		else {
+			_echoRepliesMissed = 0;
+		}
+
+		if (_echoRepliesMissed >= 2) {
 			_fsmState = INTERCOM_BUDDY_FSM_STATE_NOT_LISTENING;
 			_buddyLedp->analogWrite(0); /*Off*/
 			PLF_PRINT(PRNTGRP_DFLT, "buddyFSM->NotListening\n");
@@ -133,6 +145,7 @@ void Intercom_Buddy::_fsm(void) {
 	}
 	else { /*Not Listening state:*/
 		if (_echoReplyAcc > 0) {
+			_echoRepliesMissed = 0;
 			_fsmState = INTERCOM_BUDDY_FSM_STATE_LISTENING;
 			_buddyLedp->breathe(200 /*tOn*/, 200 /*tOff*/, 1800 /*rise*/, 1800/*fall*/);
 			PLF_PRINT(PRNTGRP_DFLT, "buddyFSM->Listening\n");
@@ -146,16 +159,26 @@ bool Intercom_Buddy::checkButtonAndSend(void) {
 	bool buttonIsPressed;
 
 	plf_assert("IntercomBuddy not initialized", _initialized);
-	
+
 	buttonIsPressed = _intercom_buttonsAndLedsp->buddyButtonIsPressed(_buddyIdx);
 
-	if (buttonIsPressed) {
-  		if ((_messageHandlerp->getMyId() != ID_UNKNOWN) && (_buddyId != ID_UNKNOWN)) {
-  			_intercom_outgoingp->transfer(_buddyId);
-  		}
-  	}
+	if (_sendState == INTERCOM_BUDDY_SEND_STATE_NOT_SENDING) {
+		if (buttonIsPressed && (_messageHandlerp->getMyId() != ID_UNKNOWN) && (_buddyId != ID_UNKNOWN)) {
+			_numBytesTransferedAcc = 0;
+			_sendState = INTERCOM_BUDDY_SEND_STATE_SENDING;
+		}
+	}
+	else { /*SENDING state:*/
+		if ((!buttonIsPressed) && (_numBytesTransferedAcc > MIN_BYTES_TO_SEND)) {
+			_sendState = INTERCOM_BUDDY_SEND_STATE_NOT_SENDING;
+		}
+	}
 
-  	return buttonIsPressed;
+	if (_sendState == INTERCOM_BUDDY_SEND_STATE_SENDING) {
+		_numBytesTransferedAcc += _intercom_outgoingp->transfer(_buddyId);
+	}
+
+	return (_sendState == INTERCOM_BUDDY_SEND_STATE_SENDING);
 }
 
 void Intercom_Buddy::_tickerHook(void) {
@@ -188,7 +211,10 @@ void Intercom_Buddy::init(Intercom_Outgoing* intercom_outgoingp, Intercom_Messag
 	_buddyId = ID_UNKNOWN;
 	_fsmState = INTERCOM_BUDDY_FSM_STATE_NOT_LISTENING;
 	_echoReplyAcc = 0;
+	_echoRepliesMissed = 0;
 	_prevMillis = 0;
+	_numBytesTransferedAcc = 0;
+	_sendState = INTERCOM_BUDDY_SEND_STATE_NOT_SENDING;
 
 	_messageHandlerp->registerHandler(WHO_IS_REPLY_T_MSG_ID, messageHandlerHelper, this, true);	
 	_messageHandlerp->registerHandler(ECHO_REPLY_T_MSG_ID, messageHandlerHelper, this, true);

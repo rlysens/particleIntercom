@@ -14,7 +14,8 @@
 #define PRNTGRP_DFLT 0
 #define PRNTGRP_STATS 1
 #define PRNTGRP_MSGS 2
-#define NUM_PRINT_GROUPS 3
+#define PRNTGRP_RATETN 3
+#define NUM_PRINT_GROUPS 4
 
 bool printGroupEnabled(int printGroup);
 void printGroupEnable(int printGroup, bool enable);

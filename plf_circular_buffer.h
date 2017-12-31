@@ -10,6 +10,11 @@ private:
     int _bufSizeBytes;
     uint8_t *_readPtr;
     uint8_t *_writePtr;
+
+#if 0
+    void _track(void);
+#endif
+    
 public:
 	Plf_CircularBuf(IN uint8_t *bufPtr, int bufSizeBytes);
 	void reset(void);

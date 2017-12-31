@@ -3,26 +3,33 @@
 
 #include "intercom_message_handler.h"
 #include "plf_circular_buffer.h"
+#include "plf_ticker_base.h"
 
-#define CIRCULAR_BUFFER_SIZE (8192*2)
+#define CIRCULAR_BUFFER_SIZE 8192
 
-class Intercom_Incoming {
+class Intercom_Incoming : public Plf_TickerBase {
 private:
 	uint8_t _circularBuffer[CIRCULAR_BUFFER_SIZE];
 	Plf_CircularBuf _circularBuf;
-  	Intercom_MessageHandler& _messageHandler;
-	int _drainState;
-  	int _discardNextByte;
+  Intercom_MessageHandler& _messageHandler;
+#if 0
+  int _drainState;
+#endif
+  int _discardNextByte;
+  int _fsmState;
+  int32_t _movingAvg;
 
-  	int _receive(int8_t *rxData, int rxDataLength);
+  int _receive(int8_t *rxData, int rxDataLength);
+  int _fsm(void);
+  virtual void _tickerHook(void);
 
 public:
-  	Intercom_Incoming(Intercom_MessageHandler& messageHandler);
+  Intercom_Incoming(Intercom_MessageHandler& messageHandler);
 
-  	void drain(void);
+  void drain(void);
 
-  	/*private*/
-  	int handleMessage(Intercom_Message &msg, int payloadSize);
+  /*private*/
+  int handleMessage(Intercom_Message &msg, int payloadSize);
 };
 
 #endif /*INTERCOM_INCOMING_H*/

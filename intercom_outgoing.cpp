@@ -9,7 +9,7 @@ Intercom_Outgoing::Intercom_Outgoing(Intercom_MessageHandler& messageHandler) : 
 
 }
 
-void Intercom_Outgoing::transfer(uint32_t buddyId) {
+int Intercom_Outgoing::transfer(uint32_t buddyId) {
   int numEncodedBytes;
   static voice_data_t voice_data;
   int recordedNumBytes;
@@ -27,12 +27,12 @@ void Intercom_Outgoing::transfer(uint32_t buddyId) {
   PLF_COUNT_MIN(ENCODER_OUTBUF_FILL_MIN, VS1063aStreamOutputBufferFillBytes());
 
   if (VS1063aStreamOutputBufferFillBytes() < (int)(sizeof(voice_data.data)))
-    return;
+    return 0;
 
   recordedNumBytes = VS1063RecordBuf((uint8_t*)voice_data.data, sizeof(voice_data.data));
   if (recordedNumBytes==0) {
       PLF_COUNT_EVENT(NO_ENCODER_AVL_BYTES);
-      return;
+      return 0;
   }
 
   PLF_COUNT_VAL(ENCODER_AVL_BYTES, recordedNumBytes);
@@ -49,6 +49,8 @@ void Intercom_Outgoing::transfer(uint32_t buddyId) {
   if (_messageHandler.send(intercom_message, VOICE_DATA_T_MSG_ID, 
     numEncodedBytes, true)) {
     PLF_PRINT(PRNTGRP_DFLT, ("Voice data send failed\n"));
-    return;
+    return 0;
   }
+
+  return recordedNumBytes;
 }

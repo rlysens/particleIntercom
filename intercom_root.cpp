@@ -28,6 +28,7 @@ void Intercom_Root::loop(void) {
       PLF_PRINT(PRNTGRP_DFLT, "msg_hdlr rx code %d\n", res);
     }	
 
+    _intercom_incoming.tick();
     _intercom_incoming.drain();
 
     _intercom_batteryChecker.checkButton();
