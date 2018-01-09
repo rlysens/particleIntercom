@@ -8,7 +8,7 @@
 #define MODULE_ID 500
 
 #define BUFFER_MID_POINT (CIRCULAR_BUFFER_SIZE/2)
-#define BUFFER_DRAIN_THRESHOLD BUFFER_MID_POINT
+#define BUFFER_DRAIN_THRESHOLD (CIRCULAR_BUFFER_SIZE*8/10)
 #define INTERCOM_INCOMING_TICK_INTER_MS 100
 
 #if 0
@@ -33,7 +33,7 @@ static int messageHandlerHelper(Intercom_Message &msg,
   return intercom_incomingp->handleMessage(msg, payloadSize);
 }
 
-int Intercom_Incoming::_fsm(void) {
+int Intercom_Incoming::_fsmUpdate(void) {
   int usedSpace = _circularBuf.usedSpace();
 
   switch (_fsmState) {
@@ -75,31 +75,70 @@ int Intercom_Incoming::_fsm(void) {
   return _fsmState;
 }
 
-int Intercom_Incoming::handleMessage(Intercom_Message &msg, int payloadSize) {
-  
-  switch (msg.msg_id) {
-    case VOICE_DATA_T_MSG_ID:
-    {
-      static voice_data_t voice_data;
-      int numDecodedMsgBytes = voice_data_t_decode(msg.data, 0, payloadSize, &voice_data);
+int Intercom_Incoming::_rxVoiceDataMsg(Intercom_Message &msg, int payloadSize) {
+  static voice_data_t voiceData;
+  int retCode = 0;
+  int numDecodedMsgBytes = voice_data_t_decode(msg.data, 0, payloadSize, &voiceData);
+  uint32_t senderId = voiceData.source_id;
 
-      if (numDecodedMsgBytes < 0) {
-        return -(MODULE_ID+1);
+  /*Only accept this message if not already in sending state or if it's from the
+   *currently active sender*/
+  if ((_fsmState == INCOMING_FSM_STATE_LISTENING) || (senderId == _activeSender)) {
+    if (numDecodedMsgBytes < 0) {
+      retCode = -(MODULE_ID+1);
+    }
+    else {
+      if (_fsmState == INCOMING_FSM_STATE_LISTENING) {
+        _seqNumber = voiceData.seq_number; /*Restart tracking seq. number when coming out of listening state*/
       }
 
-      return _receive(voice_data.data, voice_data.data_size);
-    }
+      /*Did we miss anything?*/
+      if (_seqNumber != voiceData.seq_number) {
+        uint32_t bytesMissed = voiceData.seq_number - _seqNumber;
+        PLF_COUNT_VAL(BYTES_MISSED, bytesMissed);
+        /*stuff the circular buffer with the amount of bytes missed*/
+        retCode |= _stuff(bytesMissed); 
+      }
 
-    default:
-      return -(MODULE_ID+2);
+      retCode |= _receive(voiceData.data, voiceData.data_size);
+
+      _activeSender = senderId;
+      _seqNumber = voiceData.seq_number + voiceData.data_size;
+
+      _fsmUpdate();
+    }
   }
 
-  return 0;
+  return retCode;     
+}
+
+int Intercom_Incoming::handleMessage(Intercom_Message &msg, int payloadSize) {
+  int retCode = 0;
+
+  switch (msg.msgId) {
+    case VOICE_DATA_T_MSG_ID:
+      retCode = _rxVoiceDataMsg(msg, payloadSize);
+      break;
+
+    case COMM_START_T_MSG_ID:
+      _rateTuningEnable = true;
+      break;
+    
+    case COMM_STOP_T_MSG_ID:
+      _rateTuningEnable = false;
+      break;
+
+    default:
+      retCode = -(MODULE_ID+2);
+      break;
+  }
+
+  return retCode;
 }
 
 void Intercom_Incoming::drain(void) {
   int numBytesBuffered = _circularBuf.usedSpace();
-  int fsmState = _fsm();
+  int fsmState = _fsmUpdate();
 
   if (fsmState == INCOMING_FSM_STATE_DRAINING) {
     uint8_t *decoderData;
@@ -133,64 +172,7 @@ void Intercom_Incoming::drain(void) {
 
       _circularBuf.readRelease(numBytesForCodec);
 
-      PLF_COUNT_VAL(BYTES_SENT_TO_DECODER, numBytesForCodec);
-      PLF_COUNT_MAX(BYTES_SENT_TO_DECODER_MAX, numBytesForCodec);
-      PLF_COUNT_MIN(BYTES_SENT_TO_DECODER_MIN, numBytesForCodec);
-    }
-  }
-}
-
-#if 0
-void Intercom_Incoming::drain(void) {
-  int numBytesBuffered = _circularBuf.usedSpace();
-  uint8_t *decoderData;
-  int numBytesForCodec, decoderAvlSpace;
-
-  PLF_COUNT_MAX(CIRCULAR_BUF_MAX, numBytesBuffered);
-  PLF_COUNT_MIN(CIRCULAR_BUF_MIN, numBytesBuffered);
-
-  if ((_drainState == DRAIN_STATE_FILL) && (numBytesBuffered >= BUFFER_NEARLY_FULL)) {
-    _drainState = DRAIN_STATE_DRAIN;
-  }
-  else if ((_drainState == DRAIN_STATE_DRAIN) && (numBytesBuffered < BUFFER_NEARLY_EMPTY)) {
-    _drainState = DRAIN_STATE_FILL;
-  }
-
-  PLF_COUNT_VAL(DECODER_UNDERFLOW, VS1063aAudioBufferUnderflow());
-
-  if (_drainState == DRAIN_STATE_FILL) {
-    static uint8_t zeroBuf[64]={0};
-
-    decoderAvlSpace = VS1063aStreamBufferFreeBytes();
-    numBytesForCodec = MIN(decoderAvlSpace, (int)(sizeof(zeroBuf)&0x7ffffffe));
-    VS1063PlayBuf(zeroBuf, numBytesForCodec);
-  }
-  else if (_drainState == DRAIN_STATE_DRAIN) {
-    decoderAvlSpace = VS1063aStreamBufferFreeBytes();
-    numBytesBuffered = _circularBuf.usedSpace();
-    numBytesForCodec = MIN(decoderAvlSpace, numBytesBuffered);
-
-    if (numBytesForCodec && _discardNextByte) {
-      _circularBuf.readStart(&decoderData, 1);
-      _circularBuf.readRelease(1);
-      _discardNextByte = 0;
-    }
-
-    numBytesBuffered = _circularBuf.usedSpace();
-    numBytesForCodec = MIN(decoderAvlSpace, numBytesBuffered);
-    numBytesForCodec = _circularBuf.readStart(&decoderData, numBytesForCodec);
-
-    if (numBytesForCodec) {
-      if ((numBytesForCodec&1)==0) {
-        VS1063PlayBuf(decoderData, numBytesForCodec);
-      }
-      else { /*uneven number of bytes, make it even for decoder*/
-        VS1063PlayBuf(decoderData, numBytesForCodec&0x7ffffffe);
-        /*discard next byte too to fall back into even alignment*/
-        _discardNextByte=1;
-      }
-
-      _circularBuf.readRelease(numBytesForCodec);
+      //PLF_PRINT(PRNTGRP_DFLT, "D:%d\n", numBytesForCodec);
 
       PLF_COUNT_VAL(BYTES_SENT_TO_DECODER, numBytesForCodec);
       PLF_COUNT_MAX(BYTES_SENT_TO_DECODER_MAX, numBytesForCodec);
@@ -198,20 +180,35 @@ void Intercom_Incoming::drain(void) {
     }
   }
 }
-#endif
 
 void Intercom_Incoming::_tickerHook(void) {
-  if (_fsmState == INCOMING_FSM_STATE_DRAINING) {
-    const float alpha = 0.0001F;
+  if (/*_rateTuningEnable &&*/ (_fsmState == INCOMING_FSM_STATE_DRAINING)) {
+    const float alpha = 0.1F;
     int newValue = _circularBuf.usedSpace();
 
     _movingAvg = (int)(alpha*newValue + ((float)1-alpha)*_movingAvg);
 
     int32_t error = _movingAvg - BUFFER_MID_POINT; /*If getting too full...*/
-    int32_t rateTuneValue = (error*1000000/BUFFER_MID_POINT); /*...speed up the clock.*/
-    WriteVS10xxMem32(PAR_RATE_TUNE, (uint32_t)rateTuneValue);
-    PLF_PRINT(PRNTGRP_RATETN,"a:%d e:%d r:%d\n", _movingAvg, error, rateTuneValue);
+    int32_t rateTuneValue = (10*error*1000000/BUFFER_MID_POINT); /*...speed up the clock.*/
+    if (_rateTuningEnable)
+      WriteVS10xxMem32(PAR_RATE_TUNE, (uint32_t)rateTuneValue);
+    PLF_PRINT(PRNTGRP_RATETN,"a:%d c:%d e:%d r:%d\n", _movingAvg, newValue, error, rateTuneValue);
   }
+}
+
+int Intercom_Incoming::_stuff(int rxDataLength) {
+  if (rxDataLength > 0) {
+    int freeSpace = _circularBuf.freeSpace();
+    if (freeSpace < rxDataLength) {
+      PLF_COUNT_EVENT(CIRCULAR_BUF_OFL);
+    }
+    else {
+      _circularBuf.stuff(0, rxDataLength);
+      //PLF_PRINT(PRNTGRP_DFLT, "S:%d\n", rxDataLength);
+    }
+  }
+
+  return 0;
 }
 
 int Intercom_Incoming::_receive(int8_t *rxData, int rxDataLength) {
@@ -222,10 +219,9 @@ int Intercom_Incoming::_receive(int8_t *rxData, int rxDataLength) {
     }
     else {
       _circularBuf.write((uint8_t*)rxData, rxDataLength);
+      //PLF_PRINT(PRNTGRP_DFLT, "I:%d\n", rxDataLength);
     }
   }
-
-  _fsm();
 
   return 0;
 }
@@ -233,10 +229,13 @@ int Intercom_Incoming::_receive(int8_t *rxData, int rxDataLength) {
 Intercom_Incoming::Intercom_Incoming(Intercom_MessageHandler& messageHandler) :
   Plf_TickerBase(INTERCOM_INCOMING_TICK_INTER_MS),
   _circularBuf(_circularBuffer, CIRCULAR_BUFFER_SIZE), _messageHandler(messageHandler),
-  /*_drainState(DRAIN_STATE_FILL),*/ _discardNextByte(0), _fsmState(INCOMING_FSM_STATE_LISTENING), _movingAvg(0) {
+  /*_drainState(DRAIN_STATE_FILL),*/ _discardNextByte(0), _fsmState(INCOMING_FSM_STATE_LISTENING), _movingAvg(0),
+  _activeSender(ID_UNKNOWN), _seqNumber(0), _rateTuningEnable(false) {
 
   PLF_COUNT_MIN_INIT(BYTES_SENT_TO_DECODER_MIN);
   PLF_COUNT_MIN_INIT(CIRCULAR_BUF_MIN);
 
   _messageHandler.registerHandler(VOICE_DATA_T_MSG_ID, messageHandlerHelper, this, true);
+  _messageHandler.registerHandler(COMM_START_T_MSG_ID, messageHandlerHelper, this, true);
+  _messageHandler.registerHandler(COMM_STOP_T_MSG_ID, messageHandlerHelper, this, true);
 }

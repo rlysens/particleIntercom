@@ -4,7 +4,6 @@
 #include "Particle.h"
 #include "vs10xx_uc.h"
 
-#define VS1063_SAMPLE_RATE 8000 /*Number of 8-bit samples per second*/
 #define MAX_VOL 255
 
 uint32_t ReadVS10xxMem32Counter(uint16_t addr);

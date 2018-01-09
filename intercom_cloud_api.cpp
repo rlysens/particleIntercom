@@ -150,6 +150,9 @@ int Intercom_CloudAPI::disable_printgroup(String name) {
 	else if (name.startsWith(String("messages"))) {
 		printgroup = PRNTGRP_MSGS;
 	}
+	else if (name.startsWith(String("ratetune"))) {
+		printgroup = PRNTGRP_RATETN;
+	}
 	else {
 		PLF_PRINT(PRNTGRP_DFLT, "printgroup fail\n");
 		return -(MODULE_ID+2);

@@ -19,7 +19,7 @@
 /* Download the latest VS1063a Patches package and its vs1063a-patches.plg.
    The patches package is available at
    http://www.vlsi.fi/en/support/software/vs10xxpatches.html */
-#include "vs1063a_patches.h"
+#include "vs1063a_patches_201.h"
 
 #define SDI_MAX_TRANSFER_SIZE 32
 #define SDI_END_FILL_BYTES_FLAC 12288
@@ -135,31 +135,22 @@ void WriteVS10xxMem32(uint16_t addr, uint32_t data) {
     WriteSci(SCI_WRAM, (uint16_t)(data>>16));
 }
 
-/*
-
-  Loads a plugin.
-
-  This is a slight modification of the LoadUserCode() example
-  provided in many of VLSI Solution's program packages.
-
-*/
-/*RL port complete*/
-static void LoadPlugin(const uint16_t *d, uint16_t len) {
+void LoadUserCode(void) {
   int i = 0;
 
-  while (i<len) {
+  while (i<sizeof(plugin)/sizeof(plugin[0])) {
     unsigned short addr, n, val;
-    addr = d[i++];
-    n = d[i++];
+    addr = plugin[i++];
+    n = plugin[i++];
     if (n & 0x8000U) { /* RLE run, replicate n samples */
       n &= 0x7FFF;
-      val = d[i++];
+      val = plugin[i++];
       while (n--) {
         WriteSci(addr, val);
       }
     } else {           /* Copy run, copy n samples */
       while (n--) {
-        val = d[i++];
+        val = plugin[i++];
         WriteSci(addr, val);
       }
     }
@@ -409,9 +400,9 @@ void VS1063SetVol(uint32_t volLevel) {
 /* RL port complete */
 void VS1063RecordInit(void) {
     /* Initialize recording */
-    WriteSci(SCI_RECRATE,    VS1063_SAMPLE_RATE /*Sample rate*/);
+    WriteSci(SCI_RECRATE, 8000 /*Sample rate*/);
     WriteSci(SCI_RECGAIN, 0); /* 1024 = gain 1 = best quality */
-    WriteSci(SCI_RECMAXAUTO, 4096); /* if RECGAIN = 0, define max auto gain */
+    WriteSci(SCI_RECMAXAUTO, 8192); /* if RECGAIN = 0, define max auto gain */
     WriteSci(SCI_RECMODE, RM_63_ADC_MODE_MONO | RM_63_FORMAT_G711_ULAW | RM_63_CODEC | RM_63_NO_RIFF);
     audioFormat = afRiff;
 
@@ -486,7 +477,7 @@ void VS1063InitSoftware(void) {
      Datasheet for details. */
     /* Not setting: SDISHARE, using the 7 pin connection, i.e. with xDCS*/
     /* Or-in SM_TESTS to allow SDI tests like sine test*/
-    WriteSci(SCI_MODE, SM_SDINEW|SM_RESET|SM_TESTS);
+    WriteSci(SCI_MODE, SM_SDINEW|SM_RESET);
 
     /* A quick sanity check: write to two registers, then test if we
      get the same results. Note that if you use a too high SPI
@@ -515,7 +506,8 @@ void VS1063InitSoftware(void) {
     WriteSci(SCI_VOL, INIT_VOL);
 
     /* Now it's time to load the proper patch set. */
-    LoadPlugin(plugin, sizeof(plugin)/sizeof(plugin[0]));
+    //LoadPlugin(plugin, sizeof(plugin)/sizeof(plugin[0]));
+    LoadUserCode();
 
     /* We're ready to go. */
 }

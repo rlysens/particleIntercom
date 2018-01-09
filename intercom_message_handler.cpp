@@ -78,7 +78,7 @@ int Intercom_MessageHandler::send(Intercom_Message &msg, uint32_t msgId, int pay
 
   PLF_PRINT(PRNTGRP_MSGS, "Tx Msg %d\n", (int)msgId);
 
-  msg.msg_id = msgId;
+  msg.msgId = msgId;
   msg.source_id = _myId;
 
 #if 0
@@ -114,14 +114,14 @@ int Intercom_MessageHandler::receive(void) {
 	static Intercom_Message msg;
   int rxDataLength = _udp.receivePacket((uint8_t*)&msg, sizeof(msg));
   int payloadSize;
-  Intercom_MessageHandlerTableElement *msgEntryp = &_msgTable[msg.msg_id];
+  Intercom_MessageHandlerTableElement *msgEntryp = &_msgTable[msg.msgId];
   int ii;
 
   if (rxDataLength < 8)
     return 0;
 
   PLF_COUNT_VAL(UDP_BYTES_RX, rxDataLength);
-  PLF_PRINT(PRNTGRP_MSGS, "Rx Msg %d\n", (int)msg.msg_id);
+  PLF_PRINT(PRNTGRP_MSGS, "Rx Msg %d\n", (int)msg.msgId);
 
   payloadSize = rxDataLength - 8;
 

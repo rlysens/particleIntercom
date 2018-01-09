@@ -1,7 +1,7 @@
 [Intercom_Root|loop()]
 [Intercom_Root]-go()>[Plf_Registry]
 [Intercom_Root]-receive()>[Intercom_MessageHandler]
-[Intercom_Root]-drain()>[Intercom_Incoming]
+[Intercom_Root]-drain();tick()>[Intercom_Incoming]
 [Intercom_Root]-init();tick();checkButtonAndSend()>[Intercom_Buddy]
 [Intercom_Root]-tick();checkButtons()>[Intercom_VolumeControl]
 [Intercom_Root]-checkButton()>[Intercom_BatteryCheck]

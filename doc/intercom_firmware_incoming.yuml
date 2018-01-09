@@ -1,5 +1,6 @@
-[Intercom_Incoming|drain()]registerHandler(VOICE_DATA)->[Intercom_MessageHandler]
+[Plf_TickerBase|tick();_tickerHook()]^-[Intercom_Incoming]
+[Intercom_Incoming|drain()]registerHandler(VOICE_DATA;COMM_START;COMM_STOP)->[Intercom_MessageHandler]
 [Intercom_Incoming]-.->[Intercom_Message|id;data]
-[Intercom_Incoming]-PlayBuf\nStreamBufferFreeBytes>[VS1063_Codec{bg:green}]
-[Intercom_Incoming]->[Plf_CircularBuffer|reset();freeSpace();usedSpace();write();readStart();readRelease(){bg:green}]
+[Intercom_Incoming]-PlayBuf()\nStreamBufferFreeBytes()\nWriteVS10xxMem32(PAR_RATE_TUNE)>[VS1063_Codec{bg:green}]
+[Intercom_Incoming]->[Plf_CircularBuffer|reset();freeSpace();usedSpace();sutff();write();readStart();readRelease(){bg:green}]
 

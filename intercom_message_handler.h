@@ -10,7 +10,7 @@
 #define ID_UNKNOWN (~0UL)
 #define MAX_NUM_FUNS_PER_MSG 8
 typedef struct {
-	uint32_t msg_id;
+	uint32_t msgId;
 	uint32_t source_id;
 	uint8_t data[MESSAGE_DATA_LENGTH];
 

@@ -88,6 +88,27 @@ int Plf_CircularBuf::write(IN uint8_t *data, int numBytes) {
     return numBytes;
 }
 
+/*Returns number of bytes successfully written. In case of overflow, may be less than requested*/
+int Plf_CircularBuf::stuff(uint8_t stuffByte, int numBytes) {
+    if (_writePtr + numBytes > _bufStart + _bufSizeBytes)
+    {
+        /*truncate*/
+        numBytes = _bufStart + _bufSizeBytes - _writePtr;
+        memset(_writePtr, stuffByte, numBytes);
+        _writePtr = _bufStart;
+    }
+    else
+    {
+        memset(_writePtr, stuffByte, numBytes);
+        _writePtr += numBytes;
+    }
+
+#if 0
+    _track();
+#endif
+
+    return numBytes;
+}
 /*Returns size of data chunk returned in bytes. May be less than requested if a boundary is reached*/
 int Plf_CircularBuf::readStart(OUT uint8_t **data, int numBytes) {
     if (_readPtr + numBytes > _bufStart + _bufSizeBytes) {

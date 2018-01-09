@@ -56,9 +56,9 @@ class Intercom_MessageHandler:
         self._msg_table = msg_table
         self.source_id = 0 #Server is 0
 
-    def send(self, payload_data, msg_id, address, cryptoCodec=None):
+    def send(self, payload_data, msgId, address, cryptoCodec=None):
 
-        print "Tx Msg: %d"%(msg_id)
+        print "Tx Msg: %d"%(msgId)
 
         if cryptoCodec:
             payload_data = cryptoCodec.encrypt(payload_data)
@@ -66,10 +66,10 @@ class Intercom_MessageHandler:
                 
         msg = []
         
-        msg.append(chr(msg_id&0xff))
-        msg.append(chr((msg_id>>8)&0xff))
-        msg.append(chr((msg_id>>16)&0xff))
-        msg.append(chr((msg_id>>24)&0xff))
+        msg.append(chr(msgId&0xff))
+        msg.append(chr((msgId>>8)&0xff))
+        msg.append(chr((msgId>>16)&0xff))
+        msg.append(chr((msgId>>24)&0xff))
 
         msg.append(chr(self.source_id&0xff))
         msg.append(chr((self.source_id>>8)&0xff))
@@ -86,10 +86,10 @@ class Intercom_MessageHandler:
             print "Msg. too short."
             return False
 
-        msg_id = ord(data[0])+(ord(data[1])<<8)+(ord(data[2])<<16)+(ord(data[3])<<24)
+        msgId = ord(data[0])+(ord(data[1])<<8)+(ord(data[2])<<16)+(ord(data[3])<<24)
         source_id = ord(data[4])+(ord(data[5])<<8)+(ord(data[6])<<16)+(ord(data[7])<<24)
-        if not self._msg_table.has_key(msg_id):
-            print "Unknown Message %d"%(msg_id)
+        if not self._msg_table.has_key(msgId):
+            print "Unknown Message %d"%(msgId)
             return
 
         intercom = None
@@ -97,8 +97,8 @@ class Intercom_MessageHandler:
             intercom = intercom_id_to_intercom_table[source_id]
 
         #Invoke the handler
-        print "Rx Msg: %d Src: %d"%(msg_id, source_id)
-        fun, decrypt = self._msg_table[msg_id]
+        print "Rx Msg: %d Src: %d"%(msgId, source_id)
+        fun, decrypt = self._msg_table[msgId]
 
         msg_payload = None        
         if decrypt:
@@ -107,7 +107,7 @@ class Intercom_MessageHandler:
                 msg_payload = cryptoCodec.decrypt(data[8:])
                 cryptoCodec.IV = data[-8:]
             else:
-                print "Can't decrypt msg_id %d source_id %x"%(msg_id, source_id)
+                print "Can't decrypt msgId %d source_id %x"%(msgId, source_id)
         else:
             msg_payload = data[8:]
 
@@ -115,7 +115,7 @@ class Intercom_MessageHandler:
             try: #A decode failure will trigger a ValueError exception
                 fun(msg_payload, address, self, intercom)
             except ValueError:
-                print "Can't decode msg_id %d source_id %x"%(msg_id, source_id)
+                print "Can't decode msgId %d source_id %x"%(msgId, source_id)
 
 class Intercom:
     def __init__(self, name, id, address, msg_handler):
@@ -137,12 +137,12 @@ class Intercom:
     def getDecoderCryptoCodec(self):
         return self.decCrypto
 
-    def sendTo(self, sender_id, msg, msg_id, encrypt):
+    def sendTo(self, sender_id, msg, msgId, encrypt):
         if sender_id in self.buddy_list:
             if encrypt:
-                self.msg_handler.send(msg, msg_id, self.address, self.encCrypto)
+                self.msg_handler.send(msg, msgId, self.address, self.encCrypto)
             else:
-                self.msg_handler.send(msg, msg_id, self.address)
+                self.msg_handler.send(msg, msgId, self.address)
         else:
             print "sender %d not in buddy list"%(sender_id)
 
@@ -170,6 +170,42 @@ def msg_echo_reply_handler(msg_data, address, msg_handler, intercom):
             echo_reply_t.echo_reply_t.MSG_ID, True)
     else:
         print "Unknown destination %d"%(echo_reply.destination_id)
+
+def msg_comm_start_handler(msg_data, address, msg_handler, intercom):
+    comm_start = comm_start_t.comm_start_t.decode(msg_data)
+    if intercom_id_to_intercom_table.has_key(comm_start.destination_id):
+        buddy_intercom = intercom_id_to_intercom_table[comm_start.destination_id]
+        buddy_intercom.sendTo(comm_start.source_id, msg_data, 
+            comm_start_t.comm_start_t.MSG_ID, True)
+    else:
+        print "Unknown destination %d"%(comm_start.destination_id)
+
+def msg_comm_start_ack_handler(msg_data, address, msg_handler, intercom):
+    comm_start_ack = comm_start_ack_t.comm_start_ack_t.decode(msg_data)
+    if intercom_id_to_intercom_table.has_key(comm_start_ack.destination_id):
+        buddy_intercom = intercom_id_to_intercom_table[comm_start_ack.destination_id]
+        buddy_intercom.sendTo(comm_start_ack.source_id, msg_data, 
+            comm_start_ack_t.comm_start_ack_t.MSG_ID, True)
+    else:
+        print "Unknown destination %d"%(comm_start_ack.destination_id)
+
+def msg_comm_stop_handler(msg_data, address, msg_handler, intercom):
+    comm_stop = comm_stop_t.comm_stop_t.decode(msg_data)
+    if intercom_id_to_intercom_table.has_key(comm_stop.destination_id):
+        buddy_intercom = intercom_id_to_intercom_table[comm_stop.destination_id]
+        buddy_intercom.sendTo(comm_stop.source_id, msg_data, 
+            comm_stop_t.comm_stop_t.MSG_ID, True)
+    else:
+        print "Unknown destination %d"%(comm_stop.destination_id)
+
+def msg_comm_stop_ack_handler(msg_data, address, msg_handler, intercom):
+    comm_stop_ack = comm_stop_ack_t.comm_stop_ack_t.decode(msg_data)
+    if intercom_id_to_intercom_table.has_key(comm_stop_ack.destination_id):
+        buddy_intercom = intercom_id_to_intercom_table[comm_stop_ack.destination_id]
+        buddy_intercom.sendTo(comm_stop_ack.source_id, msg_data, 
+            comm_stop_ack_t.comm_stop_ack_t.MSG_ID, True)
+    else:
+        print "Unknown destination %d"%(comm_stop_ack.destination_id)
 
 def msg_voice_data_handler(msg_data, address, msg_handler, intercom):
     voice_data = voice_data_t.voice_data_t.decode(msg_data)
@@ -252,7 +288,11 @@ MSG_TABLE = {
     who_is_t.who_is_t.MSG_ID : (msg_who_is_handler, True),
     set_buddy_t.set_buddy_t.MSG_ID : (set_buddy_handler, True),
     echo_request_t.echo_request_t.MSG_ID : (msg_echo_request_handler, True),
-    echo_reply_t.echo_reply_t.MSG_ID : (msg_echo_reply_handler, True)
+    echo_reply_t.echo_reply_t.MSG_ID : (msg_echo_reply_handler, True),
+    comm_start_t.comm_start_t.MSG_ID : (msg_comm_start_handler, True),
+    comm_start_ack_t.comm_start_ack_t.MSG_ID : (msg_comm_start_ack_handler, True),
+    comm_stop_t.comm_stop_t.MSG_ID : (msg_comm_stop_handler, True),
+    comm_stop_ack_t.comm_stop_ack_t.MSG_ID : (msg_comm_stop_ack_handler, True),
 }
 
 try:

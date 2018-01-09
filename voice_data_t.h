@@ -21,8 +21,9 @@ struct _voice_data_t
 {
     int32_t    source_id;
     int32_t    destination_id;
+    int32_t    seq_number;
     int16_t    data_size;
-    int8_t     data[486];
+    int8_t     data[482];
 };
 
 /**

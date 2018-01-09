@@ -4,8 +4,9 @@ struct voice_data_t
 	const int32_t MSG_ID=1;
 	int32_t source_id;
 	int32_t destination_id;
+	int32_t seq_number;
 	int16_t data_size;
-	int8_t data[486];
+	int8_t data[482];
 }
 
 struct i_am_t
@@ -59,3 +60,30 @@ struct echo_reply_t
 	int32_t destination_id;
 }
 
+struct comm_start_t
+{
+	const int32_t MSG_ID=9;
+	int32_t source_id;
+	int32_t destination_id;
+}
+
+struct comm_start_ack_t
+{
+	const int32_t MSG_ID=10;
+	int32_t source_id;
+	int32_t destination_id;
+}
+
+struct comm_stop_t
+{
+	const int32_t MSG_ID=11;
+	int32_t source_id;
+	int32_t destination_id;
+}
+
+struct comm_stop_ack_t
+{
+	const int32_t MSG_ID=12;
+	int32_t source_id;
+	int32_t destination_id;
+}

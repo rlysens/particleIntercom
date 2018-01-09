@@ -97,7 +97,7 @@ int Intercom_Controller::_i_am_reply(Intercom_Message& msg, int payloadSize) {
 }
 
 int Intercom_Controller::handleMessage(Intercom_Message& msg, int payloadSize) {
-	switch (msg.msg_id) {
+	switch (msg.msgId) {
 
     case I_AM_REPLY_T_MSG_ID:
     	return _i_am_reply(msg, payloadSize);

@@ -24,6 +24,8 @@ void setup() {
 
   System.set(SYSTEM_CONFIG_SOFTAP_PREFIX, "Photon");
 
+  delay(3000);
+
   /*Only enable default printgroup by default*/
   printGroupEnable(PRNTGRP_DFLT, true);
 
@@ -31,16 +33,17 @@ void setup() {
   Wire.begin();
 
   PLF_PRINT(PRNTGRP_DFLT, "Entered setup()");
-  Serial.println(localIP);
 
   // Prints out the device ID over Serial
   Serial.println(deviceID);
 
   VS1063InitHardware();
-  VS1063InitSoftware();
 
+  PLF_PRINT(PRNTGRP_DFLT, "VS1063InitHardware done");
+  VS1063InitSoftware();
+  PLF_PRINT(PRNTGRP_DFLT, "VS1063InitSoftware done");
   VS1063RecordInit();
-  PLF_PRINT(PRNTGRP_DFLT, "VS1063RecordInit done\n");
+  PLF_PRINT(PRNTGRP_DFLT, "VS1063RecordInit done");
 
   VS1063PrintState();
 

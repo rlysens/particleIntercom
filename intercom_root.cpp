@@ -14,7 +14,11 @@ Intercom_Root::Intercom_Root(void) :
     int ii;
 
     for (ii=0; ii<NUM_BUDDIES; ++ii) {
-        _intercom_buddies[ii].init(&_intercom_outgoing, &_messageHandler, &_plf_registry, &_intercom_buttonsAndLeds, ii);
+        _intercom_buddies[ii].init(&_intercom_outgoing, 
+            &_messageHandler, 
+            &_plf_registry, 
+            &_intercom_buttonsAndLeds,
+            ii);
     }
 
 	_plf_registry.go();

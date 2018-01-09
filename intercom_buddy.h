@@ -21,18 +21,25 @@ private:
 	uint32_t _buddyId;
 	int32_t _fsmState;
 	int32_t _echoReplyAcc;
-	int32_t _echoRepliesMissed;
 	unsigned long _prevMillis;
-	int _numBytesTransferedAcc;
-	int _sendState;
+	int _buttonState;
+	int _tickCount;
+	bool _sendCommStart;
+	bool _sendCommStop;
 	bool _initialized;
 
+	int _rxCommStart(Intercom_Message& msg, int payloadSize);
+	int _rxCommStop(Intercom_Message& msg, int payloadSize);
+	void _txCommStop(void);
+	void _txCommStart(void);
+	int _rxCommStartAck(Intercom_Message& msg, int payloadSize);
+	int _rxCommStopAck(Intercom_Message& msg, int payloadSize);
 	void _txSetBuddy(void);
 	void _txEchoReq(void);
 	int _rxEchoRep(Intercom_Message& msg, int payloadSize);
 	void _txWhoIsReq(void);
 	int _rxWhoIsRep(Intercom_Message& msg, int payloadSize);
-	void _fsm(void);
+	void _fsmUpdate(void);
 	
 	virtual void _tickerHook(void);
 

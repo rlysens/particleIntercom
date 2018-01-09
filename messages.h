@@ -11,5 +11,9 @@
 #include "set_buddy_t.h"
 #include "echo_request_t.h"
 #include "echo_reply_t.h"
+#include "comm_start_t.h"
+#include "comm_start_ack_t.h"
+#include "comm_stop_t.h"
+#include "comm_stop_ack_t.h"
 
 #endif /*MESSAGES_H*/

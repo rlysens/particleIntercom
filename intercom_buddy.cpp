@@ -7,12 +7,13 @@
 #define INTERCOM_BUDDY_FSM_STATE_LISTENING 1 /*Buddy is listening*/
 #define INTERCOM_BUDDY_FSM_STATE_NOT_LISTENING 0 /*Buddy is not listening*/
 
-#define INTERCOM_BUDDY_SEND_STATE_NOT_SENDING 0
-#define INTERCOM_BUDDY_SEND_STATE_SENDING 1
+#define BUTTON_STATE_RELEASED 0
+#define BUTTON_STATE_PRESSED 1
 
-#define INTERCOM_BUDDY_TICK_INTER_MS 2000
+#define INTERCOM_BUDDY_TICK_INTER_MS 500
 
-#define MIN_BYTES_TO_SEND (4096+1024)
+#define RECORD_REQ_ID_BUTTON 0
+#define RECORD_REQ_ID_INCOMING_COMM 1
 
 static const int regKey_buddyId[NUM_BUDDIES] = {REG_KEY_BUDDY_0_ID, REG_KEY_BUDDY_1_ID, REG_KEY_BUDDY_2_ID};
 static const int regKey_buddyName[NUM_BUDDIES] = {REG_KEY_BUDDY_0_NAME, REG_KEY_BUDDY_1_NAME, REG_KEY_BUDDY_2_NAME};
@@ -42,6 +43,130 @@ void Intercom_Buddy::_txSetBuddy(void) {
 	plf_assert("Msg Encode Error", numEncodedBytes>=0);
 
 	_messageHandlerp->send(intercom_message, SET_BUDDY_T_MSG_ID, numEncodedBytes, true);
+}
+
+int Intercom_Buddy::_rxCommStart(Intercom_Message& msg, int payloadSize) {
+	static comm_start_t comm_start;
+	static comm_start_ack_t comm_start_ack;
+	int numEncodedBytes;
+	int numDecodedBytes = comm_start_t_decode(msg.data, 0, payloadSize, &comm_start);
+	uint32_t myId = _messageHandlerp->getMyId();
+
+	if (numDecodedBytes < 0)
+		return -(MODULE_ID+1);
+
+	if (myId==ID_UNKNOWN)
+		return -(MODULE_ID+2);
+
+	if (comm_start.source_id != (int32_t)_buddyId) /*Did this buddy send it?*/
+		return 0;
+
+	_intercom_outgoingp->recordRequest(RECORD_REQ_ID_INCOMING_COMM, true);
+
+	comm_start_ack.source_id = myId;
+	comm_start_ack.destination_id = comm_start.source_id;
+
+	numEncodedBytes = comm_start_ack_t_encode(intercom_message.data, 0, sizeof(intercom_message.data), &comm_start_ack);
+	plf_assert("Msg Encode Error", numEncodedBytes>=0);
+
+	_messageHandlerp->send(intercom_message, COMM_START_ACK_T_MSG_ID, numEncodedBytes, true);
+
+	return 0;
+}
+
+int Intercom_Buddy::_rxCommStop(Intercom_Message& msg, int payloadSize) {
+	static comm_stop_t comm_stop;
+	static comm_stop_ack_t comm_stop_ack;
+	int numEncodedBytes;
+	int numDecodedBytes = comm_stop_t_decode(msg.data, 0, payloadSize, &comm_stop);
+	uint32_t myId = _messageHandlerp->getMyId();
+
+	if (numDecodedBytes < 0)
+		return -(MODULE_ID+1);
+
+	if (myId==ID_UNKNOWN)
+		return -(MODULE_ID+2);
+
+	if (comm_stop.source_id != (int32_t)_buddyId) /*Did this buddy send it?*/
+		return 0;
+
+	_intercom_outgoingp->recordRequest(RECORD_REQ_ID_INCOMING_COMM, false);
+
+	comm_stop_ack.source_id = myId;
+	comm_stop_ack.destination_id = comm_stop.source_id;
+
+	numEncodedBytes = comm_stop_ack_t_encode(intercom_message.data, 0, sizeof(intercom_message.data), &comm_stop_ack);
+	plf_assert("Msg Encode Error", numEncodedBytes>=0);
+
+	_messageHandlerp->send(intercom_message, COMM_STOP_ACK_T_MSG_ID, numEncodedBytes, true);
+
+	return 0;
+}
+
+void Intercom_Buddy::_txCommStart(void) {
+	int numEncodedBytes;
+	static comm_start_t comm_start;
+	uint32_t myId = _messageHandlerp->getMyId();
+
+	if (myId == ID_UNKNOWN)
+		return;
+
+	if (_buddyId == ID_UNKNOWN)	
+		return;
+
+	comm_start.source_id = myId;
+	comm_start.destination_id = _buddyId;
+
+	numEncodedBytes = comm_start_t_encode(intercom_message.data, 0, sizeof(intercom_message.data), &comm_start);
+	plf_assert("Msg Encode Error", numEncodedBytes>=0);
+
+	_messageHandlerp->send(intercom_message, COMM_START_T_MSG_ID, numEncodedBytes, true);
+}
+
+int Intercom_Buddy::_rxCommStartAck(Intercom_Message& msg, int payloadSize) {
+	static comm_start_ack_t comm_start_ack;
+	int numDecodedBytes = comm_start_ack_t_decode(msg.data, 0, payloadSize, &comm_start_ack);
+
+	if (numDecodedBytes < 0)
+		return -(MODULE_ID+1);
+
+	if (comm_start_ack.source_id == (int32_t)_buddyId) /*Did this buddy send it?*/
+		_sendCommStart = false; /*Stop sending comm_start*/
+
+	return 0;
+}
+
+void Intercom_Buddy::_txCommStop(void) {
+	int numEncodedBytes;
+	static comm_stop_t comm_stop;
+	uint32_t myId = _messageHandlerp->getMyId();
+
+	if (myId == ID_UNKNOWN)
+		return;
+
+	if (_buddyId == ID_UNKNOWN)	
+		return;
+
+	comm_stop.source_id = myId;
+	comm_stop.destination_id = _buddyId;
+
+	numEncodedBytes = comm_stop_t_encode(intercom_message.data, 0, sizeof(intercom_message.data), &comm_stop);
+	plf_assert("Msg Encode Error", numEncodedBytes>=0);
+
+	_messageHandlerp->send(intercom_message, COMM_STOP_T_MSG_ID, numEncodedBytes, true);
+}
+
+int Intercom_Buddy::_rxCommStopAck(Intercom_Message& msg, int payloadSize) {
+	static comm_stop_ack_t comm_stop_ack;
+	int numDecodedBytes = comm_stop_ack_t_decode(msg.data, 0, payloadSize, &comm_stop_ack);
+
+	if (numDecodedBytes < 0)
+		return -(MODULE_ID+1);
+
+	if (comm_stop_ack.source_id == (int32_t)_buddyId) /*Did this buddy send it?*/
+		_sendCommStop = false; /*Stop sending comm_stop*/
+
+	return 0;
 }
 
 void Intercom_Buddy::_txEchoReq(void) {
@@ -128,16 +253,13 @@ int Intercom_Buddy::_rxWhoIsRep(Intercom_Message& msg, int payloadSize) {
 	return 0;
 }
 
-void Intercom_Buddy::_fsm(void) {
-	if (_fsmState == INTERCOM_BUDDY_FSM_STATE_LISTENING) {
-		if (_echoReplyAcc == 0) {
-			++_echoRepliesMissed;
-		}
-		else {
-			_echoRepliesMissed = 0;
-		}
+void Intercom_Buddy::_fsmUpdate(void) {
+#if 0
+	PLF_PRINT(PRNTGRP_DFLT, "echoReplyAcc=%d\n", _echoReplyAcc);
+#endif
 
-		if (_echoRepliesMissed >= 2) {
+	if (_fsmState == INTERCOM_BUDDY_FSM_STATE_LISTENING) {
+		if (_echoReplyAcc==0) {
 			_fsmState = INTERCOM_BUDDY_FSM_STATE_NOT_LISTENING;
 			_buddyLedp->analogWrite(0); /*Off*/
 			PLF_PRINT(PRNTGRP_DFLT, "buddyFSM->NotListening\n");
@@ -145,7 +267,6 @@ void Intercom_Buddy::_fsm(void) {
 	}
 	else { /*Not Listening state:*/
 		if (_echoReplyAcc > 0) {
-			_echoRepliesMissed = 0;
 			_fsmState = INTERCOM_BUDDY_FSM_STATE_LISTENING;
 			_buddyLedp->breathe(200 /*tOn*/, 200 /*tOff*/, 1800 /*rise*/, 1800/*fall*/);
 			PLF_PRINT(PRNTGRP_DFLT, "buddyFSM->Listening\n");
@@ -156,38 +277,59 @@ void Intercom_Buddy::_fsm(void) {
 }
 
 bool Intercom_Buddy::checkButtonAndSend(void) {
-	bool buttonIsPressed;
-
 	plf_assert("IntercomBuddy not initialized", _initialized);
 
-	buttonIsPressed = _intercom_buttonsAndLedsp->buddyButtonIsPressed(_buddyIdx);
+	bool buttonIsPressed = _intercom_buttonsAndLedsp->buddyButtonIsPressed(_buddyIdx);
 
-	if (_sendState == INTERCOM_BUDDY_SEND_STATE_NOT_SENDING) {
-		if (buttonIsPressed && (_messageHandlerp->getMyId() != ID_UNKNOWN) && (_buddyId != ID_UNKNOWN)) {
-			_numBytesTransferedAcc = 0;
-			_sendState = INTERCOM_BUDDY_SEND_STATE_SENDING;
-		}
-	}
-	else { /*SENDING state:*/
-		if ((!buttonIsPressed) && (_numBytesTransferedAcc > MIN_BYTES_TO_SEND)) {
-			_sendState = INTERCOM_BUDDY_SEND_STATE_NOT_SENDING;
-		}
+	switch (_buttonState) {
+		case BUTTON_STATE_RELEASED:
+			if (buttonIsPressed && (_messageHandlerp->getMyId() != ID_UNKNOWN) && (_buddyId != ID_UNKNOWN)) {
+				_intercom_outgoingp->recordRequest(RECORD_REQ_ID_BUTTON, true);
+				_txCommStart();
+				_sendCommStart = true;
+				_buttonState = BUTTON_STATE_PRESSED;
+			}
+
+			break;
+
+		case BUTTON_STATE_PRESSED:
+			if (!buttonIsPressed) {
+				_intercom_outgoingp->recordRequest(RECORD_REQ_ID_BUTTON, false);
+				_txCommStop();
+				_sendCommStop = true;
+				_buttonState = BUTTON_STATE_RELEASED;
+			}
+
+			break;
+
+		default:
+			break;
 	}
 
-	if (_sendState == INTERCOM_BUDDY_SEND_STATE_SENDING) {
-		_numBytesTransferedAcc += _intercom_outgoingp->transfer(_buddyId);
-	}
+	_intercom_outgoingp->run(_buddyId);
 
-	return (_sendState == INTERCOM_BUDDY_SEND_STATE_SENDING);
+	return (_buttonState == BUTTON_STATE_PRESSED);
 }
 
 void Intercom_Buddy::_tickerHook(void) {
 	plf_assert("IntercomBuddy not initialized", _initialized);
 
-	_txSetBuddy();
-	_txWhoIsReq();
 	_txEchoReq();
-	_fsm();
+	if (_sendCommStart) {
+		_txCommStart();
+	}
+
+	if (_sendCommStop) {
+		_txCommStop();
+	}
+
+	if (++_tickCount>=4) {
+		_tickCount=0;
+		/*Do these every four ticks*/
+		_txSetBuddy();
+		_txWhoIsReq();
+		_fsmUpdate();
+	}
 }
 
 Intercom_Buddy::Intercom_Buddy() : Plf_TickerBase(INTERCOM_BUDDY_TICK_INTER_MS), _initialized(false) {
@@ -211,15 +353,21 @@ void Intercom_Buddy::init(Intercom_Outgoing* intercom_outgoingp, Intercom_Messag
 	_buddyId = ID_UNKNOWN;
 	_fsmState = INTERCOM_BUDDY_FSM_STATE_NOT_LISTENING;
 	_echoReplyAcc = 0;
-	_echoRepliesMissed = 0;
 	_prevMillis = 0;
-	_numBytesTransferedAcc = 0;
-	_sendState = INTERCOM_BUDDY_SEND_STATE_NOT_SENDING;
+	_tickCount = 0;
+	_buttonState = BUTTON_STATE_RELEASED;
 
 	_messageHandlerp->registerHandler(WHO_IS_REPLY_T_MSG_ID, messageHandlerHelper, this, true);	
 	_messageHandlerp->registerHandler(ECHO_REPLY_T_MSG_ID, messageHandlerHelper, this, true);
+	_messageHandlerp->registerHandler(COMM_START_ACK_T_MSG_ID, messageHandlerHelper, this, true);
+	_messageHandlerp->registerHandler(COMM_STOP_ACK_T_MSG_ID, messageHandlerHelper, this, true);
+	_messageHandlerp->registerHandler(COMM_START_T_MSG_ID, messageHandlerHelper, this, true);
+	_messageHandlerp->registerHandler(COMM_STOP_T_MSG_ID, messageHandlerHelper, this, true);
 
 	_buddyLedp->analogWrite(0); /*Off*/
+
+	_sendCommStart = false;
+	_sendCommStop = false;
 
 	_initialized = true;
 }
@@ -227,12 +375,24 @@ void Intercom_Buddy::init(Intercom_Outgoing* intercom_outgoingp, Intercom_Messag
 int Intercom_Buddy::handleMessage(Intercom_Message& msg, int payloadSize) {
 	plf_assert("IntercomBuddy not initialized", _initialized);
 
-	switch (msg.msg_id) {
+	switch (msg.msgId) {
     case WHO_IS_REPLY_T_MSG_ID:
     	return _rxWhoIsRep(msg, payloadSize);
 
     case ECHO_REPLY_T_MSG_ID:
     	return _rxEchoRep(msg, payloadSize);
+
+    case COMM_START_ACK_T_MSG_ID:
+    	return _rxCommStartAck(msg, payloadSize);
+
+	case COMM_STOP_ACK_T_MSG_ID:
+    	return _rxCommStopAck(msg, payloadSize);
+
+    case COMM_START_T_MSG_ID:
+    	return _rxCommStart(msg, payloadSize);
+
+	case COMM_STOP_T_MSG_ID:
+    	return _rxCommStop(msg, payloadSize);
 
     default:
       return -(MODULE_ID+5);
