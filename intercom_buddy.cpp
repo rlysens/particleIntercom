@@ -4,11 +4,11 @@
 
 #define MODULE_ID 100
 
-#define INTERCOM_BUDDY_FSM_STATE_LISTENING 1 /*Buddy is listening*/
-#define INTERCOM_BUDDY_FSM_STATE_NOT_LISTENING 0 /*Buddy is not listening*/
+#define INTERCOM_BUDDY_LISTENING_STATE_LISTENING 1 /*Buddy is listening*/
+#define INTERCOM_BUDDY_LISTENING_STATE_NOT_LISTENING 0 /*Buddy is not listening*/
 
-#define BUTTON_STATE_RELEASED 0
-#define BUTTON_STATE_PRESSED 1
+#define INTERCOM_BUDDY_BUTTON_STATE_RELEASED 0
+#define INTERCOM_BUDDY_BUTTON_STATE_PRESSED 1
 
 #define INTERCOM_BUDDY_TICK_INTER_MS 500
 
@@ -258,19 +258,27 @@ void Intercom_Buddy::_fsmUpdate(void) {
 	PLF_PRINT(PRNTGRP_DFLT, "echoReplyAcc=%d\n", _echoReplyAcc);
 #endif
 
-	if (_fsmState == INTERCOM_BUDDY_FSM_STATE_LISTENING) {
-		if (_echoReplyAcc==0) {
-			_fsmState = INTERCOM_BUDDY_FSM_STATE_NOT_LISTENING;
-			_buddyLedp->analogWrite(0); /*Off*/
-			PLF_PRINT(PRNTGRP_DFLT, "buddyFSM->NotListening\n");
-		}
-	}
-	else { /*Not Listening state:*/
-		if (_echoReplyAcc > 0) {
-			_fsmState = INTERCOM_BUDDY_FSM_STATE_LISTENING;
-			_buddyLedp->breathe(200 /*tOn*/, 200 /*tOff*/, 1800 /*rise*/, 1800/*fall*/);
-			PLF_PRINT(PRNTGRP_DFLT, "buddyFSM->Listening\n");
-		}
+	switch (_fsmState) {
+		case INTERCOM_BUDDY_LISTENING_STATE_LISTENING:
+			if (_echoReplyAcc==0) {
+				_fsmState = INTERCOM_BUDDY_LISTENING_STATE_NOT_LISTENING;
+				_buddyLedp->analogWrite(0); /*Off*/
+				PLF_PRINT(PRNTGRP_DFLT, "buddyFSM->NotListening\n");
+			}
+		
+			break;
+
+		case INTERCOM_BUDDY_LISTENING_STATE_NOT_LISTENING:
+			if (_echoReplyAcc > 0) {
+				_fsmState = INTERCOM_BUDDY_LISTENING_STATE_LISTENING;
+				_buddyLedp->breathe(200 /*tOn*/, 200 /*tOff*/, 1800 /*rise*/, 1800/*fall*/);
+				PLF_PRINT(PRNTGRP_DFLT, "buddyFSM->Listening\n");
+			}
+			
+			break;
+
+		default:
+			break;
 	}
 
 	_echoReplyAcc = 0;
@@ -282,22 +290,22 @@ bool Intercom_Buddy::checkButtonAndSend(void) {
 	bool buttonIsPressed = _intercom_buttonsAndLedsp->buddyButtonIsPressed(_buddyIdx);
 
 	switch (_buttonState) {
-		case BUTTON_STATE_RELEASED:
+		case INTERCOM_BUDDY_BUTTON_STATE_RELEASED:
 			if (buttonIsPressed && (_messageHandlerp->getMyId() != ID_UNKNOWN) && (_buddyId != ID_UNKNOWN)) {
 				_intercom_outgoingp->recordRequest(RECORD_REQ_ID_BUTTON, true);
 				_txCommStart();
 				_sendCommStart = true;
-				_buttonState = BUTTON_STATE_PRESSED;
+				_buttonState = INTERCOM_BUDDY_BUTTON_STATE_PRESSED;
 			}
 
 			break;
 
-		case BUTTON_STATE_PRESSED:
+		case INTERCOM_BUDDY_BUTTON_STATE_PRESSED:
 			if (!buttonIsPressed) {
 				_intercom_outgoingp->recordRequest(RECORD_REQ_ID_BUTTON, false);
 				_txCommStop();
 				_sendCommStop = true;
-				_buttonState = BUTTON_STATE_RELEASED;
+				_buttonState = INTERCOM_BUDDY_BUTTON_STATE_RELEASED;
 			}
 
 			break;
@@ -308,7 +316,7 @@ bool Intercom_Buddy::checkButtonAndSend(void) {
 
 	_intercom_outgoingp->run(_buddyId);
 
-	return (_buttonState == BUTTON_STATE_PRESSED);
+	return (_buttonState == INTERCOM_BUDDY_BUTTON_STATE_PRESSED);
 }
 
 void Intercom_Buddy::_tickerHook(void) {
@@ -351,11 +359,11 @@ void Intercom_Buddy::init(Intercom_Outgoing* intercom_outgoingp, Intercom_Messag
 	_buddyLedp = &(intercom_buttonsAndLedsp->getBuddyLed(buddyIdx));
 	_buddyIdx = buddyIdx;
 	_buddyId = ID_UNKNOWN;
-	_fsmState = INTERCOM_BUDDY_FSM_STATE_NOT_LISTENING;
+	_fsmState = INTERCOM_BUDDY_LISTENING_STATE_NOT_LISTENING;
 	_echoReplyAcc = 0;
 	_prevMillis = 0;
 	_tickCount = 0;
-	_buttonState = BUTTON_STATE_RELEASED;
+	_buttonState = INTERCOM_BUDDY_BUTTON_STATE_RELEASED;
 
 	_messageHandlerp->registerHandler(WHO_IS_REPLY_T_MSG_ID, messageHandlerHelper, this, true);	
 	_messageHandlerp->registerHandler(ECHO_REPLY_T_MSG_ID, messageHandlerHelper, this, true);

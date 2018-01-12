@@ -9,9 +9,9 @@
 #define ATT_STEP 20
 #define MAX_ATT (5*ATT_STEP)
 
-#define VOL_CTRL_FSM_ALL_RELEASED 0
-#define VOL_CTRL_FSM_MIN_PRESSED 1
-#define VOL_CTRL_FSM_PLUS_PRESSED 2
+#define VOL_CTRL_BUTTON_FSM_ALL_RELEASED 0
+#define VOL_CTRL_BUTTON_FSM_MIN_PRESSED 1
+#define VOL_CTRL_BUTTON_FSM_PLUS_PRESSED 2
 
 #define LED_BAR_TIMEOUT_MS 1000
 
@@ -50,7 +50,7 @@ void Intercom_VolumeControl::_startTimer(void) {
 }
 
 void Intercom_VolumeControl::_setLedBar(void) {
-	if (_fsm != VOL_CTRL_FSM_ALL_RELEASED) {
+	if (_fsm != VOL_CTRL_BUTTON_FSM_ALL_RELEASED) {
 		int level=0;
 
 		if (_curAtt >= 5*ATT_STEP) {
@@ -79,7 +79,7 @@ void Intercom_VolumeControl::_setLedBar(void) {
 
 Intercom_VolumeControl::Intercom_VolumeControl(Intercom_ButtonsAndLeds& intercom_buttonsAndLeds) : 
 	Plf_TickerBase(INTERCOM_VOL_CTRL_TICK_INTER_MS),
-	_intercom_buttonsAndLeds(intercom_buttonsAndLeds), _curAtt(DEFAULT_VOL), _fsm(VOL_CTRL_FSM_ALL_RELEASED),
+	_intercom_buttonsAndLeds(intercom_buttonsAndLeds), _curAtt(DEFAULT_VOL), _fsm(VOL_CTRL_BUTTON_FSM_ALL_RELEASED),
 	_ledTurnOffTime(0), _timerRunning(false) {
 
 	VS1063SetVol(_curAtt);
@@ -91,31 +91,31 @@ void Intercom_VolumeControl::checkButtons(void) {
 	bool decVolButtonPressed = _intercom_buttonsAndLeds.decVolumeButtonIsPressed();
 
 	switch (_fsm) {
-		case VOL_CTRL_FSM_ALL_RELEASED:
+		case VOL_CTRL_BUTTON_FSM_ALL_RELEASED:
 			if (incVolButtonPressed) {
 				_incVol();
-				_fsm = VOL_CTRL_FSM_PLUS_PRESSED;
+				_fsm = VOL_CTRL_BUTTON_FSM_PLUS_PRESSED;
 				_setLedBar();
 			}
 			else if (decVolButtonPressed) {
 				_decVol();
-				_fsm = VOL_CTRL_FSM_MIN_PRESSED;
+				_fsm = VOL_CTRL_BUTTON_FSM_MIN_PRESSED;
 				_setLedBar();
 			}
 
 			break;
 
-		case VOL_CTRL_FSM_MIN_PRESSED:
+		case VOL_CTRL_BUTTON_FSM_MIN_PRESSED:
 			if (!decVolButtonPressed) {
-				_fsm = VOL_CTRL_FSM_ALL_RELEASED;
+				_fsm = VOL_CTRL_BUTTON_FSM_ALL_RELEASED;
 				_setLedBar();
 			}
 		
 			break;
 
-		case VOL_CTRL_FSM_PLUS_PRESSED:
+		case VOL_CTRL_BUTTON_FSM_PLUS_PRESSED:
 			if (!incVolButtonPressed) {
-				_fsm = VOL_CTRL_FSM_ALL_RELEASED;
+				_fsm = VOL_CTRL_BUTTON_FSM_ALL_RELEASED;
 				_setLedBar();
 			}
 		
