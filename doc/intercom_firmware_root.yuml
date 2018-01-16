@@ -4,6 +4,7 @@
 [Intercom_Root]-drain();tick()>[Intercom_Incoming]
 [Intercom_Root]-init();tick();checkButtonAndSend()>[Intercom_Buddy]
 [Intercom_Root]-tick();checkButtons()>[Intercom_VolumeControl]
-[Intercom_Root]-checkButton()>[Intercom_BatteryCheck]
+[Intercom_Root]-checkButton()>[Intercom_BatteryChecker]
+[Intercom_Root]-checkButton()>[Intercom_WifiChecker]
 [Intercom_Root]-tick()>[Intercom_Controller]
 [Intercom_Root]-tick()>[Intercom_CloudAPI]

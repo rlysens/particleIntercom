@@ -16,6 +16,7 @@ static String buddy_2_name;
 static String buddy_2_id;
 static String secret_key;
 static String battery_lvl;
+static String rssi;
 
 static int registryHandlerHelper(int key, String& value, bool valid, void *ctxt) {
 	Intercom_CloudAPI *intercom_cloudApi = (Intercom_CloudAPI*)ctxt;
@@ -110,6 +111,8 @@ int Intercom_CloudAPI::updateVars(void) {
 
 	battery_lvl = String((int)lipo.getSOC());
 
+	rssi = String((int)_intercom_wifiChecker.getRSSI());
+
 	return 0;
 }
 
@@ -168,8 +171,9 @@ int Intercom_CloudAPI::set_key(String key_val) {
   	return 0;
 }
 
-Intercom_CloudAPI::Intercom_CloudAPI(PlfRegistry& registry) : Plf_TickerBase(INTERCOM_CLOUD_API_TICK_INTER_MS), 
-	_registry(registry),_prevMillis(0) {
+Intercom_CloudAPI::Intercom_CloudAPI(PlfRegistry& registry, Intercom_WifiChecker& intercom_wifiChecker) : 
+	Plf_TickerBase(INTERCOM_CLOUD_API_TICK_INTER_MS), 
+	_registry(registry), _intercom_wifiChecker(intercom_wifiChecker), _prevMillis(0) {
 	int res;
 	res = Particle.function("my_name", &Intercom_CloudAPI::set_my_name, this);
 	PLF_PRINT(PRNTGRP_DFLT, "Cloud function my_name register result: %d\n", res);
@@ -197,6 +201,7 @@ Intercom_CloudAPI::Intercom_CloudAPI(PlfRegistry& registry) : Plf_TickerBase(INT
 	Particle.variable("buddy_2_id", buddy_2_id);
 	Particle.variable("secret_key", secret_key);
 	Particle.variable("battery_lvl", battery_lvl);
+	Particle.variable("rssi", rssi);
 
 	_registry.registerHandler(REG_KEY_MY_NAME, registryHandlerHelper, this);
 	_registry.registerHandler(REG_KEY_BUDDY_0_NAME, registryHandlerHelper, this);

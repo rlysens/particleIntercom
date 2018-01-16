@@ -80,10 +80,10 @@ private:
 	SX1509 _io; 
 	Intercom_Led _leds[NUM_LEDS];
 	Intercom_LedBar _ledBar;
+
 public:
-	bool batteryCheckButtonIsPressed(void);
-	bool incVolumeButtonIsPressed(void);
-	bool decVolumeButtonIsPressed(void);
+	/*Button IDs: WIFI_CHECK_BUTTON, BATTERY_CHECK_BUTTON, VOL_INC_BUTTON, VOL_DEC_BUTTON. See board.h*/
+	bool buttonIsPressed(int buttonId);
 
 	bool buddyButtonIsPressed(int buddyIndex);
 	Intercom_Led& getBuddyLed(int buddyIndex);

@@ -1,5 +1,5 @@
 [Plf_TickerBase|tick();_tickerHook()]^-[Intercom_VolumeControl]
-[Intercom_VolumeControl|checkButtons()]getLedBar();incVolButtonIsPressed();decVolButtonIsPressed()->[Intercom_ButtonsAndLeds]
+[Intercom_VolumeControl|checkButtons()]getLedBar();buttonIsPressed()->[Intercom_ButtonsAndLeds]
 [Intercom_VolumeControl]-setLevel()>[Intercom_LedBar]
 [Intercom_VolumeControl]-setVol()>[VS1603_Codec]
 

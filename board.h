@@ -11,6 +11,7 @@
 #define PARTICLE_SCL D1
 
 #define BATTERY_CHECK_BUTTON 0
+#define WIFI_CHECK_BUTTON 7
 
 #define NUM_LEDS 3
 #define NUM_BUDDIES 3

@@ -3,16 +3,18 @@
 
 #include "plf_registry.h"
 #include "plf_ticker_base.h"
+#include "intercom_wifi_checker.h"
 
 class Intercom_CloudAPI : public Plf_TickerBase {
 private:
 	PlfRegistry& _registry;
+	Intercom_WifiChecker& _intercom_wifiChecker;
 	unsigned long _prevMillis;
 	
 	virtual void _tickerHook(void);
 
 public:
-	Intercom_CloudAPI(PlfRegistry& registry);
+	Intercom_CloudAPI(PlfRegistry& registry, Intercom_WifiChecker& intercom_wifiChecker);
 
 	int set_my_name(String name);
 	int set_buddy_0_name(String name);

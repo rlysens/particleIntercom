@@ -87,8 +87,8 @@ Intercom_VolumeControl::Intercom_VolumeControl(Intercom_ButtonsAndLeds& intercom
 }
 
 void Intercom_VolumeControl::checkButtons(void) {
-	bool incVolButtonPressed = _intercom_buttonsAndLeds.incVolumeButtonIsPressed();
-	bool decVolButtonPressed = _intercom_buttonsAndLeds.decVolumeButtonIsPressed();
+	bool incVolButtonPressed = _intercom_buttonsAndLeds.buttonIsPressed(VOL_INC_BUTTON);
+	bool decVolButtonPressed = _intercom_buttonsAndLeds.buttonIsPressed(VOL_DEC_BUTTON);
 
 	switch (_fsm) {
 		case VOL_CTRL_BUTTON_FSM_ALL_RELEASED:

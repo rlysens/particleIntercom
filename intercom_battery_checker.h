@@ -3,16 +3,14 @@
 
 #include "Particle.h"
 #include "intercom_buttons_and_leds.h"
+#include "intercom_level_checker_base.h"
 
-class Intercom_BatteryChecker {
+class Intercom_BatteryChecker : public Intercom_LevelCheckerBase {
 private:
-	Intercom_ButtonsAndLeds& _intercom_buttonsAndLeds;
-	int32_t _fsm;
+	virtual int _getLevel(void);
 	
 public:
 	Intercom_BatteryChecker(Intercom_ButtonsAndLeds& intercom_buttonsAndLeds);
-
-	void checkButton(void);
 };
 
 #endif /*INTERCOM_BATTERY_CHECKER_H*/

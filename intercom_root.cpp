@@ -8,9 +8,10 @@ Intercom_Root::Intercom_Root(void) :
 	_intercom_incoming(_messageHandler),
     _intercom_outgoing(_messageHandler),
 	_intercom_controller(_messageHandler, _plf_registry),
-	_intercom_cloud_api(_plf_registry),
     _intercom_volumeControl(_intercom_buttonsAndLeds),
-    _intercom_batteryChecker(_intercom_buttonsAndLeds) {
+    _intercom_batteryChecker(_intercom_buttonsAndLeds),
+    _intercom_wifiChecker(_intercom_buttonsAndLeds),
+    _intercom_cloud_api(_plf_registry, _intercom_wifiChecker) {
     int ii;
 
     for (ii=0; ii<NUM_BUDDIES; ++ii) {
@@ -36,6 +37,7 @@ void Intercom_Root::loop(void) {
     _intercom_incoming.drain();
 
     _intercom_batteryChecker.checkButton();
+    _intercom_wifiChecker.checkButton();
     
     if (!_intercom_buddies[0].checkButtonAndSend()) {
         if (!_intercom_buddies[1].checkButtonAndSend()) {

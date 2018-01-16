@@ -11,6 +11,7 @@
 #include "intercom_outgoing.h"
 #include "intercom_volume_control.h"
 #include "intercom_battery_checker.h"
+#include "intercom_wifi_checker.h"
 
 #define LOCAL_PORT 50007
 #define REMOTE_PORT 50007
@@ -28,6 +29,7 @@ private:
 	Intercom_Buddy _intercom_buddies[NUM_BUDDIES];
 	Intercom_VolumeControl _intercom_volumeControl;
 	Intercom_BatteryChecker _intercom_batteryChecker;
+	Intercom_WifiChecker _intercom_wifiChecker;
 	
 public:
 	Intercom_Root(void);

@@ -1,6 +1,0 @@
-[Plf_TickerBase|tick();_tickerHook()]^-[Intercom_BatteryChecker]
-[Intercom_BatteryChecker|checkButton()]getLedBar();batteryCheckButtonIsPressed()->[Intercom_ButtonsAndLeds]
-[Intercom_BatteryChecker]-setLevel()>[Intercom_LedBar]
-[Intercom_BatteryChecker]-getSOC()>[MAX17043]
-
-
