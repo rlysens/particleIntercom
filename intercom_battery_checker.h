@@ -11,6 +11,8 @@ private:
 	
 public:
 	Intercom_BatteryChecker(Intercom_ButtonsAndLeds& intercom_buttonsAndLeds);
+
+	int getBatteryPct(void);
 };
 
 #endif /*INTERCOM_BATTERY_CHECKER_H*/

@@ -12,13 +12,13 @@ Intercom_WifiChecker::Intercom_WifiChecker(Intercom_ButtonsAndLeds& intercom_but
 }
 
 int Intercom_WifiChecker::_getLevel(void) {
-	int rssi = getRSSI();
+	int rssi = WiFi.RSSI();
 
 	PLF_PRINT(PRNTGRP_DFLT, "rssi=%d\n", rssi);
 
 	return MAX(0,(128+rssi)/22); /*Create 6 levels*/
 }
 
-int Intercom_WifiChecker::getRSSI(void) { /*-1..-127dB. >=0 is error*/
-	return WiFi.RSSI();
+int Intercom_WifiChecker::getRSSIPct(void) { /*-1..-127dB. >=0 is error*/
+	return 100+MIN(0,WiFi.RSSI())*100/127;
 }

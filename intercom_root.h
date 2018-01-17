@@ -24,12 +24,12 @@ private:
 	Intercom_Incoming _intercom_incoming;
 	Intercom_Outgoing _intercom_outgoing;
 	Intercom_Controller _intercom_controller;
-	Intercom_CloudAPI _intercom_cloud_api;
 	Intercom_ButtonsAndLeds _intercom_buttonsAndLeds;
 	Intercom_Buddy _intercom_buddies[NUM_BUDDIES];
 	Intercom_VolumeControl _intercom_volumeControl;
 	Intercom_BatteryChecker _intercom_batteryChecker;
 	Intercom_WifiChecker _intercom_wifiChecker;
+	Intercom_CloudAPI _intercom_cloud_api;
 	
 public:
 	Intercom_Root(void);

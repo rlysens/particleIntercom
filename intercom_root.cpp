@@ -11,7 +11,7 @@ Intercom_Root::Intercom_Root(void) :
     _intercom_volumeControl(_intercom_buttonsAndLeds),
     _intercom_batteryChecker(_intercom_buttonsAndLeds),
     _intercom_wifiChecker(_intercom_buttonsAndLeds),
-    _intercom_cloud_api(_plf_registry, _intercom_wifiChecker) {
+    _intercom_cloud_api(_plf_registry, _intercom_wifiChecker, _intercom_batteryChecker) {
     int ii;
 
     for (ii=0; ii<NUM_BUDDIES; ++ii) {

@@ -2,7 +2,7 @@
 [Intercom_LevelCheckerBase]-setLevel()>[Intercom_LedBar]
 [Intercom_LevelCheckerBase]-getSOC()>[MAX17043]
 
-[Intercom_LevelCheckerBase]^-[Intercom_BatteryChecker|_getLevel()]
-[Intercom_LevelCheckerBase]^-[Intercom_WifiChecker|getRSSI()|_getLevel()]
+[Intercom_LevelCheckerBase]^-[Intercom_BatteryChecker|getBatteryPct()|_getLevel()]
+[Intercom_LevelCheckerBase]^-[Intercom_WifiChecker|getRSSIPct()|_getLevel()]
 
 

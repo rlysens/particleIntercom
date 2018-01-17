@@ -12,9 +12,13 @@ Intercom_BatteryChecker::Intercom_BatteryChecker(Intercom_ButtonsAndLeds& interc
 }
 
 int Intercom_BatteryChecker::_getLevel(void) {
-	int batteryPct = MIN((int)lipo.getSOC(), 100);
+	int batteryPct = getBatteryPct();
 	
 	PLF_PRINT(PRNTGRP_DFLT, "BatteryPct=%d\n", batteryPct);
 
 	return batteryPct/17; /*Create 6 levels*/
+}
+
+int Intercom_BatteryChecker::getBatteryPct(void) {
+	return MIN((int)lipo.getSOC(), 100);
 }

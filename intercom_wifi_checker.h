@@ -12,7 +12,7 @@ private:
 public:
 	Intercom_WifiChecker(Intercom_ButtonsAndLeds& intercom_buttonsAndLeds);
 
-	int getRSSI(void); /*-1..-127dB. >=0 is error*/
+	int getRSSIPct(void);
 };
 
 #endif /*INTERCOM_WIFI_CHECKER_H*/
