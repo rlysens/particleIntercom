@@ -15,8 +15,8 @@ static String buddy_1_id;
 static String buddy_2_name;
 static String buddy_2_id;
 static String secret_key;
-static String battery_lvl;
-static String rssi;
+static String battery_pct;
+static String wifi_pct;
 
 static int registryHandlerHelper(int key, String& value, bool valid, void *ctxt) {
 	Intercom_CloudAPI *intercom_cloudApi = (Intercom_CloudAPI*)ctxt;
@@ -109,9 +109,9 @@ int Intercom_CloudAPI::updateVars(void) {
 		secret_key = String();
 	}
 
-	battery_lvl = String(_intercom_batteryChecker.getBatteryPct());
+	battery_pct = String(_intercom_batteryChecker.getBatteryPct());
 
-	rssi = String(_intercom_wifiChecker.getRSSIPct());
+	wifi_pct = String(_intercom_wifiChecker.getRSSIPct());
 
 	return 0;
 }
@@ -202,8 +202,8 @@ Intercom_CloudAPI::Intercom_CloudAPI(PlfRegistry& registry,
 	Particle.variable("buddy_2_name", buddy_2_name);
 	Particle.variable("buddy_2_id", buddy_2_id);
 	Particle.variable("secret_key", secret_key);
-	Particle.variable("battery_lvl", battery_lvl);
-	Particle.variable("rssi", rssi);
+	Particle.variable("battery_pct", battery_pct);
+	Particle.variable("wifi_pct", wifi_pct);
 
 	_registry.registerHandler(REG_KEY_MY_NAME, registryHandlerHelper, this);
 	_registry.registerHandler(REG_KEY_BUDDY_0_NAME, registryHandlerHelper, this);
