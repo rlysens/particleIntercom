@@ -48,7 +48,11 @@ void Intercom_Led::init(SX1509& io, byte pin) {
 
 void Intercom_Led::analogWrite(byte iOn) {
 	plf_assert("Intercom_Led io=0", _iop);
+
 	_iop->analogWrite(_pin, iOn);
+#if 0
+	_iop->breathe(_pin, 100, 0, 0, 0, iOn, iOn);
+#endif
 }
 
 void Intercom_Led::blink(unsigned long tOn, unsigned long tOff, byte onIntensity, byte offIntensity) {

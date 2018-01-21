@@ -20,6 +20,8 @@ private:
 	int _buddyIdx;
 	uint32_t _buddyId;
 	int32_t _fsmState;
+	int32_t _commState;
+	int32_t _ledState;
 	int32_t _echoReplyAcc;
 	unsigned long _prevMillis;
 	int _buttonState;
@@ -40,7 +42,8 @@ private:
 	void _txWhoIsReq(void);
 	int _rxWhoIsRep(Intercom_Message& msg, int payloadSize);
 	void _fsmUpdate(void);
-	
+	void _buddyLedUpdate(void);
+
 	virtual void _tickerHook(void);
 
 public:

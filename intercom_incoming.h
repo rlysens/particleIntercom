@@ -28,6 +28,7 @@ private:
   int _stuff(int rxDataLength);
   int _receive(int8_t *rxData, int rxDataLength);
   int _fsmUpdate(void);
+
   virtual void _tickerHook(void);
 
 public:

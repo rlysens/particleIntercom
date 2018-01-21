@@ -19,10 +19,12 @@ Intercom_Root *intercom_rootp = NULL;
 SYSTEM_MODE(SEMI_AUTOMATIC);
 
 void setup() {
-  IPAddress localIP = WiFi.localIP();
   String deviceID = System.deviceID();
 
   System.set(SYSTEM_CONFIG_SOFTAP_PREFIX, "Photon");
+  
+  //STARTUP(WiFi.selectAntenna(ANT_INTERNAL)); // selects the CHIP antenna
+  STARTUP(WiFi.selectAntenna(ANT_EXTERNAL)); // selects the u.FL antenna
 
   delay(3000);
 
