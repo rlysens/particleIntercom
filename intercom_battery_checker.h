@@ -8,6 +8,8 @@
 class Intercom_BatteryChecker : public Intercom_LevelCheckerBase {
 private:
 	virtual int _getLevel(void);
+
+	void _dataDump(void);
 	
 public:
 	Intercom_BatteryChecker(Intercom_ButtonsAndLeds& intercom_buttonsAndLeds);

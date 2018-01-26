@@ -44,6 +44,8 @@ private:
 	int _encryptMsg(Intercom_Message &msg, int payloadSize);
 	int _decryptMsg(Intercom_Message &msg, int payloadSize);
 
+	void _dataDump(void);
+	
 public:
 	Intercom_MessageHandler(int localPort, IPAddress remoteIpAddress, int remotePort,
 		PlfRegistry& registry);

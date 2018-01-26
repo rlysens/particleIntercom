@@ -4,6 +4,7 @@
 #include "plf_utils.h"
 #include "plf_event_counter.h"
 #include "messages.h"
+#include "plf_data_dump.h"
 
 #define MODULE_ID 500
 
@@ -23,6 +24,7 @@
 #define INCOMING_FSM_STATE_LISTENING 0
 #define INCOMING_FSM_STATE_BUFFERING 1
 #define INCOMING_FSM_STATE_DRAINING 2
+#define INCOMING_FSM_NUM_STATES (INCOMING_FSM_STATE_DRAINING+1)
 
 static int messageHandlerHelper(Intercom_Message &msg, 
   int payloadSize, void *ctxt) {
@@ -238,4 +240,15 @@ Intercom_Incoming::Intercom_Incoming(Intercom_MessageHandler& messageHandler) :
   _messageHandler.registerHandler(VOICE_DATA_T_MSG_ID, messageHandlerHelper, this, true);
   _messageHandler.registerHandler(COMM_START_T_MSG_ID, messageHandlerHelper, this, true);
   _messageHandler.registerHandler(COMM_STOP_T_MSG_ID, messageHandlerHelper, this, true);
+
+  dataDump.registerFunction("Incoming", &Intercom_Incoming::_dataDump, this);
+}
+
+void Intercom_Incoming::_dataDump(void) {
+  const char* fsmStateStrings[INCOMING_FSM_NUM_STATES] = {"Listening", "Buffering", "Draining"};
+
+  PLF_PRINT(PRNTGRP_DFLT, "FSMstate: %s", fsmStateStrings[_fsmState]);
+  PLF_PRINT(PRNTGRP_DFLT, "BufferFillingLevelAvg: %d/%d", _movingAvg, CIRCULAR_BUFFER_SIZE);
+  PLF_PRINT(PRNTGRP_DFLT, "ActiveSender: %d", (int)_activeSender);
+  PLF_PRINT(PRNTGRP_DFLT, "RateTuningEnabled: %d", (int)_rateTuningEnable);
 }

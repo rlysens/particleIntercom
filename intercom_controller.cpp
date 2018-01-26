@@ -1,6 +1,7 @@
 #include "intercom_controller.h"
 #include "messages.h"
 #include "plf_utils.h"
+#include "plf_data_dump.h"
 
 #define MODULE_ID 400
 
@@ -122,4 +123,11 @@ Intercom_Controller::Intercom_Controller(Intercom_MessageHandler& messageHandler
  	_registry(registry) {
 	_messageHandler.registerHandler(I_AM_REPLY_T_MSG_ID, messageHandlerHelper, this, true);
 	_messageHandler.registerHandler(ECHO_REQUEST_T_MSG_ID, messageHandlerHelper, this, true);
+
+	dataDump.registerFunction("Controller", &Intercom_Controller::_dataDump, this);
+}
+
+void Intercom_Controller::_dataDump(void) {
+	PLF_PRINT(PRNTGRP_DFLT, "FSMstate: %s", _fsmState == INTERCOM_CONTROLLER_FSM_STATE_RESTARTED ? "Restarted" : "Steady");
+	PLF_PRINT(PRNTGRP_DFLT, "MyId: %d", (int)_myId);
 }

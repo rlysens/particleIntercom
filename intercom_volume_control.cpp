@@ -2,6 +2,7 @@
 #include "vs1063a_codec.h"
 #include "plf_utils.h"
 #include "sine_max_vol_ulaw_g711.h"
+#include "plf_data_dump.h"
 
 #define MODULE_ID 1400
 
@@ -12,6 +13,7 @@
 #define VOL_CTRL_BUTTON_FSM_ALL_RELEASED 0
 #define VOL_CTRL_BUTTON_FSM_MIN_PRESSED 1
 #define VOL_CTRL_BUTTON_FSM_PLUS_PRESSED 2
+#define VOL_CTRL_BUTTON_FSM_NUM_STATES (VOL_CTRL_BUTTON_FSM_PLUS_PRESSED+1)
 
 #define LED_BAR_TIMEOUT_MS 1000
 
@@ -84,6 +86,7 @@ Intercom_VolumeControl::Intercom_VolumeControl(Intercom_ButtonsAndLeds& intercom
 
 	VS1063SetVol(_curAtt);
 	_setLedBar();
+	dataDump.registerFunction("VolumeControl", &Intercom_VolumeControl::_dataDump, this);
 }
 
 void Intercom_VolumeControl::checkButtons(void) {
@@ -134,4 +137,10 @@ void Intercom_VolumeControl::_tickerHook(void) {
 			_onTimeout();
 		}
 	}
+}
+
+void Intercom_VolumeControl::_dataDump(void) {
+	const char *fsmStateStrings[] = {"AllReleased", "MinPressed", "PlusPressed"};
+	PLF_PRINT(PRNTGRP_DFLT, "CurrentAttenuation: %d (-%2.2fdB)", _curAtt, (float)_curAtt*0.5);
+	PLF_PRINT(PRNTGRP_DFLT, "FSMstate: %s", fsmStateStrings[_fsm]);
 }

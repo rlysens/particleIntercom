@@ -1,6 +1,7 @@
 #include "intercom_message_handler.h"
 #include "plf_utils.h"
 #include "plf_event_counter.h"
+#include "plf_data_dump.h"
 
 #define MODULE_ID 600
 
@@ -33,12 +34,28 @@ int Intercom_MessageHandler::_encryptMsg(Intercom_Message &msg, int payloadSize)
   int result=-1;
 
   if (_encryptionKeyIsSet) {
+#ifdef MBEDTLS_CIPHER_MODE_CBC
     result = mbedtls_xtea_crypt_cbc(&_xteaCtxt,
       MBEDTLS_XTEA_ENCRYPT,
       payloadSize,
       _ivEnc,
       msg.data,
       msg.data);
+#else /*ECB mode:*/
+    uint8_t *inputp = msg.data;
+
+    plf_assert("payloadSize must be multiple of 8", (payloadSize%8)==0);
+
+    result = 0;
+    while (payloadSize > 0) {
+      result |= mbedtls_xtea_crypt_ecb(&_xteaCtxt,
+        MBEDTLS_XTEA_ENCRYPT,
+        inputp,
+        inputp);
+      inputp += 8;
+      payloadSize -= 8;
+    }
+#endif /*MBEDTLS_CIPHER_MODE_CBC*/
   }
 
   return result;
@@ -48,13 +65,28 @@ int Intercom_MessageHandler::_decryptMsg(Intercom_Message &msg, int payloadSize)
   int result=-(MODULE_ID+1);
 
   if (_encryptionKeyIsSet) {
+#ifdef MBEDTLS_CIPHER_MODE_CBC
     result = mbedtls_xtea_crypt_cbc(&_xteaCtxt,
       MBEDTLS_XTEA_DECRYPT,
       payloadSize,
       _ivDec,
       msg.data,
       msg.data);
+#else /*ECB mode:*/
+    uint8_t *inputp = msg.data;
 
+    plf_assert("payloadSize must be multiple of 8", (payloadSize%8)==0);
+    
+    result = 0;
+    while (payloadSize > 0) {
+      result |= mbedtls_xtea_crypt_ecb(&_xteaCtxt,
+        MBEDTLS_XTEA_DECRYPT,
+        inputp,
+        inputp);
+      inputp += 8;
+      payloadSize -= 8;
+    }
+#endif /*MBEDTLS_CIPHER_MODE_CBC*/
     if (result!=0) {
       PLF_PRINT(PRNTGRP_MSGS, "Decrypt failed, res=%d.\n", result);
     }
@@ -178,4 +210,17 @@ Intercom_MessageHandler::Intercom_MessageHandler(int localPort,
   _registry.registerHandler(REG_KEY_SECRET_KEY, registryHandlerHelper, this);
 
 	_udp.begin(localPort);
+
+  dataDump.registerFunction("MessageHandler", &Intercom_MessageHandler::_dataDump, this);
+}
+
+void Intercom_MessageHandler::_dataDump(void) {
+  PLF_PRINT(PRNTGRP_DFLT, "RemoteIPaddress: %s", _remoteIpAddress.toString().c_str());
+  PLF_PRINT(PRNTGRP_DFLT, "RemotePort: %d", _remotePort);
+#ifdef MBEDTLS_CIPHER_MODE_CBC
+  PLF_PRINT(PRNTGRP_DFLT, "EncryptionMode: CBC");
+#else /*ECB:*/
+  PLF_PRINT(PRNTGRP_DFLT, "EncryptionMode: ECB");
+#endif /*MBEDTLS_CIPHER_MODE*/
+  PLF_PRINT(PRNTGRP_DFLT, "EncryptionKeyIsSet: %d", (int)_encryptionKeyIsSet);
 }

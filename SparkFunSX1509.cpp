@@ -25,6 +25,7 @@ Distributed as-is; no warranty is given.
 #include "Particle.h"
 #include "SparkFunSX1509.h"
 #include "sx1509_registers.h"
+#include "plf_utils.h"
 
 SX1509::SX1509()
 {
@@ -86,6 +87,7 @@ void SX1509::reset(bool hardware)
 			regMisc &= ~(1<<2);
 			writeByte(REG_MISC, regMisc);
 		}
+		delay(10);
 		// Reset the SX1509, the pin is active low
 		pinMode(pinReset, OUTPUT);	// set reset pin as output
 		digitalWrite(pinReset, LOW);	// pull reset pin low

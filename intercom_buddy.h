@@ -19,7 +19,7 @@ private:
 
 	int _buddyIdx;
 	uint32_t _buddyId;
-	int32_t _fsmState;
+	int32_t _listeningState;
 	int32_t _commState;
 	int32_t _ledState;
 	int32_t _echoReplyAcc;
@@ -45,6 +45,8 @@ private:
 	void _buddyLedUpdate(void);
 
 	virtual void _tickerHook(void);
+
+	void _dataDump(void);
 
 public:
 	Intercom_Buddy();

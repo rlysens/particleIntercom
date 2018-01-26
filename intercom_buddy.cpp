@@ -2,6 +2,7 @@
 #include "messages.h"
 #include "plf_utils.h"
 #include "vs1063a_codec.h"
+#include "plf_data_dump.h"
 
 #define MODULE_ID 100
 
@@ -17,6 +18,7 @@
 #define INTERCOM_BUDDY_LED_STATE_OFF 0
 #define INTERCOM_BUDDY_LED_STATE_BREATHING 1
 #define INTERCOM_BUDDY_LED_STATE_BLINKING 2
+#define INTERCOM_BUDDY_NUM_LED_STATES (INTERCOM_BUDDY_LED_STATE_BLINKING+1)
 
 #define INTERCOM_BUDDY_TICK_INTER_MS 500
 
@@ -270,18 +272,18 @@ void Intercom_Buddy::_fsmUpdate(void) {
 	PLF_PRINT(PRNTGRP_DFLT, "echoReplyAcc=%d\n", _echoReplyAcc);
 #endif
 
-	switch (_fsmState) {
+	switch (_listeningState) {
 		case INTERCOM_BUDDY_LISTENING_STATE_LISTENING:
 			if (_echoReplyAcc==0) {
-				_fsmState = INTERCOM_BUDDY_LISTENING_STATE_NOT_LISTENING;
-				PLF_PRINT(PRNTGRP_DFLT, "commState==%d, buddyFSM->NotListening\n", _commState);
+				_listeningState = INTERCOM_BUDDY_LISTENING_STATE_NOT_LISTENING;
+				PLF_PRINT(PRNTGRP_DFLT, "commState==%d, buddyFSM->NotListening\n", (int)_commState);
 			}
 			break;
 
 		case INTERCOM_BUDDY_LISTENING_STATE_NOT_LISTENING:
 			if (_echoReplyAcc > 0) {
-				_fsmState = INTERCOM_BUDDY_LISTENING_STATE_LISTENING;
-				PLF_PRINT(PRNTGRP_DFLT, "commState==%d, buddyFSM->Listening\n", _commState);
+				_listeningState = INTERCOM_BUDDY_LISTENING_STATE_LISTENING;
+				PLF_PRINT(PRNTGRP_DFLT, "commState==%d, buddyFSM->Listening\n", (int)_commState);
 			}
 			break;
 
@@ -335,7 +337,7 @@ void Intercom_Buddy::_buddyLedUpdate(void) {
 				_buddyLedp->blink(200, 200);
 				PLF_PRINT(PRNTGRP_DFLT, "Buddy %d LED state -> Blinking\n", _buddyIdx);
 			}
-			else if (_fsmState == INTERCOM_BUDDY_LISTENING_STATE_LISTENING) {
+			else if (_listeningState == INTERCOM_BUDDY_LISTENING_STATE_LISTENING) {
 				_ledState = INTERCOM_BUDDY_LED_STATE_BREATHING;
 				PLF_PRINT(PRNTGRP_DFLT, "Buddy %d LED state -> Breathing\n", _buddyIdx);
 				_buddyLedp->breathe(200 /*tOn*/, 200 /*tOff*/, 1800 /*rise*/, 1800/*fall*/);
@@ -348,7 +350,7 @@ void Intercom_Buddy::_buddyLedUpdate(void) {
 				_buddyLedp->blink(200, 200);
 				PLF_PRINT(PRNTGRP_DFLT, "Buddy %d LED state -> Blinking\n", _buddyIdx);
 			}
-			else if (_fsmState == INTERCOM_BUDDY_LISTENING_STATE_NOT_LISTENING) {
+			else if (_listeningState == INTERCOM_BUDDY_LISTENING_STATE_NOT_LISTENING) {
 				_ledState = INTERCOM_BUDDY_LED_STATE_OFF;
 				PLF_PRINT(PRNTGRP_DFLT, "Buddy %d LED state -> Off\n", _buddyIdx);
 				_buddyLedp->analogWrite(0); /*Off*/
@@ -357,7 +359,7 @@ void Intercom_Buddy::_buddyLedUpdate(void) {
 
 		case INTERCOM_BUDDY_LED_STATE_BLINKING:
 			if (_commState == INTERCOM_BUDDY_COMM_STATE_STOPPED) {
-				if (_fsmState == INTERCOM_BUDDY_LISTENING_STATE_LISTENING) {
+				if (_listeningState == INTERCOM_BUDDY_LISTENING_STATE_LISTENING) {
 					_ledState = INTERCOM_BUDDY_LED_STATE_BREATHING;
 					PLF_PRINT(PRNTGRP_DFLT, "Buddy %d LED state -> Breathing\n", _buddyIdx);
 					_buddyLedp->breathe(200 /*tOn*/, 200 /*tOff*/, 1800 /*rise*/, 1800/*fall*/);
@@ -380,7 +382,7 @@ void Intercom_Buddy::_tickerHook(void) {
 
 	_buddyLedUpdate();
 	_txEchoReq();
-	
+
 	if (_sendCommStart) {
 		_txCommStart();
 	}
@@ -417,7 +419,7 @@ void Intercom_Buddy::init(Intercom_Outgoing* intercom_outgoingp, Intercom_Messag
 	_buddyLedp = &(intercom_buttonsAndLedsp->getBuddyLed(buddyIdx));
 	_buddyIdx = buddyIdx;
 	_buddyId = ID_UNKNOWN;
-	_fsmState = INTERCOM_BUDDY_LISTENING_STATE_NOT_LISTENING;
+	_listeningState = INTERCOM_BUDDY_LISTENING_STATE_NOT_LISTENING;
 	_commState = INTERCOM_BUDDY_COMM_STATE_STOPPED;
 	_ledState = INTERCOM_BUDDY_LED_STATE_OFF;
 	_echoReplyAcc = 0;
@@ -436,6 +438,8 @@ void Intercom_Buddy::init(Intercom_Outgoing* intercom_outgoingp, Intercom_Messag
 
 	_sendCommStart = false;
 	_sendCommStop = false;
+
+	dataDump.registerFunction(String::format("Buddy%d", _buddyIdx), &Intercom_Buddy::_dataDump, this);
 
 	_initialized = true;
 }
@@ -467,4 +471,16 @@ int Intercom_Buddy::handleMessage(Intercom_Message& msg, int payloadSize) {
   }
 
   return 0;
+}
+
+void Intercom_Buddy::_dataDump(void) {
+	const char* ledStateStrings[INTERCOM_BUDDY_NUM_LED_STATES] = {"Off", "Breathing", "Blinking"};
+
+	PLF_PRINT(PRNTGRP_DFLT, "BuddyId: %d", (int)_buddyId);
+	PLF_PRINT(PRNTGRP_DFLT, "ListeningState: %s", _listeningState==INTERCOM_BUDDY_LISTENING_STATE_LISTENING ? 
+		"Listening" : "Not Listening");
+	PLF_PRINT(PRNTGRP_DFLT, "CommState: %s", _commState==INTERCOM_BUDDY_COMM_STATE_STARTED ?
+		"Started" : "Not Started");
+	PLF_PRINT(PRNTGRP_DFLT, "LedState: %s", ledStateStrings[_ledState]);
+	PLF_PRINT(PRNTGRP_DFLT, "ButtonState: %s", _buttonState==INTERCOM_BUDDY_BUTTON_STATE_RELEASED ? "Released" : "Pressed");
 }

@@ -2,6 +2,7 @@
 #include "Particle.h"
 #include "plf_utils.h"
 #include "SparkFunMAX17043.h"
+#include "plf_data_dump.h"
 
 #define MODULE_ID 300
 
@@ -122,9 +123,6 @@ int Intercom_CloudAPI::enable_printgroup(String name) {
 	if (name.startsWith(String("default"))) {
 		printgroup = PRNTGRP_DFLT;
 	}
-	else if (name.startsWith(String("stats"))) {
-		printgroup = PRNTGRP_STATS;
-	}
 	else if (name.startsWith(String("messages"))) {
 		printgroup = PRNTGRP_MSGS;
 	}
@@ -147,9 +145,6 @@ int Intercom_CloudAPI::disable_printgroup(String name) {
 	if (name.startsWith(String("default"))) {
 		printgroup = PRNTGRP_DFLT;
 	}
-	else if (name.startsWith(String("stats"))) {
-		printgroup = PRNTGRP_STATS;
-	}
 	else if (name.startsWith(String("messages"))) {
 		printgroup = PRNTGRP_MSGS;
 	}
@@ -168,6 +163,16 @@ int Intercom_CloudAPI::disable_printgroup(String name) {
 
 int Intercom_CloudAPI::set_key(String key_val) {
 	_registry.set(REG_KEY_SECRET_KEY, key_val, true /*validity*/, true /*persistency*/);
+  	return 0;
+}
+
+int Intercom_CloudAPI::list_ddump(String dummy) {
+	dataDump.listNames();
+  	return 0;
+}
+
+int Intercom_CloudAPI::ddump(String name) {
+	dataDump.dataDump(name);
   	return 0;
 }
 
@@ -192,6 +197,10 @@ Intercom_CloudAPI::Intercom_CloudAPI(PlfRegistry& registry,
 	res = Particle.function("dis_prntgrp", &Intercom_CloudAPI::disable_printgroup, this);
 	PLF_PRINT(PRNTGRP_DFLT, "Cloud function disable_printgroup register result: %d\n", res);
 	res = Particle.function("set_key", &Intercom_CloudAPI::set_key, this);
+	PLF_PRINT(PRNTGRP_DFLT, "Cloud function key register result: %d\n", res);
+	res = Particle.function("list_ddump", &Intercom_CloudAPI::list_ddump, this);
+	PLF_PRINT(PRNTGRP_DFLT, "Cloud function key register result: %d\n", res);
+	res = Particle.function("ddump", &Intercom_CloudAPI::ddump, this);
 	PLF_PRINT(PRNTGRP_DFLT, "Cloud function key register result: %d\n", res);
 
 	Particle.variable("my_name", my_name);

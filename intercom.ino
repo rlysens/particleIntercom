@@ -5,7 +5,6 @@
 #include "intercom_tests.h"
 #include "intercom_root.h"
 #include "plf_utils.h"
-#include "plf_event_counter.h"
 #include "SparkFunMAX17043.h"
 #include "SparkFunSX1509.h"
 
@@ -73,6 +72,4 @@ void loop() {
   if (intercom_rootp) {
     intercom_rootp->loop();
   }
-  
-  plf_eventCounterTick();
 }

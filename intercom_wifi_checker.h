@@ -9,6 +9,8 @@ class Intercom_WifiChecker : public Intercom_LevelCheckerBase {
 private:
 	virtual int _getLevel(void);
 	
+	void _dataDump(void);
+	
 public:
 	Intercom_WifiChecker(Intercom_ButtonsAndLeds& intercom_buttonsAndLeds);
 

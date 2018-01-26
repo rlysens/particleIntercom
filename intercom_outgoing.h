@@ -15,7 +15,8 @@ private:
 	bool _recordRequests[INTERCOM_OUTGOING_NUM_REQ_IDS];
 
 	void _fsmUpdate(void);
-
+	void _dataDump(void);
+	
 public:
 	Intercom_Outgoing(Intercom_MessageHandler& messageHandler);
 

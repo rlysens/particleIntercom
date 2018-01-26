@@ -1,6 +1,7 @@
 #include "intercom_battery_checker.h"
 #include "SparkFunMAX17043.h"
 #include "plf_utils.h"
+#include "plf_data_dump.h"
 
 #define BATTERY_CHECK_FSM_BUTTON_RELEASED 0
 #define BATTERY_CHECK_FSM_BUTTON_PRESSED 1
@@ -9,6 +10,7 @@
 
 Intercom_BatteryChecker::Intercom_BatteryChecker(Intercom_ButtonsAndLeds& intercom_buttonsAndLeds) :
 	Intercom_LevelCheckerBase(intercom_buttonsAndLeds, BATTERY_CHECK_BUTTON) {
+	dataDump.registerFunction("BatteryChecker", &Intercom_BatteryChecker::_dataDump, this);
 }
 
 int Intercom_BatteryChecker::_getLevel(void) {
@@ -21,4 +23,10 @@ int Intercom_BatteryChecker::_getLevel(void) {
 
 int Intercom_BatteryChecker::getBatteryPct(void) {
 	return MIN((int)lipo.getSOC(), 100);
+}
+
+void Intercom_BatteryChecker::_dataDump(void) {
+	int batteryPct = getBatteryPct();
+	
+	PLF_PRINT(PRNTGRP_DFLT, "BatteryPct=%d", batteryPct);
 }

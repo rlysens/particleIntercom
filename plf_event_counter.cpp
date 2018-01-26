@@ -1,35 +1,26 @@
 #include "plf_event_counter.h"
 #include "plf_utils.h"
+#include "plf_data_dump.h"
 
 #define MODULE_ID 1000
 
 #define READ_RESET_MODE
-#define PRINT_PERIOD_MS (3000UL)
 
-EventTuple_t plfEventArray[PLF_EVENT_LAST];
+Plf_EvenCounter plf_eventCounter;
 
-void plf_eventCounterTick(void) {
-    int eventIndex;
-    static int counter=0;
-    static unsigned long prevMillis=0;
-    unsigned long curMillis = millis();
+Plf_EvenCounter::Plf_EvenCounter() {
+  memset(_plfEventArray, 0, sizeof(_plfEventArray));
+  dataDump.registerFunction("Stats", &Plf_EvenCounter::_dataDump, this);
+}
 
-    /*Handle wraparound by skipping a beat*/
-    if (curMillis < prevMillis) {
-      prevMillis = curMillis;
+void Plf_EvenCounter::_dataDump(void) {
+  int eventIndex;
+  
+  for (eventIndex=0; eventIndex<PLF_EVENT_LAST; eventIndex++) {
+    //if ((icomEventArray[eventIndex].eventCount != 0) || (icomEventArray[eventIndex].initVal != 0)
+    if (_plfEventArray[eventIndex].eventName != 0) {
+        PLF_PRINT(PRNTGRP_DFLT, "%s: %d", _plfEventArray[eventIndex].eventName, _plfEventArray[eventIndex].eventCount);
+        _plfEventArray[eventIndex].eventCount = _plfEventArray[eventIndex].initVal;
     }
-    else if (curMillis - prevMillis > PRINT_PERIOD_MS) {
-      prevMillis = curMillis;
-
-      PLF_PRINT(PRNTGRP_STATS, "--- Events Counted[%d]--->\n",counter++);
-
-      for (eventIndex=0; eventIndex<PLF_EVENT_LAST; eventIndex++) {
-        //if ((icomEventArray[eventIndex].eventCount != 0) || (icomEventArray[eventIndex].initVal != 0)
-        if (plfEventArray[eventIndex].eventName != 0) {
-            PLF_PRINT(PRNTGRP_STATS, "%s: %d\n", plfEventArray[eventIndex].eventName, plfEventArray[eventIndex].eventCount);
-            plfEventArray[eventIndex].eventCount = plfEventArray[eventIndex].initVal;
-        }
-      }
-      PLF_PRINT(PRNTGRP_STATS, "<--- Events Counted---\n");
-    }
+  }
 }

@@ -12,8 +12,6 @@ typedef struct {
     int initVal;
 } EventTuple_t;
 
-extern EventTuple_t plfEventArray[];
-
 enum EventIds {
     UDP_BYTES_RX,
     RX_BUF_PREFILL_DONE,
@@ -43,14 +41,52 @@ enum EventIds {
     PLF_EVENT_LAST
 };
 
-#define PLF_COUNT_EVENT(eventId) do {++(plfEventArray[eventId].eventCount); plfEventArray[eventId].eventName=#eventId;} while (0)
-#define PLF_COUNT_VAL(eventId, val) do {plfEventArray[eventId].eventCount += (val); plfEventArray[eventId].eventName=#eventId;} while (0)
+#define PLF_COUNT_EVENT(eventId) plf_eventCounter.countEvent(eventId, #eventId)
+#define PLF_COUNT_VAL(eventId, val) plf_eventCounter.countVal(eventId, val, #eventId)
 
-#define PLF_COUNT_MAX(eventId, val) do {int temp=val;plfEventArray[eventId].eventCount = MAX(plfEventArray[eventId].eventCount, temp);plfEventArray[eventId].eventName=#eventId;} while (0)
-#define PLF_COUNT_MIN(eventId, val) do {int temp=val;plfEventArray[eventId].eventCount = MIN(plfEventArray[eventId].eventCount, temp);plfEventArray[eventId].eventName=#eventId;} while (0)
+#define PLF_COUNT_MAX(eventId, val) plf_eventCounter.countMax(eventId, val, #eventId)
+#define PLF_COUNT_MIN(eventId, val) plf_eventCounter.countMin(eventId, val, #eventId)
 
-#define PLF_COUNT_MIN_INIT(eventId) do {plfEventArray[eventId].initVal = 0x7fffffff; plfEventArray[eventId].eventCount = plfEventArray[eventId].initVal;} while (0)
+#define PLF_COUNT_MIN_INIT(eventId) plf_eventCounter.countMinInit(eventId)
 
 void plf_eventCounterTick(void);
 
+class Plf_EvenCounter {
+private:
+    EventTuple_t _plfEventArray[PLF_EVENT_LAST];
+
+    void _dataDump(void);
+
+public:
+    Plf_EvenCounter();
+
+    inline void countEvent(int eventId, const char* eventName) {
+        ++(_plfEventArray[eventId].eventCount); 
+        _plfEventArray[eventId].eventName=eventName;    
+    }
+
+    inline void countVal(int eventId, int val, const char* eventName) {
+        _plfEventArray[eventId].eventCount += val; 
+        _plfEventArray[eventId].eventName = eventName;
+    }
+
+    inline void countMax(int eventId, int val, const char* eventName) {
+        int temp=val;
+        _plfEventArray[eventId].eventCount = MAX(_plfEventArray[eventId].eventCount, temp);
+        _plfEventArray[eventId].eventName = eventName;
+    }
+
+    inline void countMin(int eventId, int val, const char* eventName) {
+        int temp=val;
+        _plfEventArray[eventId].eventCount = MIN(_plfEventArray[eventId].eventCount, temp);
+        _plfEventArray[eventId].eventName = eventName;
+    }
+
+    inline void countMinInit(int eventId) {
+        _plfEventArray[eventId].initVal = 0x7fffffff; 
+        _plfEventArray[eventId].eventCount = _plfEventArray[eventId].initVal;
+    }
+};
+
+extern Plf_EvenCounter plf_eventCounter;
 #endif /*PLF_EVENT_COUNTER_H*/

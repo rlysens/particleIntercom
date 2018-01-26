@@ -22,6 +22,8 @@ private:
 
 	virtual void _tickerHook(void);
 	
+	void _dataDump(void);
+
 public:
 	Intercom_VolumeControl(Intercom_ButtonsAndLeds& intercom_buttonsAndLeds);
 

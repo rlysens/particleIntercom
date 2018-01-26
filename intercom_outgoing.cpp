@@ -2,6 +2,7 @@
 #include "plf_event_counter.h"
 #include "vs1063a_codec.h"
 #include "messages.h"
+#include "plf_data_dump.h"
 
 #define MODULE_ID 700
 
@@ -13,6 +14,7 @@
 Intercom_Outgoing::Intercom_Outgoing(Intercom_MessageHandler& messageHandler) : _messageHandler(messageHandler), 
   _fsmState(INTERCOM_OUTGOING_FSM_IDLE), _numBytesSentAcc(0), _seqNumber(0) {
     memset(_recordRequests, 0, sizeof(_recordRequests));
+    dataDump.registerFunction("Outgoing", &Intercom_Outgoing::_dataDump, this);
 }
 
 void Intercom_Outgoing::_fsmUpdate(void) {
@@ -106,11 +108,21 @@ void Intercom_Outgoing::run(uint32_t buddyId) {
 
   if (_messageHandler.send(intercom_message, VOICE_DATA_T_MSG_ID, 
     numEncodedBytes, true)) {
-    PLF_PRINT(PRNTGRP_DFLT, ("Voice data send failed\n"));
+    PLF_PRINT(PRNTGRP_DFLT, "Voice data send failed.");
     return;
   }
 
   //PLF_PRINT(PRNTGRP_DFLT, "O:%d\n", recordedNumBytes);
 
   _numBytesSentAcc += recordedNumBytes;
+}
+
+void Intercom_Outgoing::_dataDump(void) {
+  int ii;
+  PLF_PRINT(PRNTGRP_DFLT, "FSMstate: %s", _fsmState == INTERCOM_OUTGOING_FSM_IDLE ? "Idle" : "Recording");
+  PLF_PRINT(PRNTGRP_DFLT, "NumBytesSent: %d", _numBytesSentAcc);
+
+  for (ii=0; ii<INTERCOM_OUTGOING_NUM_REQ_IDS;++ii) {
+    PLF_PRINT(PRNTGRP_DFLT, "RecordRequest[%d]=%d",ii, (int)_recordRequests[ii]);
+  }
 }

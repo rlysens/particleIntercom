@@ -26,6 +26,8 @@ public:
 	int enable_printgroup(String name);
 	int disable_printgroup(String name);
 	int set_key(String key_val);
+	int list_ddump(String dummy);
+	int ddump(String name);
 
 	/*private*/
 	int updateVars(void);

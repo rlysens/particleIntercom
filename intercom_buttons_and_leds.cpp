@@ -70,8 +70,11 @@ Intercom_ButtonsAndLeds::Intercom_ButtonsAndLeds() {
 	byte result;
 	static byte pins[] = {LED_BAR_0_LED,LED_BAR_1_LED,LED_BAR_2_LED,LED_BAR_3_LED,LED_BAR_4_LED};
 
-	result = _io.begin(SX1509_ADDRESS, SX1509_RESET_PIN);
-	plf_assert("SX1509 init. failed", result!=0);
+	result = _io.begin(SX1509_ADDRESS);
+	while (result==0) {
+		PLF_PRINT(PRNTGRP_DFLT, "SX1509 init. failed. Retrying...\n");
+		result = _io.begin(SX1509_ADDRESS);
+	}
 
 	_leds[BUDDY_0_IDX].init(_io, BUDDY_0_LED);
 	_leds[BUDDY_1_IDX].init(_io, BUDDY_1_LED);

@@ -35,6 +35,8 @@ HOST = ''
 HOST_PORT = 50007
 NAME_KEYS = None
 MAX_NUM_BUDDIES = 3
+#ENCRYPTION_MODE = xtea.MODE_CBC
+ENCRYPTION_MODE = xtea.MODE_ECB
 
 id_counter = 1
 
@@ -128,8 +130,8 @@ class Intercom:
         self.next_buddy_idx = 0
         #This could raise an exception
         self.keyString = NAME_KEYS[trimString(self.name)]
-        self.encCrypto = xtea.new(self.keyString, mode=xtea.MODE_CBC, IV="\0"*8)
-        self.decCrypto = xtea.new(self.keyString, mode=xtea.MODE_CBC, IV="\0"*8)
+        self.encCrypto = xtea.new(self.keyString, mode=ENCRYPTION_MODE, IV="\0"*8)
+        self.decCrypto = xtea.new(self.keyString, mode=ENCRYPTION_MODE, IV="\0"*8)
 
     def getEncoderCryptoCodec(self):
         return self.encCrypto

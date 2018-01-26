@@ -20,6 +20,8 @@ private:
 
 	virtual void _tickerHook(void);
 
+	void _dataDump(void);
+	
 public:
 	Intercom_Controller(Intercom_MessageHandler& messageHandler, PlfRegistry &registry);
 	

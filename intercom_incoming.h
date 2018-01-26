@@ -31,6 +31,8 @@ private:
 
   virtual void _tickerHook(void);
 
+  void _dataDump(void);
+  
 public:
   Intercom_Incoming(Intercom_MessageHandler& messageHandler);
 
