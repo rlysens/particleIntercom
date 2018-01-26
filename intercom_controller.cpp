@@ -2,6 +2,7 @@
 #include "messages.h"
 #include "plf_utils.h"
 #include "plf_data_dump.h"
+#include "plf_registry.h"
 
 #define MODULE_ID 400
 
@@ -25,7 +26,7 @@ void Intercom_Controller::_i_am(void) {
 	bool myNameIsSet;
 	String myName;
 
-	_registry.get(REG_KEY_MY_NAME, myName, myNameIsSet);
+	plf_registry.get(REG_KEY_MY_NAME, myName, myNameIsSet);
 	if (!myNameIsSet)
 		return;
 
@@ -73,7 +74,7 @@ int Intercom_Controller::_i_am_reply(Intercom_Message& msg, int payloadSize) {
 		return -(MODULE_ID+3);
 	}
 
-	_registry.get(REG_KEY_MY_NAME, myName, myNameIsSet);
+	plf_registry.get(REG_KEY_MY_NAME, myName, myNameIsSet);
 	if (!myNameIsSet) {
 		PLF_PRINT(PRNTGRP_DFLT, "i_am_reply received while myName not set\n");
 		return -(MODULE_ID+4);
@@ -117,10 +118,9 @@ void Intercom_Controller::_tickerHook(void) {
 	_i_am();
 }
 
-Intercom_Controller::Intercom_Controller(Intercom_MessageHandler& messageHandler, PlfRegistry &registry) : 
+Intercom_Controller::Intercom_Controller(Intercom_MessageHandler& messageHandler) : 
 	Plf_TickerBase(INTERCOM_CONTROLLER_TICK_INTER_MS), _messageHandler(messageHandler),
-	_fsmState(INTERCOM_CONTROLLER_FSM_STATE_RESTARTED), _prevMillis(0),
- 	_registry(registry) {
+	_fsmState(INTERCOM_CONTROLLER_FSM_STATE_RESTARTED), _prevMillis(0) {
 	_messageHandler.registerHandler(I_AM_REPLY_T_MSG_ID, messageHandlerHelper, this, true);
 	_messageHandler.registerHandler(ECHO_REQUEST_T_MSG_ID, messageHandlerHelper, this, true);
 

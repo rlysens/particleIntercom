@@ -3,7 +3,6 @@
 
 #include "Particle.h"
 #include "intercom_message_handler.h"
-#include "plf_registry.h"
 #include "intercom_buttons_and_leds.h"
 #include "intercom_outgoing.h"
 #include "board.h"
@@ -13,7 +12,6 @@ class Intercom_Buddy : public Plf_TickerBase {
 private:
 	Intercom_Outgoing *_intercom_outgoingp;
 	Intercom_MessageHandler* _messageHandlerp;
-	PlfRegistry* _registryp;
 	Intercom_ButtonsAndLeds* _intercom_buttonsAndLedsp;
 	Intercom_Led* _buddyLedp;
 
@@ -52,7 +50,7 @@ public:
 	Intercom_Buddy();
 
 	void init(Intercom_Outgoing *intercom_outgoingp, Intercom_MessageHandler* messageHandlerp, 
-		PlfRegistry *registryp, Intercom_ButtonsAndLeds* intercom_buttonsAndLedsp, int buddyIndex);
+		Intercom_ButtonsAndLeds* intercom_buttonsAndLedsp, int buddyIndex);
 
 	bool checkButtonAndSend(void);
 

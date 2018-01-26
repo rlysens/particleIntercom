@@ -3,6 +3,7 @@
 #include "plf_utils.h"
 #include "vs1063a_codec.h"
 #include "plf_data_dump.h"
+#include "plf_registry.h"
 
 #define MODULE_ID 100
 
@@ -222,7 +223,7 @@ void Intercom_Buddy::_txWhoIsReq(void) {
 	String buddyName;
 	bool buddyNameIsSet;
 
-	_registryp->get(regKey_buddyName[_buddyIdx], buddyName, buddyNameIsSet);
+	plf_registry.get(regKey_buddyName[_buddyIdx], buddyName, buddyNameIsSet);
 	if (!buddyNameIsSet)
 		return;
 
@@ -244,7 +245,7 @@ int Intercom_Buddy::_rxWhoIsRep(Intercom_Message& msg, int payloadSize) {
 	if (numDecodedBytes < 0)
 		return -(MODULE_ID+2);
 
-	_registryp->get(regKey_buddyName[_buddyIdx], buddyName, buddyNameIsSet);
+	plf_registry.get(regKey_buddyName[_buddyIdx], buddyName, buddyNameIsSet);
 	if (!buddyNameIsSet) {
 		return -(MODULE_ID+3);
 	}
@@ -261,7 +262,7 @@ int Intercom_Buddy::_rxWhoIsRep(Intercom_Message& msg, int payloadSize) {
 
 	/*Put a string version of the buddy_id in the registry*/
 	buddyId_s = String(who_is_reply.id);
-	_registryp->set(regKey_buddyId[_buddyIdx], buddyId_s, true /*validity*/, false /*persistency*/);
+	plf_registry.set(regKey_buddyId[_buddyIdx], buddyId_s, true /*validity*/, false /*persistency*/);
 	_buddyId = who_is_reply.id;
 	
 	return 0;
@@ -403,18 +404,16 @@ void Intercom_Buddy::_tickerHook(void) {
 Intercom_Buddy::Intercom_Buddy() : Plf_TickerBase(INTERCOM_BUDDY_TICK_INTER_MS), _initialized(false) {
 }
 
-void Intercom_Buddy::init(Intercom_Outgoing* intercom_outgoingp, Intercom_MessageHandler* messageHandlerp, PlfRegistry* registryp, 
+void Intercom_Buddy::init(Intercom_Outgoing* intercom_outgoingp, Intercom_MessageHandler* messageHandlerp, 
 	Intercom_ButtonsAndLeds* intercom_buttonsAndLedsp, int buddyIdx) {
 
 	plf_assert("NULL ptr in IntercomBuddy::init", intercom_outgoingp);
 	plf_assert("NULL ptr in IntercomBuddy::init", messageHandlerp);
-	plf_assert("NULL ptr in IntercomBuddy::init", registryp);
 	plf_assert("NULL ptr in IntercomBuddy::init", intercom_buttonsAndLedsp);
 	plf_assert("BuddyIdx out of range", buddyIdx<NUM_BUDDIES);
 
 	_intercom_outgoingp = intercom_outgoingp;
 	_messageHandlerp = messageHandlerp;
-	_registryp = registryp;
 	_intercom_buttonsAndLedsp = intercom_buttonsAndLedsp;
 	_buddyLedp = &(intercom_buttonsAndLedsp->getBuddyLed(buddyIdx));
 	_buddyIdx = buddyIdx;

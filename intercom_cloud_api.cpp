@@ -3,6 +3,7 @@
 #include "plf_utils.h"
 #include "SparkFunMAX17043.h"
 #include "plf_data_dump.h"
+#include "plf_registry.h"
 
 #define MODULE_ID 300
 
@@ -19,13 +20,8 @@ static String secret_key;
 static String battery_pct;
 static String wifi_pct;
 
-static int registryHandlerHelper(int key, String& value, bool valid, void *ctxt) {
-	Intercom_CloudAPI *intercom_cloudApi = (Intercom_CloudAPI*)ctxt;
-
-	plf_assert("icom_cloud_api NULL ptr", intercom_cloudApi);
-
-	intercom_cloudApi->updateVars();
-
+int Intercom_CloudAPI::_registryHandler(int key, String& value, bool valid) {
+	updateVars();
 	return 0;
 }
 
@@ -34,78 +30,78 @@ void Intercom_CloudAPI::_tickerHook(void) {
 }
 
 int Intercom_CloudAPI::set_my_name(String name) {
-	_registry.set(REG_KEY_MY_NAME, name, true /*validity*/, true /*persistency*/);
+	plf_registry.set(REG_KEY_MY_NAME, name, true /*validity*/, true /*persistency*/);
   	return 0;
 }
 
 int Intercom_CloudAPI::set_buddy_0_name(String name) {
 	String dummyId = "-1";
 	/*Erase buddy_id when setting a new name*/
-	_registry.set(REG_KEY_BUDDY_0_ID, dummyId, false /*validity*/, false /*persistency*/);
-	_registry.set(REG_KEY_BUDDY_0_NAME, name, true /*validity*/, true /*persistency*/);
+	plf_registry.set(REG_KEY_BUDDY_0_ID, dummyId, false /*validity*/, false /*persistency*/);
+	plf_registry.set(REG_KEY_BUDDY_0_NAME, name, true /*validity*/, true /*persistency*/);
 	return 0;
 }
 
 int Intercom_CloudAPI::set_buddy_1_name(String name) {
 	String dummyId = "-1";
 	/*Erase buddy_id when setting a new name*/
-	_registry.set(REG_KEY_BUDDY_1_ID, dummyId, false /*validity*/, false /*persistency*/);
-	_registry.set(REG_KEY_BUDDY_1_NAME, name, true /*validity*/, true /*persistency*/);
+	plf_registry.set(REG_KEY_BUDDY_1_ID, dummyId, false /*validity*/, false /*persistency*/);
+	plf_registry.set(REG_KEY_BUDDY_1_NAME, name, true /*validity*/, true /*persistency*/);
 	return 0;
 }
 
 int Intercom_CloudAPI::set_buddy_2_name(String name) {
 	String dummyId = "-1";
 	/*Erase buddy_id when setting a new name*/
-	_registry.set(REG_KEY_BUDDY_2_ID, dummyId, false /*validity*/, false /*persistency*/);
-	_registry.set(REG_KEY_BUDDY_2_NAME, name, true /*validity*/, true /*persistency*/);
+	plf_registry.set(REG_KEY_BUDDY_2_ID, dummyId, false /*validity*/, false /*persistency*/);
+	plf_registry.set(REG_KEY_BUDDY_2_NAME, name, true /*validity*/, true /*persistency*/);
 	return 0;
 }
 
 int Intercom_CloudAPI::erase(String name) {
-	_registry.erase();
+	plf_registry.erase();
 	return 0;
 }
 
 int Intercom_CloudAPI::updateVars(void) {
 	bool valid;
 
-	_registry.get(REG_KEY_MY_NAME, my_name, valid);
+	plf_registry.get(REG_KEY_MY_NAME, my_name, valid);
 	if (!valid) {
 		my_name = String();
 	}
 
-	_registry.get(REG_KEY_BUDDY_0_NAME, buddy_0_name, valid);
+	plf_registry.get(REG_KEY_BUDDY_0_NAME, buddy_0_name, valid);
 	if (!valid) {
 		buddy_0_name = String();
 	}
 
-	_registry.get(REG_KEY_BUDDY_0_ID, buddy_0_id, valid);
+	plf_registry.get(REG_KEY_BUDDY_0_ID, buddy_0_id, valid);
 	if (!valid) {
 		buddy_0_id = String();
 	}
 
-	_registry.get(REG_KEY_BUDDY_1_NAME, buddy_1_name, valid);
+	plf_registry.get(REG_KEY_BUDDY_1_NAME, buddy_1_name, valid);
 	if (!valid) {
 		buddy_1_name = String();
 	}
 
-	_registry.get(REG_KEY_BUDDY_1_ID, buddy_1_id, valid);
+	plf_registry.get(REG_KEY_BUDDY_1_ID, buddy_1_id, valid);
 	if (!valid) {
 		buddy_1_id = String();
 	}
 
-	_registry.get(REG_KEY_BUDDY_2_NAME, buddy_2_name, valid);
+	plf_registry.get(REG_KEY_BUDDY_2_NAME, buddy_2_name, valid);
 	if (!valid) {
 		buddy_2_name = String();
 	}
 
-	_registry.get(REG_KEY_BUDDY_2_ID, buddy_2_id, valid);
+	plf_registry.get(REG_KEY_BUDDY_2_ID, buddy_2_id, valid);
 	if (!valid) {
 		buddy_2_id = String();
 	}
 
-	_registry.get(REG_KEY_SECRET_KEY, secret_key, valid);
+	plf_registry.get(REG_KEY_SECRET_KEY, secret_key, valid);
 	if (!valid) {
 		secret_key = String();
 	}
@@ -162,7 +158,7 @@ int Intercom_CloudAPI::disable_printgroup(String name) {
 }
 
 int Intercom_CloudAPI::set_key(String key_val) {
-	_registry.set(REG_KEY_SECRET_KEY, key_val, true /*validity*/, true /*persistency*/);
+	plf_registry.set(REG_KEY_SECRET_KEY, key_val, true /*validity*/, true /*persistency*/);
   	return 0;
 }
 
@@ -176,10 +172,9 @@ int Intercom_CloudAPI::ddump(String name) {
   	return 0;
 }
 
-Intercom_CloudAPI::Intercom_CloudAPI(PlfRegistry& registry, 
-	Intercom_WifiChecker& intercom_wifiChecker, Intercom_BatteryChecker& intercom_batteryChecker) : 
+Intercom_CloudAPI::Intercom_CloudAPI(Intercom_WifiChecker& intercom_wifiChecker, Intercom_BatteryChecker& intercom_batteryChecker) : 
 	Plf_TickerBase(INTERCOM_CLOUD_API_TICK_INTER_MS), 
-	_registry(registry), _intercom_wifiChecker(intercom_wifiChecker),
+	_intercom_wifiChecker(intercom_wifiChecker),
 	_intercom_batteryChecker(intercom_batteryChecker), _prevMillis(0) {
 	int res;
 	res = Particle.function("my_name", &Intercom_CloudAPI::set_my_name, this);
@@ -214,14 +209,14 @@ Intercom_CloudAPI::Intercom_CloudAPI(PlfRegistry& registry,
 	Particle.variable("battery_pct", battery_pct);
 	Particle.variable("wifi_pct", wifi_pct);
 
-	_registry.registerHandler(REG_KEY_MY_NAME, registryHandlerHelper, this);
-	_registry.registerHandler(REG_KEY_BUDDY_0_NAME, registryHandlerHelper, this);
-	_registry.registerHandler(REG_KEY_BUDDY_0_ID, registryHandlerHelper, this);
-	_registry.registerHandler(REG_KEY_BUDDY_1_NAME, registryHandlerHelper, this);
-	_registry.registerHandler(REG_KEY_BUDDY_1_ID, registryHandlerHelper, this);
-	_registry.registerHandler(REG_KEY_BUDDY_2_NAME, registryHandlerHelper, this);
-	_registry.registerHandler(REG_KEY_BUDDY_2_ID, registryHandlerHelper, this);
-	_registry.registerHandler(REG_KEY_SECRET_KEY, registryHandlerHelper, this);
+	PLF_REGISTRY_REGISTER_HANDLER(REG_KEY_MY_NAME, &Intercom_CloudAPI::_registryHandler, this);
+	PLF_REGISTRY_REGISTER_HANDLER(REG_KEY_BUDDY_0_NAME, &Intercom_CloudAPI::_registryHandler, this);
+	PLF_REGISTRY_REGISTER_HANDLER(REG_KEY_BUDDY_0_ID, &Intercom_CloudAPI::_registryHandler, this);
+	PLF_REGISTRY_REGISTER_HANDLER(REG_KEY_BUDDY_1_NAME, &Intercom_CloudAPI::_registryHandler, this);
+	PLF_REGISTRY_REGISTER_HANDLER(REG_KEY_BUDDY_1_ID, &Intercom_CloudAPI::_registryHandler, this);
+	PLF_REGISTRY_REGISTER_HANDLER(REG_KEY_BUDDY_2_NAME, &Intercom_CloudAPI::_registryHandler, this);
+	PLF_REGISTRY_REGISTER_HANDLER(REG_KEY_BUDDY_2_ID, &Intercom_CloudAPI::_registryHandler, this);
+	PLF_REGISTRY_REGISTER_HANDLER(REG_KEY_SECRET_KEY, &Intercom_CloudAPI::_registryHandler, this);
 }
 
 	

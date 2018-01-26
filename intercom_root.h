@@ -5,7 +5,6 @@
 #include "intercom_incoming.h"
 #include "intercom_controller.h"
 #include "intercom_buddy.h"
-#include "plf_registry.h"
 #include "intercom_cloud_api.h"
 #include "intercom_buttons_and_leds.h"
 #include "intercom_outgoing.h"
@@ -19,7 +18,6 @@
 
 class Intercom_Root {
 private:
-	PlfRegistry _plf_registry;
 	Intercom_MessageHandler _messageHandler;
 	Intercom_Incoming _intercom_incoming;
 	Intercom_Outgoing _intercom_outgoing;

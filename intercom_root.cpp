@@ -1,28 +1,28 @@
 #include "intercom_root.h"
 #include "plf_utils.h"
+#include "plf_registry.h"
 
 #define MODULE_ID 800
 
 Intercom_Root::Intercom_Root(void) :
-	_messageHandler(LOCAL_PORT, REMOTE_IP, REMOTE_PORT, _plf_registry),
+	_messageHandler(LOCAL_PORT, REMOTE_IP, REMOTE_PORT),
 	_intercom_incoming(_messageHandler),
     _intercom_outgoing(_messageHandler),
-	_intercom_controller(_messageHandler, _plf_registry),
+	_intercom_controller(_messageHandler),
     _intercom_volumeControl(_intercom_buttonsAndLeds),
     _intercom_batteryChecker(_intercom_buttonsAndLeds),
     _intercom_wifiChecker(_intercom_buttonsAndLeds),
-    _intercom_cloud_api(_plf_registry, _intercom_wifiChecker, _intercom_batteryChecker) {
+    _intercom_cloud_api(_intercom_wifiChecker, _intercom_batteryChecker) {
     int ii;
 
     for (ii=0; ii<NUM_BUDDIES; ++ii) {
         _intercom_buddies[ii].init(&_intercom_outgoing, 
             &_messageHandler, 
-            &_plf_registry, 
             &_intercom_buttonsAndLeds,
             ii);
     }
 
-	_plf_registry.go();
+	plf_registry.go();
 }
 
 void Intercom_Root::loop(void) {

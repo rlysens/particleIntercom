@@ -2,23 +2,19 @@
 #include "plf_utils.h"
 #include "plf_event_counter.h"
 #include "plf_data_dump.h"
+#include "plf_registry.h"
 
 #define MODULE_ID 600
 
 Intercom_Message intercom_message; /*Shared by all message_handler users*/
 
-static int registryHandlerHelper(int key, String& value, bool valid, void *ctxt) {
-  Intercom_MessageHandler *msgHandlerp = (Intercom_MessageHandler*)ctxt;
-
-  PLF_PRINT(PRNTGRP_DFLT,"In registryHandlerHelper\n");
-
-  plf_assert("msgHandlerp NULL ptr", msgHandlerp);
+int Intercom_MessageHandler::_registryHandler(int key, String& value, bool valid) {
   plf_assert("invalid reg key", key == REG_KEY_SECRET_KEY);
 
   if (valid) {
     uint8_t keyArray[17]; /*+1 because getBytes add zero terminator*/
     value.getBytes(keyArray, sizeof(keyArray));
-    msgHandlerp->setEncryptionKey(keyArray);
+    setEncryptionKey(keyArray);
   }
 
   return 0;
@@ -193,9 +189,9 @@ int Intercom_MessageHandler::registerHandler(uint16_t id,
 }
 
 Intercom_MessageHandler::Intercom_MessageHandler(int localPort, 
-	IPAddress remoteIpAddress, int remotePort, PlfRegistry& registry) : 
+	IPAddress remoteIpAddress, int remotePort) : 
 	_remoteIpAddress(remoteIpAddress),
-	_remotePort(remotePort), _msgTable(), _myId(ID_UNKNOWN), _registry(registry),
+	_remotePort(remotePort), _msgTable(), _myId(ID_UNKNOWN),
   _encryptionKeyIsSet(false) {
 
 	if (!_udp.setBuffer(sizeof(Intercom_Message))) {
@@ -207,7 +203,7 @@ Intercom_MessageHandler::Intercom_MessageHandler(int localPort,
 
   mbedtls_xtea_init(&_xteaCtxt);
 
-  _registry.registerHandler(REG_KEY_SECRET_KEY, registryHandlerHelper, this);
+  PLF_REGISTRY_REGISTER_HANDLER(REG_KEY_SECRET_KEY, &Intercom_MessageHandler::_registryHandler, this);
 
 	_udp.begin(localPort);
 

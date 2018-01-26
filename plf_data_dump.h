@@ -6,12 +6,11 @@
 
 #define MAX_NUM_DATA_DUMPERS 50
 
-typedef void (user_function_void_void_t)(void);
-typedef std::function<user_function_void_void_t> user_std_function_void_void_t;
+typedef std::function<void (void)> std_function_void_void_t;
 
 typedef struct Plf_DataDumpNameFun {
 	String name;
-	user_std_function_void_void_t *func;
+	std_function_void_void_t *func;
 } Plf_DataDumpNameFun;
 
 class Plf_DataDump {
@@ -29,7 +28,7 @@ public:
 	
 private:
 
-    void _registerFunction(String name, user_std_function_void_void_t func);
+    void _registerFunction(String name, std_function_void_void_t func);
 
 	int _lookup(String name);
 

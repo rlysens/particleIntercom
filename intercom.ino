@@ -7,12 +7,17 @@
 #include "plf_utils.h"
 #include "SparkFunMAX17043.h"
 #include "SparkFunSX1509.h"
+#include "plf_data_dump.h"
+#include "plf_registry.h"
 
 PRODUCT_ID(3891);
 PRODUCT_VERSION(1);
 
 // Use primary serial over USB interface for logging output. Used by PLF_PRINT
 SerialLogHandler logHandler;
+Plf_DataDump dataDump;
+Plf_Registry plf_registry;
+
 Intercom_Root *intercom_rootp = NULL;
 
 SYSTEM_MODE(SEMI_AUTOMATIC);

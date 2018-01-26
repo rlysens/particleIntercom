@@ -2,6 +2,7 @@
 #define PLF_REGISTRY_H
 
 #include "Particle.h"
+#include <functional>
 
 #define REG_KEY_MY_NAME 0
 #define REG_KEY_SECRET_KEY 1
@@ -19,6 +20,8 @@
 
 #define MAX_NUM_FUNS_PER_KEY 8
 
+typedef std::function<int (int, String&, bool)> std_function_int_int_StringRef_bool_t;
+
 typedef struct RegistryEntry_t {
 	uint8_t value[20];
 	uint32_t validKey;
@@ -27,12 +30,12 @@ typedef struct RegistryEntry_t {
 typedef int (RegistryHandlerFunType)(int key, String& value, bool valid, void *ctxt);
 
 typedef struct RegHandlerEntry_t {
-	RegistryHandlerFunType *fun[MAX_NUM_FUNS_PER_KEY];
-	void *ctxt[MAX_NUM_FUNS_PER_KEY];
+	std_function_int_int_StringRef_bool_t *fun[MAX_NUM_FUNS_PER_KEY];
+	String name;
 	int topIndex;
 } RegHandlerEntry_t;
 
-class PlfRegistry {
+class Plf_Registry {
 private:
 	RegistryEntry_t _registryShadow[MAX_KEY_VAL+1];
 	RegHandlerEntry_t _regHandlers[MAX_KEY_VAL+1];
@@ -41,15 +44,28 @@ private:
 
 	void _walkHandlers(void);
 	void _invokeHandler(int key, String& value, bool valid);
+	int _registerHandler(int key, String name, std_function_int_int_StringRef_bool_t func);
 
+	void _dataDump(void);
+	
 public:
-	PlfRegistry();
+	Plf_Registry();
 
 	int set(int key, String& value, bool valid, bool persistent);
 	int get(int key, String& value, bool& valid);
-	int registerHandler(int key, RegistryHandlerFunType *fun, void* ctxt);
+
+	template <typename T>
+    int registerHandler(int key, String name, int (T::*func)(int key, String&, bool), T *instance) {
+    	using namespace std::placeholders;
+      	return _registerHandler(key, name, std::bind(func, instance, _1, _2, _3));
+    }
+
 	int go(void);
 	int erase(void);
 };
+
+extern Plf_Registry plf_registry;
+
+#define PLF_REGISTRY_REGISTER_HANDLER(key, func, instance) (plf_registry.registerHandler(key, #key, func, instance))
 
 #endif /*PLF_REGISTRY_H*/

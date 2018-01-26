@@ -3,8 +3,6 @@
 
 #define MODULE_ID 1800
 
-Plf_DataDump dataDump;
-
 Plf_DataDump::Plf_DataDump() : _curIdx(0) {
 }
 
@@ -55,12 +53,12 @@ int Plf_DataDump::_lookup(String name) {
 	return -(MODULE_ID+2);
 }
 
-void Plf_DataDump::_registerFunction(String name, user_std_function_void_void_t func) {
+void Plf_DataDump::_registerFunction(String name, std_function_void_void_t func) {
 	plf_assert("_registerFunction NULL ptr", func!=NULL);
     plf_assert("DataDumper already registered", _lookup(name)<0);
 	plf_assert("dataDump idx out of range", _curIdx < MAX_NUM_DATA_DUMPERS);
 
-    auto wrapper = new user_std_function_void_void_t(func);
+    auto wrapper = new std_function_void_void_t(func);
 
     plf_assert("_registerFunction new fail", wrapper!=NULL);
 
