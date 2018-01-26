@@ -33,13 +33,12 @@ private:
 
   void _dataDump(void);
   
+  int _handleMessage(Intercom_Message &msg, int payloadSize);
+
 public:
   Intercom_Incoming(Intercom_MessageHandler& messageHandler);
 
   void drain(void);
-
-  /*private*/
-  int handleMessage(Intercom_Message &msg, int payloadSize);
 };
 
 #endif /*INTERCOM_INCOMING_H*/

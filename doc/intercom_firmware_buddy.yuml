@@ -5,4 +5,5 @@
 [Intercom_Buddy]-breathe();analogWrite()>[Intercom_Led]
 [Intercom_Buddy]-run();recordRequest()>[Intercom_Outgoing]
 [Intercom_Buddy]-.->[Intercom_Message]
+[Intercom_Buddy]-registerFunction()>[Plf_DataDump]
 

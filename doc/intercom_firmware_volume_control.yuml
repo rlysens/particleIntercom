@@ -2,5 +2,5 @@
 [Intercom_VolumeControl|checkButtons()]getLedBar();buttonIsPressed()->[Intercom_ButtonsAndLeds]
 [Intercom_VolumeControl]-setLevel()>[Intercom_LedBar]
 [Intercom_VolumeControl]-setVol()>[VS1603_Codec]
-
+[Intercom_VolumeControl]-registerFunction()>[Plf_DataDump]
 

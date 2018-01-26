@@ -5,4 +5,5 @@
 [Intercom_LevelCheckerBase]^-[Intercom_BatteryChecker|getBatteryPct()|_getLevel()]
 [Intercom_LevelCheckerBase]^-[Intercom_WifiChecker|getRSSIPct()|_getLevel()]
 
-
+[Intercom_WifiChecker]-registerFunction()>[Plf_DataDump]
+[Intercom_BatteryChecker]-registerFunction()>[Plf_DataDump]

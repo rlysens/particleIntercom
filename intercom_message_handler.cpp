@@ -177,6 +177,8 @@ int Intercom_MessageHandler::_registerHandler(int id,
 
   auto wrapper = new std_function_int_Intercom_MessageRef_int_t(func);
 
+  plf_assert("_registerHandler new fail", wrapper!=NULL);
+  
   Intercom_MessageHandlerTableElement *msgEntryp = &_msgTable[id];
 
   plf_assert("Too many handlers", msgEntryp->topIndex<MAX_NUM_FUNS_PER_MSG);

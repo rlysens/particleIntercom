@@ -105,7 +105,7 @@ int Intercom_Incoming::_rxVoiceDataMsg(Intercom_Message &msg, int payloadSize) {
   return retCode;     
 }
 
-int Intercom_Incoming::handleMessage(Intercom_Message &msg, int payloadSize) {
+int Intercom_Incoming::_handleMessage(Intercom_Message &msg, int payloadSize) {
   int retCode = 0;
 
   switch (msg.msgId) {
@@ -228,9 +228,9 @@ Intercom_Incoming::Intercom_Incoming(Intercom_MessageHandler& messageHandler) :
   PLF_COUNT_MIN_INIT(BYTES_SENT_TO_DECODER_MIN);
   PLF_COUNT_MIN_INIT(CIRCULAR_BUF_MIN);
 
-  _messageHandler.registerHandler(VOICE_DATA_T_MSG_ID, &Intercom_Incoming::handleMessage, this, true);
-  _messageHandler.registerHandler(COMM_START_T_MSG_ID, &Intercom_Incoming::handleMessage, this, true);
-  _messageHandler.registerHandler(COMM_STOP_T_MSG_ID, &Intercom_Incoming::handleMessage, this, true);
+  _messageHandler.registerHandler(VOICE_DATA_T_MSG_ID, &Intercom_Incoming::_handleMessage, this, true);
+  _messageHandler.registerHandler(COMM_START_T_MSG_ID, &Intercom_Incoming::_handleMessage, this, true);
+  _messageHandler.registerHandler(COMM_STOP_T_MSG_ID, &Intercom_Incoming::_handleMessage, this, true);
 
   dataDump.registerFunction("Incoming", &Intercom_Incoming::_dataDump, this);
 }
