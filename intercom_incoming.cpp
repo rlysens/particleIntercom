@@ -26,15 +26,6 @@
 #define INCOMING_FSM_STATE_DRAINING 2
 #define INCOMING_FSM_NUM_STATES (INCOMING_FSM_STATE_DRAINING+1)
 
-static int messageHandlerHelper(Intercom_Message &msg, 
-  int payloadSize, void *ctxt) {
-  Intercom_Incoming *intercom_incomingp = (Intercom_Incoming*)ctxt;
-
-  plf_assert("NULL ctxt ptr", intercom_incomingp);
-
-  return intercom_incomingp->handleMessage(msg, payloadSize);
-}
-
 int Intercom_Incoming::_fsmUpdate(void) {
   int usedSpace = _circularBuf.usedSpace();
 
@@ -237,9 +228,9 @@ Intercom_Incoming::Intercom_Incoming(Intercom_MessageHandler& messageHandler) :
   PLF_COUNT_MIN_INIT(BYTES_SENT_TO_DECODER_MIN);
   PLF_COUNT_MIN_INIT(CIRCULAR_BUF_MIN);
 
-  _messageHandler.registerHandler(VOICE_DATA_T_MSG_ID, messageHandlerHelper, this, true);
-  _messageHandler.registerHandler(COMM_START_T_MSG_ID, messageHandlerHelper, this, true);
-  _messageHandler.registerHandler(COMM_STOP_T_MSG_ID, messageHandlerHelper, this, true);
+  _messageHandler.registerHandler(VOICE_DATA_T_MSG_ID, &Intercom_Incoming::handleMessage, this, true);
+  _messageHandler.registerHandler(COMM_START_T_MSG_ID, &Intercom_Incoming::handleMessage, this, true);
+  _messageHandler.registerHandler(COMM_STOP_T_MSG_ID, &Intercom_Incoming::handleMessage, this, true);
 
   dataDump.registerFunction("Incoming", &Intercom_Incoming::_dataDump, this);
 }

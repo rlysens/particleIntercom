@@ -27,8 +27,6 @@ typedef struct RegistryEntry_t {
 	uint32_t validKey;
 } RegistryEntry_t;
 
-typedef int (RegistryHandlerFunType)(int key, String& value, bool valid, void *ctxt);
-
 typedef struct RegHandlerEntry_t {
 	std_function_int_int_StringRef_bool_t *fun[MAX_NUM_FUNS_PER_KEY];
 	String name;

@@ -29,15 +29,6 @@
 static const int regKey_buddyId[NUM_BUDDIES] = {REG_KEY_BUDDY_0_ID, REG_KEY_BUDDY_1_ID, REG_KEY_BUDDY_2_ID};
 static const int regKey_buddyName[NUM_BUDDIES] = {REG_KEY_BUDDY_0_NAME, REG_KEY_BUDDY_1_NAME, REG_KEY_BUDDY_2_NAME};
 
-static int messageHandlerHelper(Intercom_Message &msg, 
-  int payloadSize, void *ctxt) {
-	Intercom_Buddy *intercom_buddyp = (Intercom_Buddy*)ctxt;
-
-	plf_assert("NULL ctxt ptr", intercom_buddyp);
-
- 	return intercom_buddyp->handleMessage(msg, payloadSize);
-}
-
 void Intercom_Buddy::_txSetBuddy(void) {
 	int numEncodedBytes;
 	uint32_t myId = _messageHandlerp->getMyId();
@@ -426,12 +417,12 @@ void Intercom_Buddy::init(Intercom_Outgoing* intercom_outgoingp, Intercom_Messag
 	_tickCount = 0;
 	_buttonState = INTERCOM_BUDDY_BUTTON_STATE_RELEASED;
 
-	_messageHandlerp->registerHandler(WHO_IS_REPLY_T_MSG_ID, messageHandlerHelper, this, true);	
-	_messageHandlerp->registerHandler(ECHO_REPLY_T_MSG_ID, messageHandlerHelper, this, true);
-	_messageHandlerp->registerHandler(COMM_START_ACK_T_MSG_ID, messageHandlerHelper, this, true);
-	_messageHandlerp->registerHandler(COMM_STOP_ACK_T_MSG_ID, messageHandlerHelper, this, true);
-	_messageHandlerp->registerHandler(COMM_START_T_MSG_ID, messageHandlerHelper, this, true);
-	_messageHandlerp->registerHandler(COMM_STOP_T_MSG_ID, messageHandlerHelper, this, true);
+	_messageHandlerp->registerHandler(WHO_IS_REPLY_T_MSG_ID, &Intercom_Buddy::handleMessage, this, true);	
+	_messageHandlerp->registerHandler(ECHO_REPLY_T_MSG_ID, &Intercom_Buddy::handleMessage, this, true);
+	_messageHandlerp->registerHandler(COMM_START_ACK_T_MSG_ID, &Intercom_Buddy::handleMessage, this, true);
+	_messageHandlerp->registerHandler(COMM_STOP_ACK_T_MSG_ID, &Intercom_Buddy::handleMessage, this, true);
+	_messageHandlerp->registerHandler(COMM_START_T_MSG_ID, &Intercom_Buddy::handleMessage, this, true);
+	_messageHandlerp->registerHandler(COMM_STOP_T_MSG_ID, &Intercom_Buddy::handleMessage, this, true);
 
 	_buddyLedp->analogWrite(0); /*Off*/
 

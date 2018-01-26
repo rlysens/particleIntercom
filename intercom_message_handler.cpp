@@ -164,24 +164,24 @@ int Intercom_MessageHandler::receive(void) {
 
   for (ii=0; ii<msgEntryp->topIndex; ++ii) {
     if (msgEntryp->fun[ii]) {
-  	  msgEntryp->fun[ii](msg, payloadSize, msgEntryp->ctxt[ii]);
+  	  (*(msgEntryp->fun[ii]))(msg, payloadSize);
     }
   }
 
   return 0;
 }
 
-int Intercom_MessageHandler::registerHandler(uint16_t id, 
-	Intercom_MessageHandlerFunType *fun, void *ctxt, bool encrypted) {
-
+int Intercom_MessageHandler::_registerHandler(int id, 
+  std_function_int_Intercom_MessageRef_int_t func, bool encrypted) {
 	plf_assert("Msg ID too large", id <= MAX_MESSAGE_ID);
+
+  auto wrapper = new std_function_int_Intercom_MessageRef_int_t(func);
 
   Intercom_MessageHandlerTableElement *msgEntryp = &_msgTable[id];
 
   plf_assert("Too many handlers", msgEntryp->topIndex<MAX_NUM_FUNS_PER_MSG);
 
-	msgEntryp->fun[msgEntryp->topIndex] = fun;
-	msgEntryp->ctxt[msgEntryp->topIndex] = ctxt;
+	msgEntryp->fun[msgEntryp->topIndex] = wrapper;
   msgEntryp->encrypted = encrypted;
   ++(msgEntryp->topIndex);
 

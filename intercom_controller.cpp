@@ -11,15 +11,6 @@
 #define INTERCOM_CONTROLLER_FSM_STATE_RESTARTED 0
 #define INTERCOM_CONTROLLER_FSM_STATE_STEADY 1
 
-static int messageHandlerHelper(Intercom_Message &msg, 
-  int payloadSize, void *ctxt) {
-	Intercom_Controller *intercom_controllerp = (Intercom_Controller*)ctxt;
-
-  plf_assert("NULL ctxt ptr", intercom_controllerp);
-
-  return intercom_controllerp->handleMessage(msg, payloadSize);
-}
-
 void Intercom_Controller::_i_am(void) {
 	int numEncodedBytes;
 	static i_am_t i_am;
@@ -121,8 +112,8 @@ void Intercom_Controller::_tickerHook(void) {
 Intercom_Controller::Intercom_Controller(Intercom_MessageHandler& messageHandler) : 
 	Plf_TickerBase(INTERCOM_CONTROLLER_TICK_INTER_MS), _messageHandler(messageHandler),
 	_fsmState(INTERCOM_CONTROLLER_FSM_STATE_RESTARTED), _prevMillis(0) {
-	_messageHandler.registerHandler(I_AM_REPLY_T_MSG_ID, messageHandlerHelper, this, true);
-	_messageHandler.registerHandler(ECHO_REQUEST_T_MSG_ID, messageHandlerHelper, this, true);
+	_messageHandler.registerHandler(I_AM_REPLY_T_MSG_ID, &Intercom_Controller::handleMessage, this, true);
+	_messageHandler.registerHandler(ECHO_REQUEST_T_MSG_ID, &Intercom_Controller::handleMessage, this, true);
 
 	dataDump.registerFunction("Controller", &Intercom_Controller::_dataDump, this);
 }

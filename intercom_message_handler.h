@@ -3,6 +3,7 @@
 
 #include "Particle.h"
 #include "xtea.h"
+#include <functional>
 
 #define MESSAGE_DATA_LENGTH 508
 #define MAX_MESSAGE_ID 255
@@ -17,13 +18,11 @@ typedef struct {
 
 extern Intercom_Message intercom_message;
 
-typedef int (Intercom_MessageHandlerFunType)(Intercom_Message &msg, 
-	int payload_size, void *ctxt);
+typedef std::function<int (Intercom_Message&, int)> std_function_int_Intercom_MessageRef_int_t;
 
 typedef struct {
-	Intercom_MessageHandlerFunType *fun[MAX_NUM_FUNS_PER_MSG];
+	std_function_int_Intercom_MessageRef_int_t *fun[MAX_NUM_FUNS_PER_MSG];
 	int topIndex;
-	void *ctxt[MAX_NUM_FUNS_PER_MSG];
 	bool encrypted;
 } Intercom_MessageHandlerTableElement;
 
@@ -45,6 +44,8 @@ private:
 	int _registryHandler(int key, String& value, bool valid);
 	void _dataDump(void);
 	
+	int _registerHandler(int id, std_function_int_Intercom_MessageRef_int_t func, bool encrypted);
+
 public:
 	Intercom_MessageHandler(int localPort, IPAddress remoteIpAddress, int remotePort);
 
@@ -53,8 +54,13 @@ public:
 
 	int send(Intercom_Message &msg, uint32_t msgId, int payloadSize, bool encrypted);
 	int receive(void);
-	int registerHandler(uint16_t id, Intercom_MessageHandlerFunType *fun,
-		void *ctxt, bool encrypted);
+
+	template <typename T>
+    int registerHandler(int id, int (T::*func)(Intercom_Message &msg, int payloadSize), T *instance, bool encrypted) {
+    	using namespace std::placeholders;
+      	return _registerHandler(id, std::bind(func, instance, _1, _2), encrypted);
+    }
+
 	void setEncryptionKey(uint8_t key[16]);
 };
 
