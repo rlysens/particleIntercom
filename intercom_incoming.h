@@ -38,6 +38,8 @@ private:
 public:
   Intercom_Incoming(Intercom_MessageHandler& messageHandler);
 
+  bool isSenderActive(uint32_t senderId);
+  
   void drain(void);
 };
 

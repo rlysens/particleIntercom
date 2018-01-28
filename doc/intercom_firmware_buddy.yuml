@@ -6,4 +6,5 @@
 [Intercom_Buddy]-run();recordRequest()>[Intercom_Outgoing]
 [Intercom_Buddy]-.->[Intercom_Message]
 [Intercom_Buddy]-registerFunction()>[Plf_DataDump]
+[Intercom_Buddy]-isSenderActive()>[Intercom_Incoming]
 

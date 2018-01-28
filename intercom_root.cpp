@@ -16,7 +16,8 @@ Intercom_Root::Intercom_Root(void) :
     int ii;
 
     for (ii=0; ii<NUM_BUDDIES; ++ii) {
-        _intercom_buddies[ii].init(&_intercom_outgoing, 
+        _intercom_buddies[ii].init(&_intercom_outgoing,
+            &_intercom_incoming, 
             &_messageHandler, 
             &_intercom_buttonsAndLeds,
             ii);

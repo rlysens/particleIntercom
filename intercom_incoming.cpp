@@ -129,6 +129,10 @@ int Intercom_Incoming::_handleMessage(Intercom_Message &msg, int payloadSize) {
   return retCode;
 }
 
+bool Intercom_Incoming::isSenderActive(uint32_t senderId) {
+  return (senderId == _activeSender) && (_fsmState != INCOMING_FSM_STATE_LISTENING);
+}
+
 void Intercom_Incoming::drain(void) {
   int numBytesBuffered = _circularBuf.usedSpace();
   int fsmState = _fsmUpdate();

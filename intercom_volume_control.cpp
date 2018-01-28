@@ -24,7 +24,7 @@ void Intercom_VolumeControl::_decVol(void) {
 		_curAtt += ATT_STEP;
 	}
 
-	PLF_PRINT(PRNTGRP_DFLT, "Vol=(255-)%d\n", (int)(MAX_VOL-_curAtt));
+	PLF_PRINT(PRNTGRP_DFLT, "Vol=%d\n", (int)(MAX_VOL-_curAtt));
 
 	VS1063SetVol(_curAtt);
 	VS1063PlayBuf(sine_max_vol_ulaw_g711_wav, sizeof(sine_max_vol_ulaw_g711_wav));
@@ -35,7 +35,7 @@ void Intercom_VolumeControl::_incVol(void) {
 		_curAtt -= ATT_STEP;
 	}
 
-	PLF_PRINT(PRNTGRP_DFLT, "Vol=(255-)%d\n", (int)(MAX_VOL-_curAtt));
+	PLF_PRINT(PRNTGRP_DFLT, "Vol=%d\n", (int)(MAX_VOL-_curAtt));
 
 	VS1063SetVol(_curAtt);
 	VS1063PlayBuf(sine_max_vol_ulaw_g711_wav, sizeof(sine_max_vol_ulaw_g711_wav));

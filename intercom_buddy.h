@@ -5,12 +5,14 @@
 #include "intercom_message_handler.h"
 #include "intercom_buttons_and_leds.h"
 #include "intercom_outgoing.h"
+#include "intercom_incoming.h"
 #include "board.h"
 #include "plf_ticker_base.h"
 
 class Intercom_Buddy : public Plf_TickerBase {
 private:
 	Intercom_Outgoing *_intercom_outgoingp;
+	Intercom_Incoming *_intercom_incomingp;
 	Intercom_MessageHandler* _messageHandlerp;
 	Intercom_ButtonsAndLeds* _intercom_buttonsAndLedsp;
 	Intercom_Led* _buddyLedp;
@@ -39,8 +41,9 @@ private:
 	int _rxEchoRep(Intercom_Message& msg, int payloadSize);
 	void _txWhoIsReq(void);
 	int _rxWhoIsRep(Intercom_Message& msg, int payloadSize);
-	void _fsmUpdate(void);
+	void _listeningStateUpdate(void);
 	void _buddyLedUpdate(void);
+	void _commStateSuspendCheck(void);
 
 	virtual void _tickerHook(void);
 
@@ -49,7 +52,8 @@ private:
 public:
 	Intercom_Buddy();
 
-	void init(Intercom_Outgoing *intercom_outgoingp, Intercom_MessageHandler* messageHandlerp, 
+	void init(Intercom_Outgoing *intercom_outgoingp, 
+		Intercom_Incoming *intercom_incomingp, Intercom_MessageHandler* messageHandlerp, 
 		Intercom_ButtonsAndLeds* intercom_buttonsAndLedsp, int buddyIndex);
 
 	bool checkButtonAndSend(void);
