@@ -8,8 +8,9 @@
 
 #define MODULE_ID 500
 
+#define RATE_TUNE_LIMIT 60000
 #define BUFFER_MID_POINT (CIRCULAR_BUFFER_SIZE/2)
-#define BUFFER_DRAIN_THRESHOLD (CIRCULAR_BUFFER_SIZE*8/10)
+#define BUFFER_DRAIN_THRESHOLD BUFFER_MID_POINT
 #define INTERCOM_INCOMING_TICK_INTER_MS 100
 
 #if 0
@@ -179,17 +180,23 @@ void Intercom_Incoming::drain(void) {
 }
 
 void Intercom_Incoming::_tickerHook(void) {
-  if (/*_rateTuningEnable &&*/ (_fsmState == INCOMING_FSM_STATE_DRAINING)) {
+  if (_rateTuningEnable && (_fsmState == INCOMING_FSM_STATE_DRAINING)) {
     const float alpha = 0.1F;
     int newValue = _circularBuf.usedSpace();
 
     _movingAvg = (int)(alpha*newValue + ((float)1-alpha)*_movingAvg);
 
     int32_t error = _movingAvg - BUFFER_MID_POINT; /*If getting too full...*/
-    int32_t rateTuneValue = (10*error*1000000/BUFFER_MID_POINT); /*...speed up the clock.*/
-    if (_rateTuningEnable)
-      WriteVS10xxMem32(PAR_RATE_TUNE, (uint32_t)rateTuneValue);
+    int32_t rateTuneValue = (10*RATE_TUNE_LIMIT*error/BUFFER_MID_POINT); /*...speed up the clock.*/
+    rateTuneValue = MIN(RATE_TUNE_LIMIT, rateTuneValue); /*Max 4% deviation from midpoint*/
+    rateTuneValue = MAX(-RATE_TUNE_LIMIT, rateTuneValue);
+    _rateTuneValue = rateTuneValue;
+    WriteVS10xxMem32(PAR_RATE_TUNE, (uint32_t)rateTuneValue);
     PLF_PRINT(PRNTGRP_RATETN,"a:%d c:%d e:%d r:%d\n", _movingAvg, newValue, error, rateTuneValue);
+  }
+  else {
+    _rateTuneValue = 0;
+    WriteVS10xxMem32(PAR_RATE_TUNE, 0);
   }
 }
 
@@ -227,7 +234,7 @@ Intercom_Incoming::Intercom_Incoming(Intercom_MessageHandler& messageHandler) :
   Plf_TickerBase(INTERCOM_INCOMING_TICK_INTER_MS),
   _circularBuf(_circularBuffer, CIRCULAR_BUFFER_SIZE), _messageHandler(messageHandler),
   /*_drainState(DRAIN_STATE_FILL),*/ _discardNextByte(0), _fsmState(INCOMING_FSM_STATE_LISTENING), _movingAvg(0),
-  _activeSender(ID_UNKNOWN), _seqNumber(0), _rateTuningEnable(false) {
+  _activeSender(ID_UNKNOWN), _seqNumber(0), _rateTuneValue(0), _rateTuningEnable(false) {
 
   PLF_COUNT_MIN_INIT(BYTES_SENT_TO_DECODER_MIN);
   PLF_COUNT_MIN_INIT(CIRCULAR_BUF_MIN);
@@ -246,4 +253,5 @@ void Intercom_Incoming::_dataDump(void) {
   PLF_PRINT(PRNTGRP_DFLT, "BufferFillingLevelAvg: %d/%d", _movingAvg, CIRCULAR_BUFFER_SIZE);
   PLF_PRINT(PRNTGRP_DFLT, "ActiveSender: %d", (int)_activeSender);
   PLF_PRINT(PRNTGRP_DFLT, "RateTuningEnabled: %d", (int)_rateTuningEnable);
+  PLF_PRINT(PRNTGRP_DFLT, "RateTuningValue: %d", (int)_rateTuneValue);
 }

@@ -172,8 +172,16 @@ int Intercom_CloudAPI::ddump(String name) {
   	return 0;
 }
 
-Intercom_CloudAPI::Intercom_CloudAPI(Intercom_WifiChecker& intercom_wifiChecker, Intercom_BatteryChecker& intercom_batteryChecker) : 
+int Intercom_CloudAPI::testfun(String name) {
+	PLF_PRINT(PRNTGRP_DFLT, "testfun called\n");
+	_intercom_buttonsAndLeds.reset();
+  	return 0;
+}
+
+Intercom_CloudAPI::Intercom_CloudAPI(Intercom_ButtonsAndLeds& intercom_buttonsAndLeds, 
+	Intercom_WifiChecker& intercom_wifiChecker, Intercom_BatteryChecker& intercom_batteryChecker) : 
 	Plf_TickerBase(INTERCOM_CLOUD_API_TICK_INTER_MS), 
+	_intercom_buttonsAndLeds(intercom_buttonsAndLeds),
 	_intercom_wifiChecker(intercom_wifiChecker),
 	_intercom_batteryChecker(intercom_batteryChecker), _prevMillis(0) {
 	int res;
@@ -196,6 +204,8 @@ Intercom_CloudAPI::Intercom_CloudAPI(Intercom_WifiChecker& intercom_wifiChecker,
 	res = Particle.function("list_ddump", &Intercom_CloudAPI::list_ddump, this);
 	PLF_PRINT(PRNTGRP_DFLT, "Cloud function key register result: %d\n", res);
 	res = Particle.function("ddump", &Intercom_CloudAPI::ddump, this);
+	PLF_PRINT(PRNTGRP_DFLT, "Cloud function key register result: %d\n", res);
+	res = Particle.function("testfun", &Intercom_CloudAPI::testfun, this);
 	PLF_PRINT(PRNTGRP_DFLT, "Cloud function key register result: %d\n", res);
 
 	Particle.variable("my_name", my_name);

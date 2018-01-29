@@ -262,9 +262,7 @@ int Intercom_Buddy::_rxWhoIsRep(Intercom_Message& msg, int payloadSize) {
 }
 
 void Intercom_Buddy::_listeningStateUpdate(void) {
-#if 0
-	PLF_PRINT(PRNTGRP_DFLT, "echoReplyAcc=%d\n", _echoReplyAcc);
-#endif
+	//PLF_PRINT(PRNTGRP_DFLT, "echoReplyAcc=%d\n", _echoReplyAcc);
 
 	switch (_listeningState) {
 		case INTERCOM_BUDDY_LISTENING_STATE_LISTENING:
@@ -409,9 +407,9 @@ void Intercom_Buddy::_tickerHook(void) {
 		_txCommStop();
 	}
 
-	if (++_tickCount>=4) {
+	if (++_tickCount>=10) {
 		_tickCount=0;
-		/*Do these every 4 ticks (2s)*/
+		/*Do these every 10 ticks (5s)*/
 		_txSetBuddy();
 		_txWhoIsReq();
 		_listeningStateUpdate();

@@ -71,9 +71,9 @@ Intercom_ButtonsAndLeds::Intercom_ButtonsAndLeds() {
 	static byte pins[] = {LED_BAR_0_LED,LED_BAR_1_LED,LED_BAR_2_LED,LED_BAR_3_LED,LED_BAR_4_LED};
 
 	result = _io.begin(SX1509_ADDRESS);
-	while (result==0) {
-		PLF_PRINT(PRNTGRP_DFLT, "SX1509 init. failed. Retrying...\n");
-		result = _io.begin(SX1509_ADDRESS);
+	if (result==0) {
+		PLF_PRINT(PRNTGRP_DFLT, "SX1509 init. failed.\n");
+		//result = _io.begin(SX1509_ADDRESS);
 	}
 
 	_leds[BUDDY_0_IDX].init(_io, BUDDY_0_LED);
@@ -94,10 +94,19 @@ Intercom_ButtonsAndLeds::Intercom_ButtonsAndLeds() {
 	_io.pinMode(VOL_INC_BUTTON, INPUT_PULLUP);
 
 	_io.debounceTime(32 /*ms*/);
+
+	if (result==0) {
+		int ii;
+		for (ii=0;ii<NUM_LEDS;ii++) {
+			_leds[ii].blink(255, 0);
+		}
+
+		while (1);
+	}
 }
 
 void Intercom_ButtonsAndLeds::reset(void) {
-	_io.reset(true /*hardware*/);
+	_io.init();
 }
 
 bool Intercom_ButtonsAndLeds::buttonIsPressed(int buttonId) {
