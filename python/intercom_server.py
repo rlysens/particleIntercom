@@ -36,7 +36,10 @@ HOST_PORT = 50007
 NAME_KEYS = None
 MAX_NUM_BUDDIES = 3
 #ENCRYPTION_MODE = xtea.MODE_CBC
-ENCRYPTION_MODE = xtea.MODE_ECB
+#ENCRYPTION_MODE = xtea.MODE_ECB
+ENCRYPTION_MODE = xtea.MODE_NONE
+
+PRINT_MSG_RX_TX = True
 
 id_counter = 1
 
@@ -59,8 +62,11 @@ class Intercom_MessageHandler:
         self.source_id = 0 #Server is 0
 
     def send(self, payload_data, msgId, address, cryptoCodec=None):
-
-        print "Tx Msg: %d"%(msgId)
+        if PRINT_MSG_RX_TX:
+            if len(message_name_table.messageNameTable) > msgId:
+                print "Tx Msg: %s(%d)"%(message_name_table.messageNameTable[msgId],msgId)
+            else:
+                print "Tx Msg: XX(%d)"%(msgId)
 
         if cryptoCodec:
             payload_data = cryptoCodec.encrypt(payload_data)
@@ -99,7 +105,12 @@ class Intercom_MessageHandler:
             intercom = intercom_id_to_intercom_table[source_id]
 
         #Invoke the handler
-        print "Rx Msg: %d Src: %d"%(msgId, source_id)
+        if PRINT_MSG_RX_TX:
+            if len(message_name_table.messageNameTable) > msgId:
+                print "Rx Msg: %s(%d) Src: %d"%(message_name_table.messageNameTable[msgId], msgId, source_id)
+            else:
+                print "Rx Msg: XX(%d) Src: %d"%(msgId, source_id)
+            
         fun, decrypt = self._msg_table[msgId]
 
         msg_payload = None        
@@ -163,6 +174,7 @@ def msg_echo_request_handler(msg_data, address, msg_handler, intercom):
             echo_request_t.echo_request_t.MSG_ID, True)
     else:
         print "Unknown destination %d"%(echo_request.destination_id)
+        print echo_request
 
 def msg_echo_reply_handler(msg_data, address, msg_handler, intercom):
     echo_reply = echo_reply_t.echo_reply_t.decode(msg_data)
@@ -172,6 +184,7 @@ def msg_echo_reply_handler(msg_data, address, msg_handler, intercom):
             echo_reply_t.echo_reply_t.MSG_ID, True)
     else:
         print "Unknown destination %d"%(echo_reply.destination_id)
+        print echo_reply
 
 def msg_comm_start_handler(msg_data, address, msg_handler, intercom):
     comm_start = comm_start_t.comm_start_t.decode(msg_data)
@@ -181,6 +194,7 @@ def msg_comm_start_handler(msg_data, address, msg_handler, intercom):
             comm_start_t.comm_start_t.MSG_ID, True)
     else:
         print "Unknown destination %d"%(comm_start.destination_id)
+        print comm_start
 
 def msg_comm_start_ack_handler(msg_data, address, msg_handler, intercom):
     comm_start_ack = comm_start_ack_t.comm_start_ack_t.decode(msg_data)
@@ -190,6 +204,7 @@ def msg_comm_start_ack_handler(msg_data, address, msg_handler, intercom):
             comm_start_ack_t.comm_start_ack_t.MSG_ID, True)
     else:
         print "Unknown destination %d"%(comm_start_ack.destination_id)
+        print comm_start_ack
 
 def msg_comm_stop_handler(msg_data, address, msg_handler, intercom):
     comm_stop = comm_stop_t.comm_stop_t.decode(msg_data)
@@ -199,6 +214,7 @@ def msg_comm_stop_handler(msg_data, address, msg_handler, intercom):
             comm_stop_t.comm_stop_t.MSG_ID, True)
     else:
         print "Unknown destination %d"%(comm_stop.destination_id)
+        print comm_stop
 
 def msg_comm_stop_ack_handler(msg_data, address, msg_handler, intercom):
     comm_stop_ack = comm_stop_ack_t.comm_stop_ack_t.decode(msg_data)
@@ -208,6 +224,7 @@ def msg_comm_stop_ack_handler(msg_data, address, msg_handler, intercom):
             comm_stop_ack_t.comm_stop_ack_t.MSG_ID, True)
     else:
         print "Unknown destination %d"%(comm_stop_ack.destination_id)
+        print comm_stop_ack
 
 def msg_voice_data_handler(msg_data, address, msg_handler, intercom):
     voice_data = voice_data_t.voice_data_t.decode(msg_data)
@@ -217,6 +234,11 @@ def msg_voice_data_handler(msg_data, address, msg_handler, intercom):
             voice_data_t.voice_data_t.MSG_ID, True)
     else:
         print "Unknown destination %d"%(voice_data.destination_id)
+        print "Src=%d"%voice_data.source_id
+        print "Dst=%d"%voice_data.destination_id
+        print "Seq=%d"%voice_data.seq_number
+        print "Sz=%d"%voice_data.data_size
+        print voice_data.data
 
 def msg_i_am_handler(msg_data, address, msg_handler, intercom):
     global id_counter

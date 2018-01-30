@@ -1,2 +1,2 @@
 __all__ = ["i_am_t", "i_am_reply_t", "voice_data_t", "who_is_reply_t", "who_is_t", "set_buddy_t", "echo_request_t", "echo_reply_t", 
-"comm_start_t", "comm_start_ack_t", "comm_stop_t", "comm_stop_ack_t"]
+"comm_start_t", "comm_start_ack_t", "comm_stop_t", "comm_stop_ack_t", "message_name_table"]

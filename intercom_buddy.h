@@ -4,14 +4,16 @@
 #include "Particle.h"
 #include "intercom_message_handler.h"
 #include "intercom_buttons_and_leds.h"
-#include "intercom_outgoing.h"
 #include "intercom_incoming.h"
 #include "board.h"
 #include "plf_ticker_base.h"
 
+#define INTERCOM_BUDDY_OUTGOING_REQ_TYPE_BUTTON 0
+#define INTERCOM_BUDDY_OUTGOING_REQ_TYPE_INCOMING_COMM 1
+#define INTERCOM_BUDDY_NUM_OUTGOING_REQ_TYPES 2
+
 class Intercom_Buddy : public Plf_TickerBase {
 private:
-	Intercom_Outgoing *_intercom_outgoingp;
 	Intercom_Incoming *_intercom_incomingp;
 	Intercom_MessageHandler* _messageHandlerp;
 	Intercom_ButtonsAndLeds* _intercom_buttonsAndLedsp;
@@ -20,14 +22,16 @@ private:
 	int _buddyIdx;
 	uint32_t _buddyId;
 	int32_t _listeningState;
-	int32_t _commState;
+	int32_t _incomingCommState;
 	int32_t _ledState;
+	int32_t _outgoingCommFsmState;
 	int32_t _echoReplyAcc;
 	unsigned long _prevMillis;
 	int _buttonState;
 	int _tickCount;
 	bool _sendCommStart;
 	bool _sendCommStop;
+	bool _outgoingCommRequests[INTERCOM_BUDDY_NUM_OUTGOING_REQ_TYPES];
 	bool _initialized;
 
 	int _rxCommStart(Intercom_Message& msg, int payloadSize);
@@ -44,6 +48,7 @@ private:
 	void _listeningStateUpdate(void);
 	void _buddyLedUpdate(void);
 	void _commStateSuspendCheck(void);
+	void _outgoingCommRequest(unsigned requestType, bool enable);
 
 	virtual void _tickerHook(void);
 
@@ -52,11 +57,17 @@ private:
 public:
 	Intercom_Buddy();
 
-	void init(Intercom_Outgoing *intercom_outgoingp, 
-		Intercom_Incoming *intercom_incomingp, Intercom_MessageHandler* messageHandlerp, 
+	void init(Intercom_Incoming *intercom_incomingp, Intercom_MessageHandler* messageHandlerp, 
 		Intercom_ButtonsAndLeds* intercom_buttonsAndLedsp, int buddyIndex);
 
-	bool checkButtonAndSend(void);
+	bool checkButton(void);
+
+	/*Returns true if outgoing communication is requested for this buddy*/
+	bool outgoingCommRequested(void);
+
+	inline uint32_t getBuddyId(void) {
+		return _buddyId;
+	}
 
 	/*private*/
 	int handleMessage(Intercom_Message &msg, int payloadSize);

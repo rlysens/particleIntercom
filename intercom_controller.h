@@ -9,7 +9,6 @@ class Intercom_Controller : public Plf_TickerBase {
 private:
 	Intercom_MessageHandler& _messageHandler;
 	int32_t _fsmState;
-	uint32_t _myId;
 	unsigned long _prevMillis;
 	
 	void _i_am(void);

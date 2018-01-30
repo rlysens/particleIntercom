@@ -28,7 +28,11 @@
 
 #include "Particle.h"
 
-//#define MBEDTLS_CIPHER_MODE_CBC
+#define MBEDTLS_CIPHER_MODE_CBC 1
+#define MBEDTLS_CIPHER_MODE_ECB 2
+#define MBEDTLS_CIPHER_MODE_NONE 3
+
+#define MBEDTLS_CIPHER_MODE MBEDTLS_CIPHER_MODE_NONE
 
 #define MBEDTLS_XTEA_ENCRYPT     1
 #define MBEDTLS_XTEA_DECRYPT     0
@@ -85,7 +89,7 @@ int mbedtls_xtea_crypt_ecb( mbedtls_xtea_context *ctx,
                     const unsigned char input[8],
                     unsigned char output[8] );
 
-#if defined(MBEDTLS_CIPHER_MODE_CBC)
+#if (MBEDTLS_CIPHER_MODE==MBEDTLS_CIPHER_MODE_CBC)
 /**
  * \brief          XTEA CBC cipher function
  *

@@ -1,12 +1,13 @@
 import os
 import sys
 import re
+import genMessageNameTables
 
 def main(argv):
 	os.system("lcm-gen -c --c-no-pubsub messages.lcm")
 
-
-
+	genMessageNameTables.gen()
+	
 	for filename in os.listdir("."):
 		if filename.endswith(".h"):
 			inFile = filename

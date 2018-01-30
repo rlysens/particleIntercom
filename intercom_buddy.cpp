@@ -13,10 +13,13 @@
 #define INTERCOM_BUDDY_BUTTON_STATE_RELEASED 0
 #define INTERCOM_BUDDY_BUTTON_STATE_PRESSED 1
 
-#define INTERCOM_BUDDY_COMM_STATE_STARTED 0
-#define INTERCOM_BUDDY_COMM_STATE_STOPPED 1
-#define INTERCOM_BUDDY_COMM_STATE_SUSPENDED 2
-#define INTERCOM_BUDDY_NUM_COMM_STATES 3
+#define INTERCOM_BUDDY_INCOMING_COMM_STATE_STARTED 0
+#define INTERCOM_BUDDY_INCOMING_COMM_STATE_STOPPED 1
+#define INTERCOM_BUDDY_INCOMING_COMM_STATE_SUSPENDED 2
+#define INTERCOM_BUDDY_NUM_INCOMING_COMM_STATES 3
+
+#define INTERCOM_BUDDY_OUTGOING_COMM_IDLE 0
+#define INTERCOM_BUDDY_OUTGOING_COMM_REQUESTED 1
 
 #define INTERCOM_BUDDY_LED_STATE_OFF 0
 #define INTERCOM_BUDDY_LED_STATE_BREATHING 1
@@ -24,9 +27,6 @@
 #define INTERCOM_BUDDY_NUM_LED_STATES (INTERCOM_BUDDY_LED_STATE_BLINKING+1)
 
 #define INTERCOM_BUDDY_TICK_INTER_MS 500
-
-#define RECORD_REQ_ID_BUTTON 0
-#define RECORD_REQ_ID_INCOMING_COMM 1
 
 static const int regKey_buddyId[NUM_BUDDIES] = {REG_KEY_BUDDY_0_ID, REG_KEY_BUDDY_1_ID, REG_KEY_BUDDY_2_ID};
 static const int regKey_buddyName[NUM_BUDDIES] = {REG_KEY_BUDDY_0_NAME, REG_KEY_BUDDY_1_NAME, REG_KEY_BUDDY_2_NAME};
@@ -65,9 +65,9 @@ int Intercom_Buddy::_rxCommStart(Intercom_Message& msg, int payloadSize) {
 	if (comm_start.source_id != (int32_t)_buddyId) /*Did this buddy send it?*/
 		return 0;
 
-	_intercom_outgoingp->recordRequest(RECORD_REQ_ID_INCOMING_COMM, true);
+	_outgoingCommRequest(INTERCOM_BUDDY_OUTGOING_REQ_TYPE_INCOMING_COMM, true);
 
-	_commState = INTERCOM_BUDDY_COMM_STATE_STARTED;
+	_incomingCommState = INTERCOM_BUDDY_INCOMING_COMM_STATE_STARTED;
 
 	comm_start_ack.source_id = myId;
 	comm_start_ack.destination_id = comm_start.source_id;
@@ -96,9 +96,9 @@ int Intercom_Buddy::_rxCommStop(Intercom_Message& msg, int payloadSize) {
 	if (comm_stop.source_id != (int32_t)_buddyId) /*Did this buddy send it?*/
 		return 0;
 
-	_intercom_outgoingp->recordRequest(RECORD_REQ_ID_INCOMING_COMM, false);
+	_outgoingCommRequest(INTERCOM_BUDDY_OUTGOING_REQ_TYPE_INCOMING_COMM, false);
 
-	_commState = INTERCOM_BUDDY_COMM_STATE_STOPPED;
+	_incomingCommState = INTERCOM_BUDDY_INCOMING_COMM_STATE_STOPPED;
 
 	comm_stop_ack.source_id = myId;
 	comm_stop_ack.destination_id = comm_stop.source_id;
@@ -268,14 +268,14 @@ void Intercom_Buddy::_listeningStateUpdate(void) {
 		case INTERCOM_BUDDY_LISTENING_STATE_LISTENING:
 			if (_echoReplyAcc==0) {
 				_listeningState = INTERCOM_BUDDY_LISTENING_STATE_NOT_LISTENING;
-				PLF_PRINT(PRNTGRP_DFLT, "commState==%d, buddyFSM->NotListening\n", (int)_commState);
+				PLF_PRINT(PRNTGRP_DFLT, "commState==%d, buddyFSM->NotListening\n", (int)_incomingCommState);
 			}
 			break;
 
 		case INTERCOM_BUDDY_LISTENING_STATE_NOT_LISTENING:
 			if (_echoReplyAcc > 0) {
 				_listeningState = INTERCOM_BUDDY_LISTENING_STATE_LISTENING;
-				PLF_PRINT(PRNTGRP_DFLT, "commState==%d, buddyFSM->Listening\n", (int)_commState);
+				PLF_PRINT(PRNTGRP_DFLT, "commState==%d, buddyFSM->Listening\n", (int)_incomingCommState);
 			}
 			break;
 
@@ -286,7 +286,7 @@ void Intercom_Buddy::_listeningStateUpdate(void) {
 	_echoReplyAcc = 0;
 }
 
-bool Intercom_Buddy::checkButtonAndSend(void) {
+bool Intercom_Buddy::checkButton(void) {
 	plf_assert("IntercomBuddy not initialized", _initialized);
 
 	bool buttonIsPressed = _intercom_buttonsAndLedsp->buddyButtonIsPressed(_buddyIdx);
@@ -294,7 +294,7 @@ bool Intercom_Buddy::checkButtonAndSend(void) {
 	switch (_buttonState) {
 		case INTERCOM_BUDDY_BUTTON_STATE_RELEASED:
 			if (buttonIsPressed && (_messageHandlerp->getMyId() != ID_UNKNOWN) && (_buddyId != ID_UNKNOWN)) {
-				_intercom_outgoingp->recordRequest(RECORD_REQ_ID_BUTTON, true);
+				_outgoingCommRequest(INTERCOM_BUDDY_OUTGOING_REQ_TYPE_BUTTON, true);
 				_txCommStart();
 				_sendCommStart = true;
 				_sendCommStop = false;
@@ -305,7 +305,7 @@ bool Intercom_Buddy::checkButtonAndSend(void) {
 
 		case INTERCOM_BUDDY_BUTTON_STATE_PRESSED:
 			if (!buttonIsPressed) {
-				_intercom_outgoingp->recordRequest(RECORD_REQ_ID_BUTTON, false);
+				_outgoingCommRequest(INTERCOM_BUDDY_OUTGOING_REQ_TYPE_BUTTON, false);
 				_txCommStop();
 				_sendCommStop = true;
 				_sendCommStart = false;
@@ -318,15 +318,13 @@ bool Intercom_Buddy::checkButtonAndSend(void) {
 			break;
 	}
 
-	_intercom_outgoingp->run(_buddyId);
-
 	return (_buttonState == INTERCOM_BUDDY_BUTTON_STATE_PRESSED);
 }
 
 void Intercom_Buddy::_buddyLedUpdate(void) {
 	switch (_ledState) {
 		case INTERCOM_BUDDY_LED_STATE_OFF:
-			if (_commState == INTERCOM_BUDDY_COMM_STATE_STARTED) {
+			if (_incomingCommState == INTERCOM_BUDDY_INCOMING_COMM_STATE_STARTED) {
 				_ledState = INTERCOM_BUDDY_LED_STATE_BLINKING;
 				_buddyLedp->blink(200, 200);
 				PLF_PRINT(PRNTGRP_DFLT, "Buddy %d LED state -> Blinking\n", _buddyIdx);
@@ -339,7 +337,7 @@ void Intercom_Buddy::_buddyLedUpdate(void) {
 			break;
 
 		case INTERCOM_BUDDY_LED_STATE_BREATHING:
-			if (_commState == INTERCOM_BUDDY_COMM_STATE_STARTED) {
+			if (_incomingCommState == INTERCOM_BUDDY_INCOMING_COMM_STATE_STARTED) {
 				_ledState = INTERCOM_BUDDY_LED_STATE_BLINKING;
 				_buddyLedp->blink(200, 200);
 				PLF_PRINT(PRNTGRP_DFLT, "Buddy %d LED state -> Blinking\n", _buddyIdx);
@@ -352,7 +350,7 @@ void Intercom_Buddy::_buddyLedUpdate(void) {
 			break;
 
 		case INTERCOM_BUDDY_LED_STATE_BLINKING:
-			if (_commState != INTERCOM_BUDDY_COMM_STATE_STARTED) {
+			if (_incomingCommState != INTERCOM_BUDDY_INCOMING_COMM_STATE_STARTED) {
 				if (_listeningState == INTERCOM_BUDDY_LISTENING_STATE_LISTENING) {
 					_ledState = INTERCOM_BUDDY_LED_STATE_BREATHING;
 					PLF_PRINT(PRNTGRP_DFLT, "Buddy %d LED state -> Breathing\n", _buddyIdx);
@@ -371,19 +369,19 @@ void Intercom_Buddy::_buddyLedUpdate(void) {
 	}
 }
 
-void Intercom_Buddy::_commStateSuspendCheck(void) {
-	switch (_commState) {
-		case INTERCOM_BUDDY_COMM_STATE_STARTED:
+void Intercom_Buddy::_incomingCommStateSuspendCheck(void) {
+	switch (_incomingCommState) {
+		case INTERCOM_BUDDY_INCOMING_COMM_STATE_STARTED:
 			if (!_intercom_incomingp->isSenderActive(_buddyId)) {
-				_commState = INTERCOM_BUDDY_COMM_STATE_SUSPENDED;
-				_intercom_outgoingp->recordRequest(RECORD_REQ_ID_INCOMING_COMM, false);
+				_incomingCommState = INTERCOM_BUDDY_INCOMING_COMM_STATE_SUSPENDED;
+				_outgoingCommRequest(INTERCOM_BUDDY_OUTGOING_REQ_TYPE_INCOMING_COMM, false);
 			}
 			break;
 
-		case INTERCOM_BUDDY_COMM_STATE_SUSPENDED:
+		case INTERCOM_BUDDY_INCOMING_COMM_STATE_SUSPENDED:
 			if (_intercom_incomingp->isSenderActive(_buddyId)) {
-				_commState = INTERCOM_BUDDY_COMM_STATE_STARTED;
-				_intercom_outgoingp->recordRequest(RECORD_REQ_ID_INCOMING_COMM, true);
+				_incomingCommState = INTERCOM_BUDDY_INCOMING_COMM_STATE_STARTED;
+				_outgoingCommRequest(INTERCOM_BUDDY_OUTGOING_REQ_TYPE_INCOMING_COMM, true);
 			}
 			break;
 
@@ -392,10 +390,54 @@ void Intercom_Buddy::_commStateSuspendCheck(void) {
 	}
 }
 
+bool Intercom_Buddy::outgoingCommRequested(void) {
+	return _outgoingCommFsmState==INTERCOM_BUDDY_OUTGOING_COMM_REQUESTED;
+}
+
+void Intercom_Buddy::_outgoingCommRequest(unsigned requestType, bool enable) {
+	int ii;
+
+	plf_assert("requestType out of range", requestType < INTERCOM_BUDDY_NUM_OUTGOING_REQ_TYPES);
+
+  	_outgoingCommRequests[requestType] = enable;
+
+	switch (_outgoingCommFsmState) {
+		case INTERCOM_BUDDY_OUTGOING_COMM_IDLE:
+			for (ii=0; ii<INTERCOM_BUDDY_NUM_OUTGOING_REQ_TYPES; ++ii) {
+				if (_outgoingCommRequests[ii]) {
+				  _outgoingCommFsmState = INTERCOM_BUDDY_OUTGOING_COMM_REQUESTED;
+				  PLF_PRINT(PRNTGRP_DFLT, "Intercom_Buddy %d Outgoing Idle->Comm Requested by %d\n", _buddyIdx, ii);
+				}
+			}
+			break;
+
+		case INTERCOM_BUDDY_OUTGOING_COMM_REQUESTED:
+			{
+			    bool outgoingCommRequested = false;
+
+			    for (ii=0; ii<INTERCOM_BUDDY_NUM_OUTGOING_REQ_TYPES; ++ii) {
+			      if (_outgoingCommRequests[ii]) {
+			        outgoingCommRequested = true;
+			        break;
+			      }
+			    }
+
+			    if (!outgoingCommRequested) {
+			      _outgoingCommFsmState = INTERCOM_BUDDY_OUTGOING_COMM_IDLE;
+			      PLF_PRINT(PRNTGRP_DFLT, "Intercom_Buddy %d Outgoing Comm Requested->Idle\n", _buddyIdx);
+			    }
+			}
+		  	break;
+
+		default:
+		  	break;
+	}
+}
+
 void Intercom_Buddy::_tickerHook(void) {
 	plf_assert("IntercomBuddy not initialized", _initialized);
 
-	_commStateSuspendCheck();
+	_incomingCommStateSuspendCheck();
 	_buddyLedUpdate();
 	_txEchoReq();
 
@@ -419,17 +461,15 @@ void Intercom_Buddy::_tickerHook(void) {
 Intercom_Buddy::Intercom_Buddy() : Plf_TickerBase(INTERCOM_BUDDY_TICK_INTER_MS), _initialized(false) {
 }
 
-void Intercom_Buddy::init(Intercom_Outgoing* intercom_outgoingp, Intercom_Incoming* intercom_incomingp,
+void Intercom_Buddy::init(Intercom_Incoming* intercom_incomingp,
 	Intercom_MessageHandler* messageHandlerp, 
 	Intercom_ButtonsAndLeds* intercom_buttonsAndLedsp, int buddyIdx) {
 
-	plf_assert("NULL ptr in IntercomBuddy::init", intercom_outgoingp);
 	plf_assert("NULL ptr in IntercomBuddy::init", intercom_incomingp);
 	plf_assert("NULL ptr in IntercomBuddy::init", messageHandlerp);
 	plf_assert("NULL ptr in IntercomBuddy::init", intercom_buttonsAndLedsp);
 	plf_assert("BuddyIdx out of range", buddyIdx<NUM_BUDDIES);
 
-	_intercom_outgoingp = intercom_outgoingp;
 	_intercom_incomingp = intercom_incomingp;
 	_messageHandlerp = messageHandlerp;
 	_intercom_buttonsAndLedsp = intercom_buttonsAndLedsp;
@@ -437,12 +477,15 @@ void Intercom_Buddy::init(Intercom_Outgoing* intercom_outgoingp, Intercom_Incomi
 	_buddyIdx = buddyIdx;
 	_buddyId = ID_UNKNOWN;
 	_listeningState = INTERCOM_BUDDY_LISTENING_STATE_NOT_LISTENING;
-	_commState = INTERCOM_BUDDY_COMM_STATE_STOPPED;
+	_incomingCommState = INTERCOM_BUDDY_INCOMING_COMM_STATE_STOPPED;
 	_ledState = INTERCOM_BUDDY_LED_STATE_OFF;
+	_outgoingCommFsmState = INTERCOM_BUDDY_OUTGOING_COMM_IDLE;
 	_echoReplyAcc = 0;
 	_prevMillis = 0;
 	_tickCount = 0;
 	_buttonState = INTERCOM_BUDDY_BUTTON_STATE_RELEASED;
+
+	memset(_outgoingCommRequests, 0, sizeof(_outgoingCommRequests));
 
 	_messageHandlerp->registerHandler(WHO_IS_REPLY_T_MSG_ID, &Intercom_Buddy::handleMessage, this, true);	
 	_messageHandlerp->registerHandler(ECHO_REPLY_T_MSG_ID, &Intercom_Buddy::handleMessage, this, true);
@@ -492,12 +535,14 @@ int Intercom_Buddy::handleMessage(Intercom_Message& msg, int payloadSize) {
 
 void Intercom_Buddy::_dataDump(void) {
 	const char* ledStateStrings[INTERCOM_BUDDY_NUM_LED_STATES] = {"Off", "Breathing", "Blinking"};
-	const char* commStateStrings[INTERCOM_BUDDY_NUM_COMM_STATES] = {"Started", "Stopped", "Suspended"};
+	const char* incomingCommStateStrings[INTERCOM_BUDDY_NUM_INCOMING_COMM_STATES] = {"Started", "Stopped", "Suspended"};
 
 	PLF_PRINT(PRNTGRP_DFLT, "BuddyId: %d", (int)_buddyId);
 	PLF_PRINT(PRNTGRP_DFLT, "ListeningState: %s", _listeningState==INTERCOM_BUDDY_LISTENING_STATE_LISTENING ? 
 		"Listening" : "Not Listening");
-	PLF_PRINT(PRNTGRP_DFLT, "CommState: %s", commStateStrings[_commState]);
+	PLF_PRINT(PRNTGRP_DFLT, "IncomingCommState: %s", incomingCommStateStrings[_incomingCommState]);
 	PLF_PRINT(PRNTGRP_DFLT, "LedState: %s", ledStateStrings[_ledState]);
 	PLF_PRINT(PRNTGRP_DFLT, "ButtonState: %s", _buttonState==INTERCOM_BUDDY_BUTTON_STATE_RELEASED ? "Released" : "Pressed");
+	PLF_PRINT(PRNTGRP_DFLT, "OutgoingCommRequested: %d", (int)(_outgoingCommFsmState==INTERCOM_BUDDY_OUTGOING_COMM_REQUESTED));
+
 }

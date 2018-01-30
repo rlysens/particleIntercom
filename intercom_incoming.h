@@ -5,7 +5,8 @@
 #include "plf_circular_buffer.h"
 #include "plf_ticker_base.h"
 
-#define CIRCULAR_BUFFER_SIZE (8192*2)
+#define CIRCULAR_BUFFER_SIZE (8192)
+#define INTERCOM_INCOMING_BUFFER_DRAIN_THRESHOLD (CIRCULAR_BUFFER_SIZE/2)
 
 class Intercom_Incoming : public Plf_TickerBase {
 private:

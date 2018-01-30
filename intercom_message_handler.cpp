@@ -3,6 +3,7 @@
 #include "plf_event_counter.h"
 #include "plf_data_dump.h"
 #include "plf_registry.h"
+#include "message_name_table.h"
 
 #define MODULE_ID 600
 
@@ -30,14 +31,14 @@ int Intercom_MessageHandler::_encryptMsg(Intercom_Message &msg, int payloadSize)
   int result=-1;
 
   if (_encryptionKeyIsSet) {
-#ifdef MBEDTLS_CIPHER_MODE_CBC
+#if MBEDTLS_CIHPER_MODE==MBEDTLS_CIPHER_MODE_CBC
     result = mbedtls_xtea_crypt_cbc(&_xteaCtxt,
       MBEDTLS_XTEA_ENCRYPT,
       payloadSize,
       _ivEnc,
       msg.data,
       msg.data);
-#else /*ECB mode:*/
+#elif MBEDTLS_CIHPER_MODE==MBEDTLS_CIPHER_MODE_ECB
     uint8_t *inputp = msg.data;
 
     plf_assert("payloadSize must be multiple of 8", (payloadSize%8)==0);
@@ -51,6 +52,8 @@ int Intercom_MessageHandler::_encryptMsg(Intercom_Message &msg, int payloadSize)
       inputp += 8;
       payloadSize -= 8;
     }
+#else /*CIPHER_MODE_NONE*/
+    result=0;
 #endif /*MBEDTLS_CIPHER_MODE_CBC*/
   }
 
@@ -61,14 +64,14 @@ int Intercom_MessageHandler::_decryptMsg(Intercom_Message &msg, int payloadSize)
   int result=-(MODULE_ID+1);
 
   if (_encryptionKeyIsSet) {
-#ifdef MBEDTLS_CIPHER_MODE_CBC
+#if MBEDTLS_CIPHER_MODE==MBEDTLS_CIPHER_MODE_CBC
     result = mbedtls_xtea_crypt_cbc(&_xteaCtxt,
       MBEDTLS_XTEA_DECRYPT,
       payloadSize,
       _ivDec,
       msg.data,
       msg.data);
-#else /*ECB mode:*/
+#elif MBEDTLS_CIPHER_MODE==MBEDTLS_CIPHER_MODE_ECB
     uint8_t *inputp = msg.data;
 
     plf_assert("payloadSize must be multiple of 8", (payloadSize%8)==0);
@@ -82,6 +85,8 @@ int Intercom_MessageHandler::_decryptMsg(Intercom_Message &msg, int payloadSize)
       inputp += 8;
       payloadSize -= 8;
     }
+#else /*CIPHER_MODE_NONE*/
+    result = 0;
 #endif /*MBEDTLS_CIPHER_MODE_CBC*/
     if (result!=0) {
       PLF_PRINT(PRNTGRP_MSGS, "Decrypt failed, res=%d.\n", result);
@@ -103,8 +108,8 @@ uint32_t Intercom_MessageHandler::getMyId(void) {
 }
 
 int Intercom_MessageHandler::send(Intercom_Message &msg, uint32_t msgId, int payloadSize, bool encrypted) {
-
-  PLF_PRINT(PRNTGRP_MSGS, "Tx Msg %d\n", (int)msgId);
+  PLF_PRINT(PRNTGRP_MSGS, "Tx Msg %s(%d)\n", 
+    msgId < sizeof(messageNameTable) ? messageNameTable[msgId] : "X", (int)msgId);
 
   msg.msgId = msgId;
   msg.source_id = _myId;
@@ -149,7 +154,8 @@ int Intercom_MessageHandler::receive(void) {
     return 0;
 
   PLF_COUNT_VAL(UDP_BYTES_RX, rxDataLength);
-  PLF_PRINT(PRNTGRP_MSGS, "Rx Msg %d\n", (int)msg.msgId);
+  PLF_PRINT(PRNTGRP_MSGS, "Rx Msg %s(%d)\n", 
+    msg.msgId < sizeof(messageNameTable) ? messageNameTable[msg.msgId] : "X", (int)msg.msgId);
 
   payloadSize = rxDataLength - 8;
 
@@ -215,10 +221,13 @@ Intercom_MessageHandler::Intercom_MessageHandler(int localPort,
 void Intercom_MessageHandler::_dataDump(void) {
   PLF_PRINT(PRNTGRP_DFLT, "RemoteIPaddress: %s", _remoteIpAddress.toString().c_str());
   PLF_PRINT(PRNTGRP_DFLT, "RemotePort: %d", _remotePort);
-#ifdef MBEDTLS_CIPHER_MODE_CBC
+#if MBEDTLS_CIPHER_MODE==MBEDTLS_CIPHER_MODE_CBC
   PLF_PRINT(PRNTGRP_DFLT, "EncryptionMode: CBC");
-#else /*ECB:*/
+#elif MBEDTLS_CIPHER_MODE==MBEDTLS_CIPHER_MODE_ECB
   PLF_PRINT(PRNTGRP_DFLT, "EncryptionMode: ECB");
+#else
+  PLF_PRINT(PRNTGRP_DFLT, "EncryptionMode: None");
 #endif /*MBEDTLS_CIPHER_MODE*/
   PLF_PRINT(PRNTGRP_DFLT, "EncryptionKeyIsSet: %d", (int)_encryptionKeyIsSet);
+  PLF_PRINT(PRNTGRP_DFLT, "MyId: %d", (int)_myId);
 }

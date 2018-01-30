@@ -9,8 +9,6 @@
 #define MODULE_ID 500
 
 #define RATE_TUNE_LIMIT 60000
-#define BUFFER_MID_POINT (CIRCULAR_BUFFER_SIZE/2)
-#define BUFFER_DRAIN_THRESHOLD BUFFER_MID_POINT
 #define INTERCOM_INCOMING_TICK_INTER_MS 100
 
 #if 0
@@ -32,8 +30,8 @@ int Intercom_Incoming::_fsmUpdate(void) {
 
   switch (_fsmState) {
     case INCOMING_FSM_STATE_LISTENING:
-      if (usedSpace > BUFFER_DRAIN_THRESHOLD) {
-        _movingAvg = BUFFER_DRAIN_THRESHOLD;
+      if (usedSpace > INTERCOM_INCOMING_BUFFER_DRAIN_THRESHOLD) {
+        _movingAvg = INTERCOM_INCOMING_BUFFER_DRAIN_THRESHOLD;
         _fsmState = INCOMING_FSM_STATE_DRAINING;
         PLF_PRINT(PRNTGRP_DFLT, "Intercom_Incoming FSM -> DRAINING.\n");
       }
@@ -45,8 +43,8 @@ int Intercom_Incoming::_fsmUpdate(void) {
       break;
 
     case INCOMING_FSM_STATE_BUFFERING:
-      if (usedSpace > BUFFER_DRAIN_THRESHOLD) {
-        _movingAvg = BUFFER_DRAIN_THRESHOLD;
+      if (usedSpace > INTERCOM_INCOMING_BUFFER_DRAIN_THRESHOLD) {
+        _movingAvg = INTERCOM_INCOMING_BUFFER_DRAIN_THRESHOLD;
         _fsmState = INCOMING_FSM_STATE_DRAINING;
         PLF_PRINT(PRNTGRP_DFLT, "Intercom_Incoming FSM -> DRAINING.\n");
       }
@@ -186,8 +184,8 @@ void Intercom_Incoming::_tickerHook(void) {
 
     _movingAvg = (int)(alpha*newValue + ((float)1-alpha)*_movingAvg);
 
-    int32_t error = _movingAvg - BUFFER_MID_POINT; /*If getting too full...*/
-    int32_t rateTuneValue = (10*RATE_TUNE_LIMIT*error/BUFFER_MID_POINT); /*...speed up the clock.*/
+    int32_t error = _movingAvg - (CIRCULAR_BUFFER_SIZE/2); /*If getting too full...*/
+    int32_t rateTuneValue = (10*RATE_TUNE_LIMIT*error/(CIRCULAR_BUFFER_SIZE/2)); /*...speed up the clock.*/
     rateTuneValue = MIN(RATE_TUNE_LIMIT, rateTuneValue); /*Max 4% deviation from midpoint*/
     rateTuneValue = MAX(-RATE_TUNE_LIMIT, rateTuneValue);
     _rateTuneValue = rateTuneValue;

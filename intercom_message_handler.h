@@ -9,6 +9,7 @@
 #define MAX_MESSAGE_ID 255
 #define ID_UNKNOWN (~0UL)
 #define MAX_NUM_FUNS_PER_MSG 8
+
 typedef struct {
 	uint32_t msgId;
 	uint32_t source_id;

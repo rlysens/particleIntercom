@@ -120,5 +120,4 @@ Intercom_Controller::Intercom_Controller(Intercom_MessageHandler& messageHandler
 
 void Intercom_Controller::_dataDump(void) {
 	PLF_PRINT(PRNTGRP_DFLT, "FSMstate: %s", _fsmState == INTERCOM_CONTROLLER_FSM_STATE_RESTARTED ? "Restarted" : "Steady");
-	PLF_PRINT(PRNTGRP_DFLT, "MyId: %d", (int)_myId);
 }

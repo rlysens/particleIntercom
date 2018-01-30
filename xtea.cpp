@@ -121,7 +121,7 @@ int mbedtls_xtea_crypt_ecb( mbedtls_xtea_context *ctx, int mode,
     return( 0 );
 }
 
-#if defined(MBEDTLS_CIPHER_MODE_CBC)
+#if (MBEDTLS_CIPHER_MODE==MBEDTLS_CIPHER_MODE_CBC)
 /*
  * XTEA-CBC buffer encryption/decryption
  */

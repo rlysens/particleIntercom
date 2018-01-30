@@ -31,6 +31,7 @@ import sys
 import warnings
 import types
 
+MODE_NONE = 0
 MODE_ECB = 1
 MODE_CBC = 2
 MODE_CFB = 3
@@ -125,8 +126,12 @@ class XTEACipher(object):
         On OFB, encrypt and decrypt is the same.
         """
 
+        #None
+        if self.mode == MODE_NONE:
+            return data
+
         #ECB
-        if self.mode == MODE_ECB:
+        elif self.mode == MODE_ECB:
             if not len(data) % (self.block_size):
                 out = []
                 blocks=self._block(data)
@@ -201,8 +206,11 @@ class XTEACipher(object):
 
         On OFB, encrypt and decrypt is the same.
         """
+        if self.mode == MODE_NONE:
+            return data
+            
         #ECB
-        if self.mode == MODE_ECB:
+        elif self.mode == MODE_ECB:
             if not (len(data) % self.block_size):
                 out = []
                 blocks=self._block(data)

@@ -7,7 +7,6 @@
 Intercom_Root::Intercom_Root(void) :
 	_messageHandler(LOCAL_PORT, REMOTE_IP, REMOTE_PORT),
 	_intercom_incoming(_messageHandler),
-    _intercom_outgoing(_messageHandler),
 	_intercom_controller(_messageHandler),
     _intercom_volumeControl(_intercom_buttonsAndLeds),
     _intercom_batteryChecker(_intercom_buttonsAndLeds),
@@ -16,12 +15,14 @@ Intercom_Root::Intercom_Root(void) :
     int ii;
 
     for (ii=0; ii<NUM_BUDDIES; ++ii) {
-        _intercom_buddies[ii].init(&_intercom_outgoing,
+        _intercom_buddies[ii].init(
             &_intercom_incoming, 
             &_messageHandler, 
             &_intercom_buttonsAndLeds,
             ii);
     }
+
+    _intercom_outgoing.init(_messageHandler, _intercom_buddies);
 
 	plf_registry.go();
 }
@@ -40,12 +41,14 @@ void Intercom_Root::loop(void) {
     _intercom_batteryChecker.checkButton();
     _intercom_wifiChecker.checkButton();
     
-    if (!_intercom_buddies[0].checkButtonAndSend()) {
-        if (!_intercom_buddies[1].checkButtonAndSend()) {
-            _intercom_buddies[2].checkButtonAndSend();
+    if (!_intercom_buddies[0].checkButton()) {
+        if (!_intercom_buddies[1].checkButton()) {
+            _intercom_buddies[2].checkButton();
         }
     }
 
+    _intercom_outgoing.run();
+    
     _intercom_volumeControl.checkButtons();
     _intercom_volumeControl.tick();
 
