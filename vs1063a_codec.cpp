@@ -509,6 +509,18 @@ void VS1063InitSoftware(void) {
     //LoadPlugin(plugin, sizeof(plugin)/sizeof(plugin[0]));
     LoadUserCode();
 
+    /*Setup Equalizer*/
+    int16_t eqVector[] = {0, -32, 100, -32, 300, 32, 2000, 32, 3400, -32};
+    int ii;
+
+    for (ii=0; ii<sizeof(eqVector)/sizeof(eqVector[0]); ii++) {
+      WriteVS10xxMem(PAR_EQ5_DUMMY+ii, eqVector[ii]);
+    }
+
+    uint16_t playMode = ReadVS10xxMem(PAR_PLAY_MODE);
+    playMode |= PAR_PLAY_MODE_EQ5_ENA;
+    WriteVS10xxMem(PAR_PLAY_MODE, playMode);
+
     /* We're ready to go. */
 }
 
