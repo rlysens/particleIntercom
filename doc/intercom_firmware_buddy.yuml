@@ -1,5 +1,5 @@
 [Plf_TickerBase|tick();_tickerHook()]^-[Intercom_Buddy]
-[Intercom_Buddy|init();_tickerHook();checkButtonAndSend()]-send(WHO_IS ECHO_REQUEST SET_BUDDY COMM_START COMM_STOP COMM_START_ACK COMM_STOP_ACK);\nregisterHandler(WHO_IS_REPLY ECHO_REPLY COMM_START COMM_STOP COMM_START_ACK COMM_STOP_ACK)>[Intercom_MessageHandler]
+[Intercom_Buddy|init();_tickerHook();checkButtonAndSend()]-send(WHO_IS KEEP_ALIVE SET_BUDDY COMM_START COMM_STOP COMM_START_ACK COMM_STOP_ACK);\nregisterHandler(WHO_IS_REPLY COMM_START COMM_STOP COMM_START_ACK COMM_STOP_ACK);\nallocRxCounter();allocTxCounter()>[Intercom_MessageHandler]
 [Intercom_Buddy]-get(BUDDY_X_NAME);set(BUDDY_X_ID)>[Plf_Registry]
 [Intercom_Buddy]-getBuddyLed();buddyButtonIsPressed()>[Intercom_ButtonsAndLeds]
 [Intercom_Buddy]-breathe();analogWrite()>[Intercom_Led]

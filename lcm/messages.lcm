@@ -46,16 +46,9 @@ struct set_buddy_t
 	int32_t buddy_id;
 }
 
-struct echo_request_t
+struct keep_alive_t
 {
 	const int32_t MSG_ID=7;
-	int32_t source_id;
-	int32_t destination_id;
-}
-
-struct echo_reply_t
-{
-	const int32_t MSG_ID=8;
 	int32_t source_id;
 	int32_t destination_id;
 }

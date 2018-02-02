@@ -120,7 +120,7 @@ void Intercom_Outgoing::run(void) {
         0, sizeof(intercom_message.data), &voice_data);
 
       if (_messageHandlerp->send(intercom_message, VOICE_DATA_T_MSG_ID, 
-        numEncodedBytes, true)) {
+        voice_data.destination_id, numEncodedBytes, true)) {
         PLF_PRINT(PRNTGRP_DFLT, "Voice data send failed.\n");
       }
     }

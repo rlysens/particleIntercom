@@ -13,7 +13,6 @@ private:
 	
 	void _i_am(void);
 	int _i_am_reply(Intercom_Message& msg, int payloadSize);
-	int _rx_echo_request(Intercom_Message& msg, int payloadSize);
 
 	virtual void _tickerHook(void);
 

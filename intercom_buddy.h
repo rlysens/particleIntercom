@@ -18,14 +18,15 @@ private:
 	Intercom_MessageHandler* _messageHandlerp;
 	Intercom_ButtonsAndLeds* _intercom_buttonsAndLedsp;
 	Intercom_Led* _buddyLedp;
-
+	Intercom_TxMessageCounter* _txMsgCounterp;
+	Intercom_RxMessageCounter* _rxMsgCounterp;
+	uint32_t _prevTxMsgCounter;
 	int _buddyIdx;
 	uint32_t _buddyId;
 	int32_t _listeningState;
 	int32_t _incomingCommState;
 	int32_t _ledState;
 	int32_t _outgoingCommFsmState;
-	int32_t _echoReplyAcc;
 	unsigned long _prevMillis;
 	int _buttonState;
 	int _tickCount;
@@ -41,13 +42,12 @@ private:
 	int _rxCommStartAck(Intercom_Message& msg, int payloadSize);
 	int _rxCommStopAck(Intercom_Message& msg, int payloadSize);
 	void _txSetBuddy(void);
-	void _txEchoReq(void);
-	int _rxEchoRep(Intercom_Message& msg, int payloadSize);
+	void _txKeepAlive(void);
 	void _txWhoIsReq(void);
 	int _rxWhoIsRep(Intercom_Message& msg, int payloadSize);
 	void _listeningStateUpdate(void);
 	void _buddyLedUpdate(void);
-	void _commStateSuspendCheck(void);
+	void _incomingCommStateSuspendCheck(void);
 	void _outgoingCommRequest(unsigned requestType, bool enable);
 
 	virtual void _tickerHook(void);

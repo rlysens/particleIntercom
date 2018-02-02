@@ -28,31 +28,7 @@ void Intercom_Controller::_i_am(void) {
 	numEncodedBytes = i_am_t_encode(intercom_message.data, 0, sizeof(intercom_message.data), &i_am);
 	plf_assert("Msg Encode Error", numEncodedBytes>=0);
 
-	_messageHandler.send(intercom_message, I_AM_T_MSG_ID, numEncodedBytes, false);
-}
-
-int Intercom_Controller::_rx_echo_request(Intercom_Message& msg, int payloadSize) {
-	static echo_request_t echo_request;
-	static echo_reply_t echo_reply;
-	int numEncodedBytes;
-	int numDecodedBytes = echo_request_t_decode(msg.data, 0, payloadSize, &echo_request);
-	uint32_t myId = _messageHandler.getMyId();
-
-	if (numDecodedBytes < 0)
-		return -(MODULE_ID+1);
-
-	if (myId==ID_UNKNOWN)
-		return -(MODULE_ID+2);
-
-	echo_reply.source_id = myId;
-	echo_reply.destination_id = echo_request.source_id;
-
-	numEncodedBytes = echo_reply_t_encode(intercom_message.data, 0, sizeof(intercom_message.data), &echo_reply);
-	plf_assert("Msg Encode Error", numEncodedBytes>=0);
-
-	_messageHandler.send(intercom_message, ECHO_REPLY_T_MSG_ID, numEncodedBytes, true);
-
-	return 0;
+	_messageHandler.send(intercom_message, I_AM_T_MSG_ID, INTERCOM_SERVER_ID, numEncodedBytes, false);
 }
 
 int Intercom_Controller::_i_am_reply(Intercom_Message& msg, int payloadSize) {
@@ -91,18 +67,17 @@ int Intercom_Controller::_i_am_reply(Intercom_Message& msg, int payloadSize) {
 
 int Intercom_Controller::handleMessage(Intercom_Message& msg, int payloadSize) {
 	switch (msg.msgId) {
+	    case I_AM_REPLY_T_MSG_ID:
+	    	return _i_am_reply(msg, payloadSize);
 
-    case I_AM_REPLY_T_MSG_ID:
-    	return _i_am_reply(msg, payloadSize);
+	    case KEEP_ALIVE_T_MSG_ID:
+	    	return 0;
 
-    case ECHO_REQUEST_T_MSG_ID:
-    	return _rx_echo_request(msg, payloadSize);
+	    default:
+	      return -(MODULE_ID+6);
+  	}
 
-    default:
-      return -(MODULE_ID+6);
-  }
-
-  return 0;
+  	return 0;
 }
 
 void Intercom_Controller::_tickerHook(void) {
@@ -113,7 +88,7 @@ Intercom_Controller::Intercom_Controller(Intercom_MessageHandler& messageHandler
 	Plf_TickerBase(INTERCOM_CONTROLLER_TICK_INTER_MS), _messageHandler(messageHandler),
 	_fsmState(INTERCOM_CONTROLLER_FSM_STATE_RESTARTED), _prevMillis(0) {
 	_messageHandler.registerHandler(I_AM_REPLY_T_MSG_ID, &Intercom_Controller::handleMessage, this, true);
-	_messageHandler.registerHandler(ECHO_REQUEST_T_MSG_ID, &Intercom_Controller::handleMessage, this, true);
+	_messageHandler.registerHandler(KEEP_ALIVE_T_MSG_ID, &Intercom_Controller::handleMessage, this, true);
 
 	dataDump.registerFunction("Controller", &Intercom_Controller::_dataDump, this);
 }

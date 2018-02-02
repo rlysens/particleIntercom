@@ -27,6 +27,69 @@ void Intercom_MessageHandler::setEncryptionKey(uint8_t key[16]) {
   mbedtls_xtea_setup( &_xteaCtxt, key );
 }
 
+Intercom_RxMessageCounter* Intercom_MessageHandler::allocRxCounter(void) {
+  int ii;
+
+  for (ii=0;ii<NUM_BUDDIES;ii++) {
+    if (_msgRxCounters[ii].source_id == 0) {
+      _msgRxCounters[ii].source_id = ID_UNKNOWN;
+      return &_msgRxCounters[ii];
+    }
+  }
+
+  return 0;
+}
+
+void Intercom_MessageHandler::freeRxCounter(Intercom_RxMessageCounter* counter) {
+  plf_assert("counter ptr NULL", counter);
+  counter->source_id = 0;  
+}
+
+void Intercom_MessageHandler::_countRxMsg(Intercom_Message &msg) {
+  int ii;
+  uint32_t source_id = msg.source_id;
+
+  if (source_id > INTERCOM_SERVER_ID) {
+    for (ii=0; ii<NUM_BUDDIES; ii++) {
+      if (source_id == _msgRxCounters[ii].source_id) {
+        ++(_msgRxCounters[ii].rxMsgCounter);
+        return;
+      }
+    }    
+  }
+}
+
+Intercom_TxMessageCounter* Intercom_MessageHandler::allocTxCounter(void) {
+  int ii;
+
+  for (ii=0;ii<NUM_BUDDIES;ii++) {
+    if (_msgTxCounters[ii].destination_id == 0) {
+      _msgTxCounters[ii].destination_id = ID_UNKNOWN;
+      return &_msgTxCounters[ii];
+    }
+  }
+
+  return 0;
+}
+
+void Intercom_MessageHandler::freeTxCounter(Intercom_TxMessageCounter* counter) {
+  plf_assert("counter ptr NULL", counter);
+  counter->destination_id = 0;  
+}
+
+void Intercom_MessageHandler::_countTxMsg(uint32_t destination_id) {
+  int ii;
+
+  if (destination_id > INTERCOM_SERVER_ID) {
+    for (ii=0; ii<NUM_BUDDIES; ii++) {
+      if (destination_id == _msgTxCounters[ii].destination_id) {
+        ++(_msgTxCounters[ii].txMsgCounter);
+        return;
+      }
+    }    
+  }
+}
+
 int Intercom_MessageHandler::_encryptMsg(Intercom_Message &msg, int payloadSize) {
   int result=-1;
 
@@ -107,9 +170,9 @@ uint32_t Intercom_MessageHandler::getMyId(void) {
   return _myId;
 }
 
-int Intercom_MessageHandler::send(Intercom_Message &msg, uint32_t msgId, int payloadSize, bool encrypted) {
-  PLF_PRINT(PRNTGRP_MSGS, "Tx Msg %s(%d)\n", 
-    msgId < sizeof(messageNameTable) ? messageNameTable[msgId] : "X", (int)msgId);
+int Intercom_MessageHandler::send(Intercom_Message &msg, uint32_t msgId, uint32_t destination_id, int payloadSize, bool encrypted) {
+  PLF_PRINT(PRNTGRP_MSGS, "Tx Msg %s(%d), dest: %d\n", 
+    msgId < sizeof(messageNameTable) ? messageNameTable[msgId] : "X", (int)msgId, destination_id);
 
   msg.msgId = msgId;
   msg.source_id = _myId;
@@ -140,6 +203,8 @@ int Intercom_MessageHandler::send(Intercom_Message &msg, uint32_t msgId, int pay
 
   PLF_COUNT_VAL(UDP_BYTES_TX, payloadSize);
   
+  _countTxMsg(destination_id);
+
   return 0;
 }
 
@@ -154,7 +219,7 @@ int Intercom_MessageHandler::receive(void) {
     return 0;
 
   PLF_COUNT_VAL(UDP_BYTES_RX, rxDataLength);
-  PLF_PRINT(PRNTGRP_MSGS, "Rx Msg %s(%d)\n", 
+  PLF_PRINT(PRNTGRP_MSGS, "Rx Msg %s(%d)", 
     msg.msgId < sizeof(messageNameTable) ? messageNameTable[msg.msgId] : "X", (int)msg.msgId);
 
   payloadSize = rxDataLength - 8;
@@ -167,6 +232,9 @@ int Intercom_MessageHandler::receive(void) {
       return -101;
     }
   }
+
+  PLF_PRINT(PRNTGRP_MSGS, "Rx Msg source_id = %d", msg.source_id);
+  _countRxMsg(msg);
 
   for (ii=0; ii<msgEntryp->topIndex; ++ii) {
     if (msgEntryp->fun[ii]) {
@@ -206,6 +274,8 @@ Intercom_MessageHandler::Intercom_MessageHandler(int localPort,
       PLF_PRINT(PRNTGRP_DFLT, "Couldn't allocate outgoing packet buffer\n");
   }
 
+  memset(_msgRxCounters, 0, sizeof(_msgRxCounters));
+  memset(_msgTxCounters, 0, sizeof(_msgTxCounters));
   memset(_ivEnc, 0, sizeof(_ivEnc));
   memset(_ivDec, 0, sizeof(_ivDec));
 
@@ -230,4 +300,10 @@ void Intercom_MessageHandler::_dataDump(void) {
 #endif /*MBEDTLS_CIPHER_MODE*/
   PLF_PRINT(PRNTGRP_DFLT, "EncryptionKeyIsSet: %d", (int)_encryptionKeyIsSet);
   PLF_PRINT(PRNTGRP_DFLT, "MyId: %d", (int)_myId);
+
+  int ii;
+  for (ii=0; ii<NUM_BUDDIES; ii++) {
+    PLF_PRINT(PRNTGRP_DFLT, "MsgCounters[%d].source_id = %d, rxMsgCounter=%d",
+      ii, _msgRxCounters[ii].source_id, _msgRxCounters[ii].rxMsgCounter);
+  }
 }

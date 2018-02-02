@@ -1,5 +1,5 @@
 [Plf_TickerBase|tick();_tickerHook()]^-[Intercom_Controller]
-[Intercom_Controller|_tickerHook()]send(I_AM ECHO_REPLY);registerHandler(I_AM_REPLY ECHO_REQUEST);setMyId()->[Intercom_MessageHandler]
+[Intercom_Controller|_tickerHook()]send(I_AM);registerHandler(I_AM_REPLY KEEP_ALIVE);setMyId()->[Intercom_MessageHandler]
 [Intercom_Controller]-get(MY_NAME)>[Plf_Registry]
 [Intercom_Controller]-.->[Intercom_Message]
 [Intercom_Controller]-registerFunction()>[Plf_DataDump]

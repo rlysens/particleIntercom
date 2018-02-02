@@ -88,6 +88,9 @@ int Intercom_Incoming::_rxVoiceDataMsg(Intercom_Message &msg, int payloadSize) {
       if (_seqNumber != voiceData.seq_number) {
         uint32_t bytesMissed = voiceData.seq_number - _seqNumber;
         PLF_COUNT_VAL(BYTES_MISSED, bytesMissed);
+        PLF_PRINT(PRNTGRP_DFLT, "Missed seq# %d, Rx: %d, Missing: %d\n", _seqNumber, voiceData.seq_number, 
+          voiceData.seq_number - _seqNumber);
+
         /*stuff the circular buffer with the amount of bytes missed*/
         retCode |= _stuff(bytesMissed); 
       }

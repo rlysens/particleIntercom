@@ -9,10 +9,10 @@ except ImportError:
     from io import BytesIO
 import struct
 
-class echo_reply_t(object):
+class keep_alive_t(object):
     __slots__ = ["source_id", "destination_id"]
 
-    MSG_ID = 8
+    MSG_ID = 7
 
     def __init__(self):
         self.source_id = 0
@@ -20,7 +20,7 @@ class echo_reply_t(object):
 
     def encode(self):
         buf = BytesIO()
-        buf.write(echo_reply_t._get_packed_fingerprint())
+        buf.write(keep_alive_t._get_packed_fingerprint())
         self._encode_one(buf)
         return buf.getvalue()
 
@@ -32,20 +32,20 @@ class echo_reply_t(object):
             buf = data
         else:
             buf = BytesIO(data)
-        if buf.read(8) != echo_reply_t._get_packed_fingerprint():
+        if buf.read(8) != keep_alive_t._get_packed_fingerprint():
             raise ValueError("Decode error")
-        return echo_reply_t._decode_one(buf)
+        return keep_alive_t._decode_one(buf)
     decode = staticmethod(decode)
 
     def _decode_one(buf):
-        self = echo_reply_t()
+        self = keep_alive_t()
         self.source_id, self.destination_id = struct.unpack(">ii", buf.read(8))
         return self
     _decode_one = staticmethod(_decode_one)
 
     _hash = None
     def _get_hash_recursive(parents):
-        if echo_reply_t in parents: return 0
+        if keep_alive_t in parents: return 0
         tmphash = (0x18f1ed95b691afec) & 0xffffffffffffffff
         tmphash  = (((tmphash<<1)&0xffffffffffffffff)  + (tmphash>>63)) & 0xffffffffffffffff
         return tmphash
@@ -53,8 +53,8 @@ class echo_reply_t(object):
     _packed_fingerprint = None
 
     def _get_packed_fingerprint():
-        if echo_reply_t._packed_fingerprint is None:
-            echo_reply_t._packed_fingerprint = struct.pack(">Q", echo_reply_t._get_hash_recursive([]))
-        return echo_reply_t._packed_fingerprint
+        if keep_alive_t._packed_fingerprint is None:
+            keep_alive_t._packed_fingerprint = struct.pack(">Q", keep_alive_t._get_hash_recursive([]))
+        return keep_alive_t._packed_fingerprint
     _get_packed_fingerprint = staticmethod(_get_packed_fingerprint)
 
