@@ -116,13 +116,13 @@ int Intercom_CloudAPI::updateVars(void) {
 int Intercom_CloudAPI::enable_printgroup(String name) {
 	int printgroup;
 
-	if (name.startsWith(String("default"))) {
+	if (name.equalsIgnoreCase(String("default"))) {
 		printgroup = PRNTGRP_DFLT;
 	}
-	else if (name.startsWith(String("messages"))) {
+	else if (name.equalsIgnoreCase(String("messages"))) {
 		printgroup = PRNTGRP_MSGS;
 	}
-	else if (name.startsWith(String("ratetune"))) {
+	else if (name.equalsIgnoreCase(String("ratetune"))) {
 		printgroup = PRNTGRP_RATETN;
 	}
 	else {
@@ -138,13 +138,13 @@ int Intercom_CloudAPI::enable_printgroup(String name) {
 int Intercom_CloudAPI::disable_printgroup(String name) {
 	int printgroup;
 
-	if (name.startsWith(String("default"))) {
+	if (name.equalsIgnoreCase(String("default"))) {
 		printgroup = PRNTGRP_DFLT;
 	}
-	else if (name.startsWith(String("messages"))) {
+	else if (name.equalsIgnoreCase(String("messages"))) {
 		printgroup = PRNTGRP_MSGS;
 	}
-	else if (name.startsWith(String("ratetune"))) {
+	else if (name.equalsIgnoreCase(String("ratetune"))) {
 		printgroup = PRNTGRP_RATETN;
 	}
 	else {

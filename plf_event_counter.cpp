@@ -6,8 +6,6 @@
 
 #define READ_RESET_MODE
 
-Plf_EvenCounter plf_eventCounter;
-
 Plf_EvenCounter::Plf_EvenCounter() {
   memset(_plfEventArray, 0, sizeof(_plfEventArray));
   dataDump.registerFunction("Stats", &Plf_EvenCounter::_dataDump, this);

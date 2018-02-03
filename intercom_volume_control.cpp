@@ -1,7 +1,7 @@
 #include "intercom_volume_control.h"
 #include "vs1063a_codec.h"
 #include "plf_utils.h"
-#include "sine_max_vol_ulaw_g711.h"
+#include "sine_g711_ulaw.h"
 #include "plf_data_dump.h"
 
 #define MODULE_ID 1400
@@ -27,7 +27,7 @@ void Intercom_VolumeControl::_decVol(void) {
 	PLF_PRINT(PRNTGRP_DFLT, "Vol=%d\n", (int)(MAX_VOL-_curAtt));
 
 	VS1063SetVol(_curAtt);
-	VS1063PlayBuf(sine_max_vol_ulaw_g711_wav, sizeof(sine_max_vol_ulaw_g711_wav));
+	VS1063PlayBuf(sine_g711_ulaw_wav, sizeof(sine_g711_ulaw_wav));
 }
 
 void Intercom_VolumeControl::_incVol(void) {
@@ -38,7 +38,7 @@ void Intercom_VolumeControl::_incVol(void) {
 	PLF_PRINT(PRNTGRP_DFLT, "Vol=%d\n", (int)(MAX_VOL-_curAtt));
 
 	VS1063SetVol(_curAtt);
-	VS1063PlayBuf(sine_max_vol_ulaw_g711_wav, sizeof(sine_max_vol_ulaw_g711_wav));
+	VS1063PlayBuf(sine_g711_ulaw_wav, sizeof(sine_g711_ulaw_wav));
 }
 
 void Intercom_VolumeControl::_onTimeout(void) {

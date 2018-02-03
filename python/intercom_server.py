@@ -36,13 +36,12 @@ HOST_PORT = 50007
 NAME_KEYS = None
 MAX_NUM_BUDDIES = 3
 #ENCRYPTION_MODE = xtea.MODE_CBC
-#ENCRYPTION_MODE = xtea.MODE_ECB
-ENCRYPTION_MODE = xtea.MODE_NONE
+ENCRYPTION_MODE = xtea.MODE_ECB
+#ENCRYPTION_MODE = xtea.MODE_NONE
 
 PRINT_MSG_RX_TX = True
 
 id_counter = 1
-seq_numbers = [0,0,0,0,0,0,0,0,0,0]
 
 intercom_name_to_id_table = {}
 
@@ -71,7 +70,8 @@ class Intercom_MessageHandler:
 
         if cryptoCodec:
             payload_data = cryptoCodec.encrypt(payload_data)
-            cryptoCodec.IV = payload_data[-8:]
+            if ENCRYPTION_MODE == xtea.MODE_CBC:
+                cryptoCodec.IV = payload_data[-8:]
                 
         msg = []
         
@@ -121,7 +121,8 @@ class Intercom_MessageHandler:
             if intercom:
                 cryptoCodec = intercom.getDecoderCryptoCodec()
                 msg_payload = cryptoCodec.decrypt(data[8:])
-                cryptoCodec.IV = data[-8:]
+                if ENCRYPTION_MODE == xtea.MODE_CBC:
+                    cryptoCodec.IV = data[-8:]
             else:
                 print "Can't decrypt msgId %d source_id %x"%(msgId, source_id)
         else:
@@ -158,7 +159,7 @@ class Intercom:
             if encrypt:
                 self.msg_handler.send(msg, msgId, self.address, sender_id, self.encCrypto)
             else:
-                self.msg_handler.send(msg, msgId, self.address, sender_id)
+                self.msg_handler.send(msg, msgId, self.address, sender_id, None)
         else:
             print "sender %d not in buddy list"%(sender_id)
 
@@ -222,23 +223,10 @@ def msg_comm_stop_ack_handler(msg_data, address, msg_handler, intercom):
 def msg_voice_data_handler(msg_data, address, msg_handler, intercom):
     voice_data = voice_data_t.voice_data_t.decode(msg_data)
 
-    if seq_numbers[voice_data.source_id] != voice_data.seq_number:
-        print "Missing seq_number %d, received %d, missing: %d"%(seq_numbers[voice_data.source_id], voice_data.seq_number, 
-            voice_data.seq_number - seq_numbers[voice_data.source_id])
-
-    seq_numbers[voice_data.source_id] = voice_data.seq_number+voice_data.data_size
-
     if intercom_id_to_intercom_table.has_key(voice_data.destination_id):
         buddy_intercom = intercom_id_to_intercom_table[voice_data.destination_id]
         buddy_intercom.sendTo(voice_data.source_id, msg_data, 
             voice_data_t.voice_data_t.MSG_ID, True)
-    else:
-        print "Unknown destination %d"%(voice_data.destination_id)
-        print "Src=%d"%voice_data.source_id
-        print "Dst=%d"%voice_data.destination_id
-        print "Seq=%d"%voice_data.seq_number
-        print "Sz=%d"%voice_data.data_size
-        print voice_data.data
 
 def msg_i_am_handler(msg_data, address, msg_handler, intercom):
     global id_counter
@@ -280,7 +268,7 @@ def msg_i_am_handler(msg_data, address, msg_handler, intercom):
         i_am_reply.name = [ord(x) for x in i_am.name]
         data = i_am_reply.encode()
         cryptoCodec = intercom.getEncoderCryptoCodec()
-        msg_handler.send(data, i_am_reply_t.i_am_reply_t.MSG_ID, address, cryptoCodec=cryptoCodec)
+        msg_handler.send(data, i_am_reply_t.i_am_reply_t.MSG_ID, address, source_id=None, cryptoCodec=cryptoCodec)
 
 def msg_who_is_handler(msg_data, address, msg_handler, intercom):
     who_is = who_is_t.who_is_t.decode(msg_data)
@@ -296,7 +284,7 @@ def msg_who_is_handler(msg_data, address, msg_handler, intercom):
         assert intercom
         cryptoCodec = intercom.getEncoderCryptoCodec()
         msg_handler.send(data, who_is_reply_t.who_is_reply_t.MSG_ID, address,
-            cryptoCodec=cryptoCodec)
+            source_id=None, cryptoCodec=cryptoCodec)
 
 def set_buddy_handler(msg_data, address, msg_handler, intercom):
     set_buddy = set_buddy_t.set_buddy_t.decode(msg_data)

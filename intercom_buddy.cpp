@@ -191,10 +191,10 @@ void Intercom_Buddy::_txKeepAlive(void) {
 	plf_assert("NULL txMsgCounterp", _txMsgCounterp);
 
 	/*Only send keep-alive when there's been no incoming communication*/
-	if (_txMsgCounterp->txMsgCounter != _prevTxMsgCounter)
+	if (_txMsgCounterp->txMsgCounter != _prevTxMsgCounter) {
+		_prevTxMsgCounter = _txMsgCounterp->txMsgCounter;
 		return;
-
-	_prevTxMsgCounter = _txMsgCounterp->txMsgCounter;
+	}
 
 	keep_alive.source_id = myId;
 	keep_alive.destination_id = _buddyId;
@@ -256,6 +256,7 @@ int Intercom_Buddy::_rxWhoIsRep(Intercom_Message& msg, int payloadSize) {
 	/*Configure this buddy as the source_id for the counter object*/
 	plf_assert("counter ptr NULL", _rxMsgCounterp);
 	_rxMsgCounterp->source_id = _buddyId;
+	_txMsgCounterp->destination_id = _buddyId;
 
 	return 0;
 }

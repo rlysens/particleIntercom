@@ -9,6 +9,7 @@
 #include "SparkFunSX1509.h"
 #include "plf_data_dump.h"
 #include "plf_registry.h"
+#include "plf_event_counter.h"
 
 PRODUCT_ID(3891);
 PRODUCT_VERSION(1);
@@ -17,6 +18,7 @@ PRODUCT_VERSION(1);
 SerialLogHandler logHandler;
 Plf_DataDump dataDump;
 Plf_Registry plf_registry;
+Plf_EvenCounter plf_eventCounter;
 
 Intercom_Root *intercom_rootp = NULL;
 

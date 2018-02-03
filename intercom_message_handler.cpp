@@ -94,14 +94,14 @@ int Intercom_MessageHandler::_encryptMsg(Intercom_Message &msg, int payloadSize)
   int result=-1;
 
   if (_encryptionKeyIsSet) {
-#if MBEDTLS_CIHPER_MODE==MBEDTLS_CIPHER_MODE_CBC
+#if MBEDTLS_CIPHER_MODE==MBEDTLS_CIPHER_MODE_CBC
     result = mbedtls_xtea_crypt_cbc(&_xteaCtxt,
       MBEDTLS_XTEA_ENCRYPT,
       payloadSize,
       _ivEnc,
       msg.data,
       msg.data);
-#elif MBEDTLS_CIHPER_MODE==MBEDTLS_CIPHER_MODE_ECB
+#elif MBEDTLS_CIPHER_MODE==MBEDTLS_CIPHER_MODE_ECB
     uint8_t *inputp = msg.data;
 
     plf_assert("payloadSize must be multiple of 8", (payloadSize%8)==0);
@@ -194,6 +194,17 @@ int Intercom_MessageHandler::send(Intercom_Message &msg, uint32_t msgId, uint32_
     }
   }
 
+#if 0
+  {
+    uint8_t *p = (uint8_t*)&msg;
+    int i;
+    for (i=0;i<16;i++) {
+      PLF_PRINT(PRNTGRP_DFLT,"%x", p[i]);
+    }
+    PLF_PRINT(PRNTGRP_DFLT,"\n");
+  }
+#endif
+
   /* Send the UDP packet */
   if (_udp.sendPacket((uint8_t*)&msg, payloadSize+8, 
   		_remoteIpAddress, _remotePort) != payloadSize+8) {
@@ -219,8 +230,8 @@ int Intercom_MessageHandler::receive(void) {
     return 0;
 
   PLF_COUNT_VAL(UDP_BYTES_RX, rxDataLength);
-  PLF_PRINT(PRNTGRP_MSGS, "Rx Msg %s(%d)", 
-    msg.msgId < sizeof(messageNameTable) ? messageNameTable[msg.msgId] : "X", (int)msg.msgId);
+  PLF_PRINT(PRNTGRP_MSGS, "Rx Msg %s(%d), src:%d", 
+    msg.msgId < sizeof(messageNameTable) ? messageNameTable[msg.msgId] : "X", (int)msg.msgId, msg.source_id);
 
   payloadSize = rxDataLength - 8;
 
@@ -233,7 +244,6 @@ int Intercom_MessageHandler::receive(void) {
     }
   }
 
-  PLF_PRINT(PRNTGRP_MSGS, "Rx Msg source_id = %d", msg.source_id);
   _countRxMsg(msg);
 
   for (ii=0; ii<msgEntryp->topIndex; ++ii) {
@@ -303,7 +313,12 @@ void Intercom_MessageHandler::_dataDump(void) {
 
   int ii;
   for (ii=0; ii<NUM_BUDDIES; ii++) {
-    PLF_PRINT(PRNTGRP_DFLT, "MsgCounters[%d].source_id = %d, rxMsgCounter=%d",
+    PLF_PRINT(PRNTGRP_DFLT, "RxMsgCounters[%d].source_id = %d, rxMsgCounter=%d",
       ii, _msgRxCounters[ii].source_id, _msgRxCounters[ii].rxMsgCounter);
+  }
+
+  for (ii=0; ii<NUM_BUDDIES; ii++) {
+    PLF_PRINT(PRNTGRP_DFLT, "TxMsgCounters[%d].destination_id = %d, txMsgCounter=%d",
+      ii, _msgTxCounters[ii].destination_id, _msgTxCounters[ii].txMsgCounter);
   }
 }
