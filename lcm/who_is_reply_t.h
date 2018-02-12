@@ -20,8 +20,7 @@ typedef struct _who_is_reply_t who_is_reply_t;
 struct _who_is_reply_t
 {
     int32_t    id;
-    int8_t     name[32];
-    int8_t     padding[4];
+    int8_t     name[20];
 };
 
 /**

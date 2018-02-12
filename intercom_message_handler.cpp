@@ -206,9 +206,10 @@ int Intercom_MessageHandler::send(Intercom_Message &msg, uint32_t msgId, uint32_
 #endif
 
   /* Send the UDP packet */
-  if (_udp.sendPacket((uint8_t*)&msg, payloadSize+8, 
-  		_remoteIpAddress, _remotePort) != payloadSize+8) {
-      PLF_PRINT(PRNTGRP_DFLT, ("UDP packet send failed. Could not send all data\n"));
+  int res = _udp.sendPacket((uint8_t*)&msg, payloadSize+8, 
+      _remoteIpAddress, _remotePort);
+  if (res != payloadSize+8) {
+      PLF_PRINT(PRNTGRP_DFLT, "UDP packet send failed. Could not send all data: %d", res);
       return -(MODULE_ID+3);
   }
 

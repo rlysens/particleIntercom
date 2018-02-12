@@ -28,6 +28,8 @@ import xtea
 import random
 import string
 import json
+from threading import Thread
+from threading import Event
 
 from messages import *
 
@@ -41,11 +43,63 @@ ENCRYPTION_MODE = xtea.MODE_ECB
 
 PRINT_MSG_RX_TX = True
 
+keyPressThreadToMainEvent = Event()
+mainToKeyPressThreadEvent = Event()
+quitEvent = Event()
+
 id_counter = 1
 
 intercom_name_to_id_table = {}
 
 intercom_id_to_intercom_table = {}
+
+NO_FILTER = 0
+FILTER_ALL = -1
+
+inputFilter = NO_FILTER
+outputFilter = NO_FILTER
+
+def keyPressThread(dummy):
+    while not quitEvent.isSet():
+        raw_input()
+        keyPressThreadToMainEvent.set()
+        mainToKeyPressThreadEvent.wait()
+        mainToKeyPressThreadEvent.clear()
+
+def handleKeyboardInput():
+    global inputFilter
+    global outputFilter
+
+    quitStringRaw = raw_input('Quit? (y/n) --> ')
+    if quitStringRaw!= 'y':
+        debugStringRaw = raw_input('Debug? (y/n) --> ')
+        if debugStringRaw=='y':
+            pdb.set_trace()
+
+        inputFilterStringRaw = raw_input('Display Rx Messages from: all/none/<name> --> ')
+        outputFilterStringRaw = raw_input('Display Tx Messages to: all/none/<name> --> ')
+        
+        if inputFilterStringRaw == 'all':
+            inputFilter = NO_FILTER
+        elif inputFilterStringRaw == 'none':
+            inputFilter = FILTER_ALL
+        else:
+            inputFilterStringRaw += '\x00'*min(32,32-len(inputFilterStringRaw))
+            inputFilter = intercom_name_to_id_table.get(inputFilterStringRaw)
+            if not inputFilter:
+                print "Invalid Rx filter."
+
+        if outputFilterStringRaw == 'all':
+            outputFilter = NO_FILTER
+        elif outputFilterStringRaw == 'none':
+            outputFilter = FILTER_ALL
+        else:
+            outputFilterStringRaw += '\x00'*min(32,32-len(outputFilterStringRaw))
+            outputFilter = intercom_name_to_id_table.get(outputFilterStringRaw)
+            if not outputFilter:
+                print "Invalid Tx filter."
+    else:
+        quitEvent.set()
 
 def trimString(s):
     zeroPos = s.find('\0')
@@ -61,12 +115,20 @@ class Intercom_MessageHandler:
         self._msg_table = msg_table
         self.source_id = 0 #Server is 0
 
-    def send(self, payload_data, msgId, address, source_id=None, cryptoCodec=None):
-        if PRINT_MSG_RX_TX:
+    def send(self, payload_data, msgId, address, destination_id, source_id=None, cryptoCodec=None):
+        global outputFilter
+
+        if ((outputFilter==NO_FILTER) or (outputFilter==destination_id)):
+            name = 'X'
+            try:
+                name = intercom_id_to_intercom_table[destination_id].name
+            except:
+                pass
+
             if len(message_name_table.messageNameTable) > msgId:
-                print "Tx Msg: %s(%d)"%(message_name_table.messageNameTable[msgId],msgId)
+                print "Tx Msg: %s(%d) Dst:%s(%d)"%(message_name_table.messageNameTable[msgId], msgId, name, destination_id)
             else:
-                print "Tx Msg: XX(%d)"%(msgId)
+                print "Tx Msg: XX(%d) Dst: %s(%d)"%(msgId, name, destination_id)
 
         if cryptoCodec:
             payload_data = cryptoCodec.encrypt(payload_data)
@@ -92,6 +154,8 @@ class Intercom_MessageHandler:
         self._sock.sendto(''.join(msg), address)
 
     def receive(self):
+        global inputFilter
+
         data, address = self._sock.recvfrom(1024)
         if len(data) < 4:
             print "Msg. too short."
@@ -103,16 +167,19 @@ class Intercom_MessageHandler:
             print "Unknown Message %d"%(msgId)
             return
 
-        intercom = None
-        if intercom_id_to_intercom_table.has_key(source_id):
-            intercom = intercom_id_to_intercom_table[source_id]
+        intercom = intercom_id_to_intercom_table.get(source_id)
 
         #Invoke the handler
-        if PRINT_MSG_RX_TX:
-            if len(message_name_table.messageNameTable) > msgId:
-                print "Rx Msg: %s(%d) Src: %d"%(message_name_table.messageNameTable[msgId], msgId, source_id)
+        if ((inputFilter==NO_FILTER) or (inputFilter==source_id)):
+            if intercom:
+                name = intercom.name
             else:
-                print "Rx Msg: XX(%d) Src: %d"%(msgId, source_id)
+                name = 'X'
+            
+            if len(message_name_table.messageNameTable) > msgId:
+                print "Rx Msg: %s(%d) Src: %s(%d)"%(message_name_table.messageNameTable[msgId], msgId, name, source_id)
+            else:
+                print "Rx Msg: XX(%d) Src: %s(%d)"%(msgId, name, source_id)
             
         fun, decrypt = self._msg_table[msgId]
 
@@ -124,15 +191,16 @@ class Intercom_MessageHandler:
                 if ENCRYPTION_MODE == xtea.MODE_CBC:
                     cryptoCodec.IV = data[-8:]
             else:
-                print "Can't decrypt msgId %d source_id %x"%(msgId, source_id)
+                print "Can't decrypt msgId %d from %s"%(msgId, name)
         else:
             msg_payload = data[8:]
 
         if msg_payload:
             try: #A decode failure will trigger a ValueError exception
                 fun(msg_payload, address, self, intercom)
-            except ValueError:
-                print "Can't decode msgId %d source_id %x"%(msgId, source_id)
+            except ValueError as v:
+                print "Can't decode msgId %d from %s"%(msgId, name)
+                print v
 
 class Intercom:
     def __init__(self, name, id, address, msg_handler):
@@ -157,14 +225,15 @@ class Intercom:
     def sendTo(self, sender_id, msg, msgId, encrypt):
         if sender_id in self.buddy_list:
             if encrypt:
-                self.msg_handler.send(msg, msgId, self.address, sender_id, self.encCrypto)
+                self.msg_handler.send(msg, msgId, self.address, self.id, sender_id, self.encCrypto)
             else:
-                self.msg_handler.send(msg, msgId, self.address, sender_id, None)
+                self.msg_handler.send(msg, msgId, self.address, self.id, sender_id, None)
         else:
-            print "sender %d not in buddy list"%(sender_id)
+            print "sendTo %s: sender %d not in buddy list"%(self.name, sender_id)
+            print self.buddy_list
 
     def setBuddy(self, id):
-        if (id not in self.buddy_list):
+        if id not in self.buddy_list:
             self.buddy_list[self.next_buddy_idx] = id
             self.next_buddy_idx += 1
             if self.next_buddy_idx >= 3:
@@ -172,59 +241,53 @@ class Intercom:
         
 def msg_keep_alive_handler(msg_data, address, msg_handler, intercom):
     keep_alive = keep_alive_t.keep_alive_t.decode(msg_data)
-    if intercom_id_to_intercom_table.has_key(keep_alive.destination_id):
-        buddy_intercom = intercom_id_to_intercom_table[keep_alive.destination_id]
+    buddy_intercom = intercom_id_to_intercom_table.get(keep_alive.destination_id)
+    if buddy_intercom:
         buddy_intercom.sendTo(keep_alive.source_id, msg_data, 
             keep_alive_t.keep_alive_t.MSG_ID, True)
     else:
         print "Unknown destination %d"%(keep_alive.destination_id)
-        print keep_alive
 
 def msg_comm_start_handler(msg_data, address, msg_handler, intercom):
     comm_start = comm_start_t.comm_start_t.decode(msg_data)
-    if intercom_id_to_intercom_table.has_key(comm_start.destination_id):
-        buddy_intercom = intercom_id_to_intercom_table[comm_start.destination_id]
+    buddy_intercom = intercom_id_to_intercom_table.get(comm_start.destination_id)
+    if buddy_intercom:
         buddy_intercom.sendTo(comm_start.source_id, msg_data, 
             comm_start_t.comm_start_t.MSG_ID, True)
     else:
         print "Unknown destination %d"%(comm_start.destination_id)
-        print comm_start
 
 def msg_comm_start_ack_handler(msg_data, address, msg_handler, intercom):
     comm_start_ack = comm_start_ack_t.comm_start_ack_t.decode(msg_data)
-    if intercom_id_to_intercom_table.has_key(comm_start_ack.destination_id):
-        buddy_intercom = intercom_id_to_intercom_table[comm_start_ack.destination_id]
+    buddy_intercom = intercom_id_to_intercom_table.get(comm_start_ack.destination_id)
+    if buddy_intercom:
         buddy_intercom.sendTo(comm_start_ack.source_id, msg_data, 
             comm_start_ack_t.comm_start_ack_t.MSG_ID, True)
     else:
         print "Unknown destination %d"%(comm_start_ack.destination_id)
-        print comm_start_ack
 
 def msg_comm_stop_handler(msg_data, address, msg_handler, intercom):
     comm_stop = comm_stop_t.comm_stop_t.decode(msg_data)
-    if intercom_id_to_intercom_table.has_key(comm_stop.destination_id):
-        buddy_intercom = intercom_id_to_intercom_table[comm_stop.destination_id]
+    buddy_intercom = intercom_id_to_intercom_table.get(comm_stop.destination_id)
+    if buddy_intercom:
         buddy_intercom.sendTo(comm_stop.source_id, msg_data, 
             comm_stop_t.comm_stop_t.MSG_ID, True)
     else:
         print "Unknown destination %d"%(comm_stop.destination_id)
-        print comm_stop
 
 def msg_comm_stop_ack_handler(msg_data, address, msg_handler, intercom):
     comm_stop_ack = comm_stop_ack_t.comm_stop_ack_t.decode(msg_data)
-    if intercom_id_to_intercom_table.has_key(comm_stop_ack.destination_id):
-        buddy_intercom = intercom_id_to_intercom_table[comm_stop_ack.destination_id]
+    buddy_intercom = intercom_id_to_intercom_table.get(comm_stop_ack.destination_id)
+    if buddy_intercom:
         buddy_intercom.sendTo(comm_stop_ack.source_id, msg_data, 
             comm_stop_ack_t.comm_stop_ack_t.MSG_ID, True)
     else:
         print "Unknown destination %d"%(comm_stop_ack.destination_id)
-        print comm_stop_ack
 
 def msg_voice_data_handler(msg_data, address, msg_handler, intercom):
     voice_data = voice_data_t.voice_data_t.decode(msg_data)
-
-    if intercom_id_to_intercom_table.has_key(voice_data.destination_id):
-        buddy_intercom = intercom_id_to_intercom_table[voice_data.destination_id]
+    buddy_intercom = intercom_id_to_intercom_table.get(voice_data.destination_id)
+    if buddy_intercom:
         buddy_intercom.sendTo(voice_data.source_id, msg_data, 
             voice_data_t.voice_data_t.MSG_ID, True)
 
@@ -232,20 +295,23 @@ def msg_i_am_handler(msg_data, address, msg_handler, intercom):
     global id_counter
 
     i_am = i_am_t.i_am_t.decode(msg_data)
-    i_am.name = ''.join([chr(x) for x in i_am.name])
+
+    name = ''
+    for x in i_am.name:
+        if x==0:
+            break
+        name += chr(x)
 
     createNewIntercom = False
-    id = None
+    id = intercom_name_to_id_table.get(name)
 
-    if not intercom_name_to_id_table.has_key(i_am.name):
+    if not id:
         #Not known yet. Add it to name->id table
-        print "New name %s"%i_am.name
+        print "New name %s"%name
         id = id_counter
         id_counter += 1
-        intercom_name_to_id_table[i_am.name] = id
+        intercom_name_to_id_table[name] = id
         createNewIntercom = True
-    else:
-        id = intercom_name_to_id_table[i_am.name]
 
     assert id is not None
 
@@ -255,9 +321,9 @@ def msg_i_am_handler(msg_data, address, msg_handler, intercom):
         
     if createNewIntercom:
         try:
-            intercom_id_to_intercom_table[id] = Intercom(i_am.name, id, address, msg_handler)
+            intercom_id_to_intercom_table[id] = Intercom(name, id, address, msg_handler)
         except:
-            print "Could not create Intercom %s. Name not recognized."%(i_am.name)
+            print "Could not create Intercom %s. Name not recognized."%(name)
             pass
 
     #Send response
@@ -265,25 +331,31 @@ def msg_i_am_handler(msg_data, address, msg_handler, intercom):
     if intercom:
         i_am_reply = i_am_reply_t.i_am_reply_t()
         i_am_reply.id = id
-        i_am_reply.name = [ord(x) for x in i_am.name]
+        i_am_reply.name = i_am.name
         data = i_am_reply.encode()
         cryptoCodec = intercom.getEncoderCryptoCodec()
-        msg_handler.send(data, i_am_reply_t.i_am_reply_t.MSG_ID, address, source_id=None, cryptoCodec=cryptoCodec)
+        msg_handler.send(data, i_am_reply_t.i_am_reply_t.MSG_ID, address, id, source_id=None, cryptoCodec=cryptoCodec)
 
 def msg_who_is_handler(msg_data, address, msg_handler, intercom):
     who_is = who_is_t.who_is_t.decode(msg_data)
-    who_is.name = ''.join([chr(x) for x in who_is.name])
+    
+    name = ''
+    for x in who_is.name:
+        if x==0:
+            break
+        name += chr(x)
+
     #Known name?
-    if intercom_name_to_id_table.has_key(who_is.name):
-        id = intercom_name_to_id_table[who_is.name]
+    id = intercom_name_to_id_table.get(name)
+    if id:
         #Send who-is-reply-back
         who_is_reply = who_is_reply_t.who_is_reply_t()
-        who_is_reply.name = [ord(x) for x in who_is.name]
+        who_is_reply.name = who_is.name
         who_is_reply.id = id
         data = who_is_reply.encode()
         assert intercom
         cryptoCodec = intercom.getEncoderCryptoCodec()
-        msg_handler.send(data, who_is_reply_t.who_is_reply_t.MSG_ID, address,
+        msg_handler.send(data, who_is_reply_t.who_is_reply_t.MSG_ID, address, id,
             source_id=None, cryptoCodec=cryptoCodec)
 
 def set_buddy_handler(msg_data, address, msg_handler, intercom):
@@ -319,9 +391,18 @@ def main(argv):
 
     msg_handler = Intercom_MessageHandler(MSG_TABLE)
 
+    t = Thread(target=keyPressThread, args=(0,))
+    t.start()
+
     print "Entering receive loop."
-    while True:
+    while not quitEvent.isSet():
         msg_handler.receive()
+        if keyPressThreadToMainEvent.isSet():
+            keyPressThreadToMainEvent.clear()
+            handleKeyboardInput()
+            mainToKeyPressThreadEvent.set()
+
+    t.join()
 
 if __name__ == "__main__":
     main(sys.argv[1:])

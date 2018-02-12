@@ -15,27 +15,32 @@ def manuf_config(skipClaim, skipFlash, imageFilename):
 
 	print "Retrieving connected ports..."
 	serialPorts = particleLocal.get_connected_ports()
-	assert len(serialPorts) >= 2
 	if len(serialPorts) > 2:
 		serialPorts = serialPorts[0:2]
 
 	print "Generating names and keys..."
 	nameKeyGen = name_key_gen.NameKeyGenerator()
 	nameKeys = {}
-	nameKeys[serialPorts[0]] = nameKeyGen.gen_name_and_key()
-	nameKeys[serialPorts[1]] = nameKeyGen.gen_name_and_key()
+
+	for serialPort in serialPorts:
+		nameKeys[serialPort] = nameKeyGen.gen_name_and_key()
+		print "%s"%(nameKeys[serialPort][0])
+
 	nameKeyGen.commit()
-	print "%s %s"%(nameKeys[serialPorts[0]][0],
-		nameKeys[serialPorts[1]][0])
+	
 
 	print "Logging into cloud..."
 	particleCloud = particle.Particle(
 			credentials['particle_username'],
 			credentials['particle_password'])
 		
-	for ii in range(2):
+	for ii in range(len(serialPorts)):
 		port = serialPorts[ii]
-		otherPort = serialPorts[(ii+1)%2]
+		if (len(serialPorts)==2):
+			otherPort = serialPorts[(ii+1)%2]
+		else:
+			otherPort = None
+
 		print "Identifying device..."
 		particleId = particleLocal.identify_device(port)
 		print "Setting WiFi..."
@@ -52,16 +57,29 @@ def manuf_config(skipClaim, skipFlash, imageFilename):
 			time.sleep(20)
 
 		name, keyString = nameKeys[port]
-		buddyName, buddyKeyString = nameKeys[otherPort]
+		
 		print "Erasing..."
 
 		particleCloud.call_function(particleId, "erase", "")
 		time.sleep(5)
 
-		print "Setting name (%s), key (%s) and buddy (%s)..."%(name, keyString, buddyName)
-		particleCloud.call_function(particleId, "my_name", name)
-		particleCloud.call_function(particleId, "set_key", keyString)
-		particleCloud.call_function(particleId, "buddy_0_name", buddyName)
+		print "Setting name (%s) and key (%s)..."%(name, keyString)
+		callFunctionSuccess = False
+		while not callFunctionSuccess:
+			callFunctionSuccess = particleCloud.call_function(particleId, "my_name", name)
+			print ".",
+		callFunctionSuccess = False
+		while not callFunctionSuccess:	
+			callFunctionSuccess = particleCloud.call_function(particleId, "set_key", keyString)
+			print ".",
+
+		print ""
+
+		if otherPort:
+			buddyName, buddyKeyString = nameKeys[otherPort]
+			print "Setting buddy name: %s"%(buddyName)
+			particleCloud.call_function(particleId, "buddy_0_name", buddyName)
+
 		if not skipClaim:
 			print "Unclaiming device..."
 			particleCloud.unclaim_device(particleId)

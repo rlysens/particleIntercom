@@ -1,21 +1,28 @@
-#ifndef INTERCOM_BUTTONS_AND_LEDS_H
-#define INTERCOM_BUTTONS_AND_LEDS_H
+#ifndef INTERCOM_BUTTONS_AND_LEDS_SX1509_H
+#define INTERCOM_BUTTONS_AND_LEDS_WX1509_H
 
-#include "board.h"
-#include "Particle.h"
+#include "intercom_buttons_and_leds.h"
+#include "SparkFunSX1509.h" // Include SX1509 library
 
-#define BUDDY_0_IDX 0
-#define BUDDY_1_IDX 1
-#define BUDDY_2_IDX 2
+class Intercom_LedBar_SX1509 : public Intercom_LedBar {
+private:
+	SX1509* _iop;
+	byte _pins[LED_BAR_MAX_LEVEL];
 
-#define LED_BAR_MAX_LEVEL 5
-
-class Intercom_LedBar {
 public:
-	virtual void setLevel(int level)=0;
+	Intercom_LedBar_SX1509();
+
+	virtual void setLevel(int level);
+
+	/*private*/
+	void init(SX1509& io, byte pins[LED_BAR_MAX_LEVEL]);
 };
 
-class Intercom_Led {
+class Intercom_Led_SX1509 : public Intercom_Led {
+private:
+	SX1509* _iop;
+	byte _pin;
+
 public:
 	// -----------------------------------------------------------------------------
 	// analogWrite(byte iOn):	This function can be used to control the intensity 
@@ -25,7 +32,7 @@ public:
 	//		- iOn: should be a 0-255 value setting the intensity of the LED
 	//			- 0 is completely off, 255 is 100% on.
 	// -----------------------------------------------------------------------------
-	virtual void analogWrite(byte iOn)=0;
+	virtual void analogWrite(byte iOn);
 
 	// -----------------------------------------------------------------------------
 	// blink(unsigned long tOn, unsigned long tOff, byte onIntensity, byte offIntensity);
@@ -38,7 +45,7 @@ public:
 	//   	- offIntensity: 0-255 value determining LED off brightness
 	// 	 Notes: 
 	// -----------------------------------------------------------------------------
-	virtual void blink(unsigned long tOn, unsigned long tOff, byte onIntensity = 255, byte offIntensity = 0)=0;
+	virtual void blink(unsigned long tOn, unsigned long tOff, byte onIntensity = 255, byte offIntensity = 0);
 
 	// -----------------------------------------------------------------------------
 	// breathe(unsigned long tOn, unsigned long tOff, unsigned long rise, unsigned long fall, byte onInt, byte offInt, bool log);
@@ -54,17 +61,31 @@ public:
 	//   	- offIntensity: 0-255 value determining LED off brightness
 	// -----------------------------------------------------------------------------
 	virtual void breathe(unsigned long tOn, unsigned long tOff, unsigned long rise, unsigned long fall, 
-		byte onInt = 255, byte offInt = 0) =0;
+		byte onInt = 255, byte offInt = 0);
+
+	/*private*/
+	void init(SX1509& io, byte pin);
+
+	Intercom_Led_SX1509();
 };
 
-class Intercom_ButtonsAndLeds {
+class Intercom_ButtonsAndLeds_SX1509 : public Intercom_ButtonsAndLeds {
+private:
+	SX1509 _io; 
+	Intercom_Led_SX1509 _leds[NUM_LEDS];
+	Intercom_LedBar_SX1509 _ledBar;
+
 public:
 	/*Button IDs: WIFI_CHECK_BUTTON, BATTERY_CHECK_BUTTON, VOL_INC_BUTTON, VOL_DEC_BUTTON. See board.h*/
-	virtual bool buttonIsPressed(int buttonId) =0;
+	virtual bool buttonIsPressed(int buttonId);
 
-	virtual bool buddyButtonIsPressed(int buddyIndex) =0;
-	virtual Intercom_Led& getBuddyLed(int buddyIndex) =0;
-	virtual Intercom_LedBar& getLedBar(void) =0;
+	virtual bool buddyButtonIsPressed(int buddyIndex);
+	virtual Intercom_Led& getBuddyLed(int buddyIndex);
+	virtual Intercom_LedBar& getLedBar(void);
+
+	void reset(void);
+
+	Intercom_ButtonsAndLeds_SX1509();
 };
 
-#endif /*INTERCOM_BUTTONS_AND_LEDS_H*/
+#endif /*INTERCOM_BUTTONS_AND_LEDS_SX1509_H*/

@@ -4,21 +4,21 @@
 
 #define MODULE_ID 800
 
-Intercom_Root::Intercom_Root(void) :
+Intercom_Root::Intercom_Root(Intercom_ButtonsAndLeds& intercom_buttonsAndLeds) :
 	_messageHandler(LOCAL_PORT, REMOTE_IP, REMOTE_PORT),
 	_intercom_incoming(_messageHandler),
 	_intercom_controller(_messageHandler),
-    _intercom_volumeControl(_intercom_buttonsAndLeds),
-    _intercom_batteryChecker(_intercom_buttonsAndLeds),
-    _intercom_wifiChecker(_intercom_buttonsAndLeds),
-    _intercom_cloud_api(_intercom_buttonsAndLeds, _intercom_wifiChecker, _intercom_batteryChecker) {
+    _intercom_volumeControl(intercom_buttonsAndLeds),
+    _intercom_batteryChecker(intercom_buttonsAndLeds),
+    _intercom_wifiChecker(intercom_buttonsAndLeds),
+    _intercom_cloud_api(intercom_buttonsAndLeds, _intercom_wifiChecker, _intercom_batteryChecker) {
     int ii;
 
     for (ii=0; ii<NUM_BUDDIES; ++ii) {
         _intercom_buddies[ii].init(
             &_intercom_incoming, 
             &_messageHandler, 
-            &_intercom_buttonsAndLeds,
+            &intercom_buttonsAndLeds,
             ii);
     }
 

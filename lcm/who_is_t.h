@@ -19,7 +19,8 @@ extern "C" {
 typedef struct _who_is_t who_is_t;
 struct _who_is_t
 {
-    int8_t     name[32];
+    int8_t     name[20];
+    int8_t     padding[4];
 };
 
 /**

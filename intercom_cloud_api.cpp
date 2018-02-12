@@ -174,7 +174,6 @@ int Intercom_CloudAPI::ddump(String name) {
 
 int Intercom_CloudAPI::testfun(String name) {
 	PLF_PRINT(PRNTGRP_DFLT, "testfun called\n");
-	_intercom_buttonsAndLeds.reset();
   	return 0;
 }
 
@@ -184,29 +183,18 @@ Intercom_CloudAPI::Intercom_CloudAPI(Intercom_ButtonsAndLeds& intercom_buttonsAn
 	_intercom_buttonsAndLeds(intercom_buttonsAndLeds),
 	_intercom_wifiChecker(intercom_wifiChecker),
 	_intercom_batteryChecker(intercom_batteryChecker), _prevMillis(0) {
-	int res;
-	res = Particle.function("my_name", &Intercom_CloudAPI::set_my_name, this);
-	PLF_PRINT(PRNTGRP_DFLT, "Cloud function my_name register result: %d\n", res);
-	res = Particle.function("buddy_0_name", &Intercom_CloudAPI::set_buddy_0_name, this);
-	PLF_PRINT(PRNTGRP_DFLT, "Cloud function buddy_0_name register result: %d\n", res);
-	res = Particle.function("buddy_1_name", &Intercom_CloudAPI::set_buddy_1_name, this);
-	PLF_PRINT(PRNTGRP_DFLT, "Cloud function buddy_1_name register result: %d\n", res);
-	res = Particle.function("buddy_2_name", &Intercom_CloudAPI::set_buddy_2_name, this);
-	PLF_PRINT(PRNTGRP_DFLT, "Cloud function buddy_2_name register result: %d\n", res);
-	res = Particle.function("erase", &Intercom_CloudAPI::erase, this);
-	PLF_PRINT(PRNTGRP_DFLT, "Cloud function erase register result: %d\n", res);
-	res = Particle.function("en_prntgrp", &Intercom_CloudAPI::enable_printgroup, this);
-	PLF_PRINT(PRNTGRP_DFLT, "Cloud function enable_printgroup register result: %d\n", res);
-	res = Particle.function("dis_prntgrp", &Intercom_CloudAPI::disable_printgroup, this);
-	PLF_PRINT(PRNTGRP_DFLT, "Cloud function disable_printgroup register result: %d\n", res);
-	res = Particle.function("set_key", &Intercom_CloudAPI::set_key, this);
-	PLF_PRINT(PRNTGRP_DFLT, "Cloud function key register result: %d\n", res);
-	res = Particle.function("list_ddump", &Intercom_CloudAPI::list_ddump, this);
-	PLF_PRINT(PRNTGRP_DFLT, "Cloud function key register result: %d\n", res);
-	res = Particle.function("ddump", &Intercom_CloudAPI::ddump, this);
-	PLF_PRINT(PRNTGRP_DFLT, "Cloud function key register result: %d\n", res);
-	res = Particle.function("testfun", &Intercom_CloudAPI::testfun, this);
-	PLF_PRINT(PRNTGRP_DFLT, "Cloud function key register result: %d\n", res);
+	
+	Particle.function("my_name", &Intercom_CloudAPI::set_my_name, this);
+	Particle.function("buddy_0_name", &Intercom_CloudAPI::set_buddy_0_name, this);
+	Particle.function("buddy_1_name", &Intercom_CloudAPI::set_buddy_1_name, this);
+	Particle.function("buddy_2_name", &Intercom_CloudAPI::set_buddy_2_name, this);
+	Particle.function("erase", &Intercom_CloudAPI::erase, this);
+	Particle.function("en_prntgrp", &Intercom_CloudAPI::enable_printgroup, this);
+	Particle.function("dis_prntgrp", &Intercom_CloudAPI::disable_printgroup, this);
+	Particle.function("set_key", &Intercom_CloudAPI::set_key, this);
+	Particle.function("list_ddump", &Intercom_CloudAPI::list_ddump, this);
+	Particle.function("ddump", &Intercom_CloudAPI::ddump, this);
+	Particle.function("testfun", &Intercom_CloudAPI::testfun, this);
 
 	Particle.variable("my_name", my_name);
 	Particle.variable("buddy_0_name", buddy_0_name);

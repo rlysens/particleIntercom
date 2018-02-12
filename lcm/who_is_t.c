@@ -21,7 +21,8 @@ uint64_t __who_is_t_hash_recursive(const __lcm_hash_ptr *p)
     cp.v = (void*)__who_is_t_get_hash;
     (void) cp;
 
-    uint64_t hash = (uint64_t)0x15224fec212ef02cLL
+    uint64_t hash = (uint64_t)0xeb0beb0b232da356LL
+         + __int8_t_hash_recursive(&cp)
          + __int8_t_hash_recursive(&cp)
         ;
 
@@ -45,7 +46,10 @@ int __who_is_t_encode_array(void *buf, int offset, int maxlen, const who_is_t *p
 
     for (element = 0; element < elements; element++) {
 
-        thislen = __int8_t_encode_array(buf, offset + pos, maxlen - pos, p[element].name, 32);
+        thislen = __int8_t_encode_array(buf, offset + pos, maxlen - pos, p[element].name, 20);
+        if (thislen < 0) return thislen; else pos += thislen;
+
+        thislen = __int8_t_encode_array(buf, offset + pos, maxlen - pos, p[element].padding, 4);
         if (thislen < 0) return thislen; else pos += thislen;
 
     }
@@ -71,7 +75,9 @@ int __who_is_t_encoded_array_size(const who_is_t *p, int elements)
     int size = 0, element;
     for (element = 0; element < elements; element++) {
 
-        size += __int8_t_encoded_array_size(p[element].name, 32);
+        size += __int8_t_encoded_array_size(p[element].name, 20);
+
+        size += __int8_t_encoded_array_size(p[element].padding, 4);
 
     }
     return size;
@@ -88,7 +94,10 @@ int __who_is_t_decode_array(const void *buf, int offset, int maxlen, who_is_t *p
 
     for (element = 0; element < elements; element++) {
 
-        thislen = __int8_t_decode_array(buf, offset + pos, maxlen - pos, p[element].name, 32);
+        thislen = __int8_t_decode_array(buf, offset + pos, maxlen - pos, p[element].name, 20);
+        if (thislen < 0) return thislen; else pos += thislen;
+
+        thislen = __int8_t_decode_array(buf, offset + pos, maxlen - pos, p[element].padding, 4);
         if (thislen < 0) return thislen; else pos += thislen;
 
     }
@@ -100,7 +109,9 @@ int __who_is_t_decode_array_cleanup(who_is_t *p, int elements)
     int element;
     for (element = 0; element < elements; element++) {
 
-        __int8_t_decode_array_cleanup(p[element].name, 32);
+        __int8_t_decode_array_cleanup(p[element].name, 20);
+
+        __int8_t_decode_array_cleanup(p[element].padding, 4);
 
     }
     return 0;
@@ -132,7 +143,9 @@ int __who_is_t_clone_array(const who_is_t *p, who_is_t *q, int elements)
     int element;
     for (element = 0; element < elements; element++) {
 
-        __int8_t_clone_array(p[element].name, q[element].name, 32);
+        __int8_t_clone_array(p[element].name, q[element].name, 20);
+
+        __int8_t_clone_array(p[element].padding, q[element].padding, 4);
 
     }
     return 0;

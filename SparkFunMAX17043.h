@@ -121,7 +121,6 @@ private:
   uint16_t read16(uint8_t address);
 };
 
-// Define a static MAX17043 object called lipo, which we'll use in the sketches.
-extern MAX17043 lipo;
+extern MAX17043 *lipop;
 
 #endif

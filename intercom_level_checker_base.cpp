@@ -17,15 +17,13 @@ void Intercom_LevelCheckerBase::checkButton(void) {
 	if (_fsm == LEVEL_CHECK_FSM_BUTTON_RELEASED) {
 		if (buttonPressed) {
 			int lvl = _getLevel();
-			Intercom_LedBar ledBar = _intercom_buttonsAndLeds.getLedBar();
-			ledBar.setLevel(lvl);
+			_intercom_buttonsAndLeds.getLedBar().setLevel(lvl);
 			_fsm = LEVEL_CHECK_FSM_BUTTON_PRESSED;
 		}
 	}
 	else {/*fsm=pressed*/
 		if (!buttonPressed) {
-			Intercom_LedBar ledBar = _intercom_buttonsAndLeds.getLedBar();
-			ledBar.setLevel(0);
+			_intercom_buttonsAndLeds.getLedBar().setLevel(0);
 			_fsm = LEVEL_CHECK_FSM_BUTTON_RELEASED;
 		}
 	}

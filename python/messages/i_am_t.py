@@ -10,14 +10,13 @@ except ImportError:
 import struct
 
 class i_am_t(object):
-    __slots__ = ["restarted", "name", "padding"]
+    __slots__ = ["restarted", "name"]
 
     MSG_ID = 2
 
     def __init__(self):
         self.restarted = 0
-        self.name = [ 0 for dim0 in range(32) ]
-        self.padding = [ 0 for dim0 in range(4) ]
+        self.name = [ 0 for dim0 in range(20) ]
 
     def encode(self):
         buf = BytesIO()
@@ -27,8 +26,7 @@ class i_am_t(object):
 
     def _encode_one(self, buf):
         buf.write(struct.pack(">i", self.restarted))
-        buf.write(struct.pack('>32b', *self.name[:32]))
-        buf.write(struct.pack('>4b', *self.padding[:4]))
+        buf.write(struct.pack('>20b', *self.name[:20]))
 
     def decode(data):
         if hasattr(data, 'read'):
@@ -43,15 +41,14 @@ class i_am_t(object):
     def _decode_one(buf):
         self = i_am_t()
         self.restarted = struct.unpack(">i", buf.read(4))[0]
-        self.name = struct.unpack('>32b', buf.read(32))
-        self.padding = struct.unpack('>4b', buf.read(4))
+        self.name = struct.unpack('>20b', buf.read(20))
         return self
     _decode_one = staticmethod(_decode_one)
 
     _hash = None
     def _get_hash_recursive(parents):
         if i_am_t in parents: return 0
-        tmphash = (0x302a258f84d1fcde) & 0xffffffffffffffff
+        tmphash = (0x955cdf2135ea7ca9) & 0xffffffffffffffff
         tmphash  = (((tmphash<<1)&0xffffffffffffffff)  + (tmphash>>63)) & 0xffffffffffffffff
         return tmphash
     _get_hash_recursive = staticmethod(_get_hash_recursive)

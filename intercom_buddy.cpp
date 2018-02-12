@@ -39,6 +39,9 @@ void Intercom_Buddy::_txSetBuddy(void) {
 	if (myId == ID_UNKNOWN)
 		return;
 
+	if (_buddyId == ID_UNKNOWN)
+		return;
+
 	/*Set my buddy server side. Keep in mind that this code runs periodically. So if one message gets lost, no problem.*/
 	set_buddy.my_id = myId;
 	set_buddy.buddy_id = _buddyId; /*Note that this is 0 if buddy_id is unknown*/

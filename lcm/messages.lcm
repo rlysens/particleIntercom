@@ -13,30 +13,28 @@ struct i_am_t
 {
 	const int32_t MSG_ID=2;
 	int32_t restarted;
-	int8_t name[32];
-	int8_t padding[4];
+	int8_t name[20];
 }
 
 struct i_am_reply_t
 {
 	const int32_t MSG_ID=3;
 	int32_t id;
-	int8_t name[32];
-	int8_t padding[4];
+	int8_t name[20];
 }
 
 struct who_is_t
 {
 	const int32_t MSG_ID=4;
-	int8_t name[32];
+	int8_t name[20];
+	int8_t padding[4];
 }
 
 struct who_is_reply_t
 {
 	const int32_t MSG_ID=5;
 	int32_t id;
-	int8_t name[32];
-	int8_t padding[4];
+	int8_t name[20];
 }
 
 struct set_buddy_t

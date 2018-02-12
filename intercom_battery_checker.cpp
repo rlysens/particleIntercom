@@ -22,7 +22,7 @@ int Intercom_BatteryChecker::_getLevel(void) {
 }
 
 int Intercom_BatteryChecker::getBatteryPct(void) {
-	return MIN((int)lipo.getSOC(), 100);
+	return lipop ? MIN((int)lipop->getSOC(), 100) : 100;
 }
 
 void Intercom_BatteryChecker::_dataDump(void) {

@@ -17,6 +17,8 @@ int Plf_Registry::set(int key, String& value, bool valid, bool persistent) {
 
 	get(key, oldValue, oldValid);
 
+	memset(regEntry.value, 0, sizeof(regEntry.value));
+
 	/*returns a zero terminated string*/
 	value.getBytes(regEntry.value, sizeof(regEntry.value));
 	
@@ -100,7 +102,7 @@ void Plf_Registry::_walkHandlers(void) {
 			bool valid;
 
 			get(key, value, valid);
-			PLF_PRINT(PRNTGRP_DFLT, "[%d] %s: %s, valid: %d\n", 
+			PLF_PRINT(PRNTGRP_DFLT, "[%d] %s: %s, valid: %d", 
 				key, _regHandlers[key].name.c_str(), valid ? value.c_str() : "X", (int)valid);
 			_invokeHandler(key, value, valid);
 		}

@@ -21,9 +21,8 @@ uint64_t __who_is_reply_t_hash_recursive(const __lcm_hash_ptr *p)
     cp.v = (void*)__who_is_reply_t_get_hash;
     (void) cp;
 
-    uint64_t hash = (uint64_t)0x1856e917389af6b4LL
+    uint64_t hash = (uint64_t)0x4a63db5ad5c61898LL
          + __int32_t_hash_recursive(&cp)
-         + __int8_t_hash_recursive(&cp)
          + __int8_t_hash_recursive(&cp)
         ;
 
@@ -50,10 +49,7 @@ int __who_is_reply_t_encode_array(void *buf, int offset, int maxlen, const who_i
         thislen = __int32_t_encode_array(buf, offset + pos, maxlen - pos, &(p[element].id), 1);
         if (thislen < 0) return thislen; else pos += thislen;
 
-        thislen = __int8_t_encode_array(buf, offset + pos, maxlen - pos, p[element].name, 32);
-        if (thislen < 0) return thislen; else pos += thislen;
-
-        thislen = __int8_t_encode_array(buf, offset + pos, maxlen - pos, p[element].padding, 4);
+        thislen = __int8_t_encode_array(buf, offset + pos, maxlen - pos, p[element].name, 20);
         if (thislen < 0) return thislen; else pos += thislen;
 
     }
@@ -81,9 +77,7 @@ int __who_is_reply_t_encoded_array_size(const who_is_reply_t *p, int elements)
 
         size += __int32_t_encoded_array_size(&(p[element].id), 1);
 
-        size += __int8_t_encoded_array_size(p[element].name, 32);
-
-        size += __int8_t_encoded_array_size(p[element].padding, 4);
+        size += __int8_t_encoded_array_size(p[element].name, 20);
 
     }
     return size;
@@ -103,10 +97,7 @@ int __who_is_reply_t_decode_array(const void *buf, int offset, int maxlen, who_i
         thislen = __int32_t_decode_array(buf, offset + pos, maxlen - pos, &(p[element].id), 1);
         if (thislen < 0) return thislen; else pos += thislen;
 
-        thislen = __int8_t_decode_array(buf, offset + pos, maxlen - pos, p[element].name, 32);
-        if (thislen < 0) return thislen; else pos += thislen;
-
-        thislen = __int8_t_decode_array(buf, offset + pos, maxlen - pos, p[element].padding, 4);
+        thislen = __int8_t_decode_array(buf, offset + pos, maxlen - pos, p[element].name, 20);
         if (thislen < 0) return thislen; else pos += thislen;
 
     }
@@ -120,9 +111,7 @@ int __who_is_reply_t_decode_array_cleanup(who_is_reply_t *p, int elements)
 
         __int32_t_decode_array_cleanup(&(p[element].id), 1);
 
-        __int8_t_decode_array_cleanup(p[element].name, 32);
-
-        __int8_t_decode_array_cleanup(p[element].padding, 4);
+        __int8_t_decode_array_cleanup(p[element].name, 20);
 
     }
     return 0;
@@ -156,9 +145,7 @@ int __who_is_reply_t_clone_array(const who_is_reply_t *p, who_is_reply_t *q, int
 
         __int32_t_clone_array(&(p[element].id), &(q[element].id), 1);
 
-        __int8_t_clone_array(p[element].name, q[element].name, 32);
-
-        __int8_t_clone_array(p[element].padding, q[element].padding, 4);
+        __int8_t_clone_array(p[element].name, q[element].name, 20);
 
     }
     return 0;
