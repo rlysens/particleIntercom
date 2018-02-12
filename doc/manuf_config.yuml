@@ -1,0 +1,5 @@
+[credentials.json]->[manuf_config.py]
+[manuf_config.py]->[particle.py]
+[manuf_config.py]->[name_key_gen.py]
+[name_key_gen.py]->[name_key.json]
+[name_key_gen.py]->[namegen.py]

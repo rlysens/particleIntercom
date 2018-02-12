@@ -2,19 +2,17 @@
 [Plf_DataDump]
 [Plf_Registry]
 
+[Intercom_ButtonsAndLeds_SX1509]
+[Intercom_ButtonsAndLeds_Stub]
+
 [Intercom_Root]++-1>[Intercom_MessageHandler]
 [Intercom_Root]++-1>[Intercom_Incoming]
 [Intercom_Root]++-1>[Intercom_Outgoing]
 [Intercom_Root]++-1>[Intercom_Controller]
 [Intercom_Root]++-3>[Intercom_Buddy]
 [Intercom_Root]++-1>[Intercom_CloudAPI{bg:orange}]
-[Intercom_Root]++-1>[Intercom_ButtonsAndLeds]
 [Intercom_Root]++-1>[Intercom_VolumeControl]
 [Intercom_Root]++-1>[Intercom_BatteryChecker]
-
-[Intercom_ButtonsAndLeds]++-1>[Intercom_LedBar]
-[Intercom_ButtonsAndLeds]++-n>[Intercom_Led]
-[Intercom_ButtonsAndLeds]++-1>[SX1509]
 
 [Intercom_Incoming]++-1>[Plf_CircularBuffer]
 

@@ -52,6 +52,7 @@ def main():
         if device == "all":
     	   device_list.append("Intercom1")
     	   device_list.append("Intercom2")
+           device_list.append("Intercom3")
         else:
     	   device_list.append(device)
 

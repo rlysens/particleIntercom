@@ -20,6 +20,11 @@
 #define BUDDY_1_LED 5
 #define BUDDY_2_LED 6
 
+#define BUDDY_0_BUTTON_DUMMY D0
+#define BUDDY_1_BUTTON_DUMMY D1
+#define BUDDY_0_LED_DUMMY D3
+#define BUDDY_1_LED_DUMMY D4
+
 #define BUDDY_0_BUTTON 1
 #define BUDDY_1_BUTTON 2
 #define BUDDY_2_BUTTON 3
