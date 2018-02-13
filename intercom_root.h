@@ -19,11 +19,11 @@
 class Intercom_Root {
 private:
 	Intercom_MessageHandler _messageHandler;
-	Intercom_Incoming _intercom_incoming;
 	Intercom_Outgoing _intercom_outgoing;
 	Intercom_Controller _intercom_controller;
 	Intercom_Buddy _intercom_buddies[NUM_BUDDIES];
 	Intercom_VolumeControl _intercom_volumeControl;
+	Intercom_Incoming _intercom_incoming;
 	Intercom_BatteryChecker _intercom_batteryChecker;
 	Intercom_WifiChecker _intercom_wifiChecker;
 	Intercom_CloudAPI _intercom_cloud_api;

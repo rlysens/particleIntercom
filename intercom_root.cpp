@@ -6,9 +6,9 @@
 
 Intercom_Root::Intercom_Root(Intercom_ButtonsAndLeds& intercom_buttonsAndLeds) :
 	_messageHandler(LOCAL_PORT, REMOTE_IP, REMOTE_PORT),
-	_intercom_incoming(_messageHandler),
 	_intercom_controller(_messageHandler),
     _intercom_volumeControl(intercom_buttonsAndLeds),
+    _intercom_incoming(_messageHandler, _intercom_volumeControl),
     _intercom_batteryChecker(intercom_buttonsAndLeds),
     _intercom_wifiChecker(intercom_buttonsAndLeds),
     _intercom_cloud_api(intercom_buttonsAndLeds, _intercom_wifiChecker, _intercom_batteryChecker) {

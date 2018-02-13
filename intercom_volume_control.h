@@ -12,13 +12,15 @@ private:
 	int32_t _fsm;
 	unsigned long _ledTurnOffTime;
 	bool _timerRunning;
-
+	bool _ampEnabled;
 	void _incVol(void);
 	void _decVol(void);
 	void _setLedBar(void);
 
 	void _startTimer(void);
 	void _onTimeout(void);
+
+	void _doEnableAmp(bool enable);
 
 	virtual void _tickerHook(void);
 	
@@ -28,6 +30,8 @@ public:
 	Intercom_VolumeControl(Intercom_ButtonsAndLeds& intercom_buttonsAndLeds);
 
 	void checkButtons(void);
+
+	void enableAmp(bool enable);
 };
 
 #endif /*INTERCOM_VOLUME_CONTROL_H*/

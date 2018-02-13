@@ -27,7 +27,16 @@ void Intercom_VolumeControl::_decVol(void) {
 	PLF_PRINT(PRNTGRP_DFLT, "Vol=%d\n", (int)(MAX_VOL-_curAtt));
 
 	VS1063SetVol(_curAtt);
+
+	if (!_ampEnabled) {
+		_doEnableAmp(true);
+	}
+
 	VS1063PlayBuf(sine_g711_ulaw_wav, sizeof(sine_g711_ulaw_wav));
+
+	if (!_ampEnabled) {
+		_doEnableAmp(false);
+	}
 }
 
 void Intercom_VolumeControl::_incVol(void) {
@@ -38,7 +47,16 @@ void Intercom_VolumeControl::_incVol(void) {
 	PLF_PRINT(PRNTGRP_DFLT, "Vol=%d\n", (int)(MAX_VOL-_curAtt));
 
 	VS1063SetVol(_curAtt);
+
+	if (!_ampEnabled) {
+		_doEnableAmp(true);
+	}
+
 	VS1063PlayBuf(sine_g711_ulaw_wav, sizeof(sine_g711_ulaw_wav));
+
+	if (!_ampEnabled) {
+		_doEnableAmp(false);
+	}
 }
 
 void Intercom_VolumeControl::_onTimeout(void) {
@@ -79,13 +97,25 @@ void Intercom_VolumeControl::_setLedBar(void) {
 	}
 }
 
+void Intercom_VolumeControl::_doEnableAmp(bool enable) {
+	digitalWrite(AMP_SHUTDOWN, enable ? HIGH : LOW);
+}
+
+void Intercom_VolumeControl::enableAmp(bool enable) {
+	_doEnableAmp(enable);
+	_ampEnabled = enable;
+}
+
 Intercom_VolumeControl::Intercom_VolumeControl(Intercom_ButtonsAndLeds& intercom_buttonsAndLeds) : 
 	Plf_TickerBase(INTERCOM_VOL_CTRL_TICK_INTER_MS),
 	_intercom_buttonsAndLeds(intercom_buttonsAndLeds), _curAtt(DEFAULT_VOL), _fsm(VOL_CTRL_BUTTON_FSM_ALL_RELEASED),
-	_ledTurnOffTime(0), _timerRunning(false) {
+	_ledTurnOffTime(0), _timerRunning(false), _ampEnabled(false) {
 
 	VS1063SetVol(_curAtt);
 	_setLedBar();
+	pinMode(AMP_SHUTDOWN, OUTPUT);
+	digitalWrite(AMP_SHUTDOWN, LOW);
+
 	dataDump.registerFunction("VolumeControl", &Intercom_VolumeControl::_dataDump, this);
 }
 

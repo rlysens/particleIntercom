@@ -4,6 +4,7 @@
 #include "intercom_message_handler.h"
 #include "plf_circular_buffer.h"
 #include "plf_ticker_base.h"
+#include "intercom_volume_control.h"
 
 #define CIRCULAR_BUFFER_SIZE (8192)
 #define INTERCOM_INCOMING_BUFFER_DRAIN_THRESHOLD (CIRCULAR_BUFFER_SIZE/2)
@@ -13,6 +14,7 @@ private:
 	uint8_t _circularBuffer[CIRCULAR_BUFFER_SIZE];
 	Plf_CircularBuf _circularBuf;
   Intercom_MessageHandler& _messageHandler;
+  Intercom_VolumeControl& _volumeControl;
   
 #if 0
   int _drainState;
@@ -38,7 +40,7 @@ private:
   int _handleMessage(Intercom_Message &msg, int payloadSize);
 
 public:
-  Intercom_Incoming(Intercom_MessageHandler& messageHandler);
+  Intercom_Incoming(Intercom_MessageHandler& messageHandler, Intercom_VolumeControl& volumeControl);
 
   bool isSenderActive(uint32_t senderId);
   

@@ -10,6 +10,8 @@
 #define PARTICLE_SDA D0
 #define PARTICLE_SCL D1
 
+#define AMP_SHUTDOWN D5
+
 #define BATTERY_CHECK_BUTTON 0
 #define WIFI_CHECK_BUTTON 7
 

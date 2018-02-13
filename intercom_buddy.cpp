@@ -398,6 +398,7 @@ bool Intercom_Buddy::outgoingCommRequested(void) {
 }
 
 void Intercom_Buddy::_outgoingCommRequest(unsigned requestType, bool enable) {
+	const char *requestTypeStrings[] = {"Button", "Incoming Comm"};
 	int ii;
 
 	plf_assert("requestType out of range", requestType < INTERCOM_BUDDY_NUM_OUTGOING_REQ_TYPES);
@@ -409,7 +410,8 @@ void Intercom_Buddy::_outgoingCommRequest(unsigned requestType, bool enable) {
 			for (ii=0; ii<INTERCOM_BUDDY_NUM_OUTGOING_REQ_TYPES; ++ii) {
 				if (_outgoingCommRequests[ii]) {
 				  _outgoingCommFsmState = INTERCOM_BUDDY_OUTGOING_COMM_REQUESTED;
-				  PLF_PRINT(PRNTGRP_DFLT, "Intercom_Buddy %d Outgoing Idle->Comm Requested by %d\n", _buddyIdx, ii);
+				  PLF_PRINT(PRNTGRP_DFLT, "Intercom_Buddy %d Outgoing Idle->Comm Requested by %s\n", _buddyIdx, 
+				  	requestTypeStrings[ii]);
 				}
 			}
 			break;
