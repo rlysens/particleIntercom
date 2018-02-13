@@ -390,11 +390,11 @@ void VS1063PlayCancel(void) {
 }
 
 /* RL port complete */
-void VS1063SetVol(uint32_t volLevel) {
-    if (volLevel > MAX_VOL)
-        volLevel = MAX_VOL;
+void VS1063SetVol(uint32_t attLevel) {
+    if (attLevel > MAX_ATT)
+        attLevel = MAX_ATT;
 
-    WriteSci(SCI_VOL, volLevel*0x101);
+    WriteSci(SCI_VOL, attLevel*0x101);
 }
 
 /* RL port complete */

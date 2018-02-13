@@ -11,16 +11,21 @@ private:
 	uint32_t _curAtt;
 	int32_t _fsm;
 	unsigned long _ledTurnOffTime;
-	bool _timerRunning;
-	bool _ampEnabled;
+	unsigned long _volTurnOffTime;
+	bool _ledTimerRunning;
+	bool _volTimerRunning;
+	bool _volEnabled;
+
 	void _incVol(void);
 	void _decVol(void);
 	void _setLedBar(void);
 
-	void _startTimer(void);
-	void _onTimeout(void);
+	void _startLedTimer(void);
+	void _onLedTimeout(void);
+	void _startVolTimer(void);
+	void _onVolTimeout(void);
 
-	void _doEnableAmp(bool enable);
+	void _doEnableVol(bool enable);
 
 	virtual void _tickerHook(void);
 	
@@ -31,7 +36,7 @@ public:
 
 	void checkButtons(void);
 
-	void enableAmp(bool enable);
+	void enableVol(bool enable);
 };
 
 #endif /*INTERCOM_VOLUME_CONTROL_H*/

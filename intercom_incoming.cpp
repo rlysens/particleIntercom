@@ -31,13 +31,13 @@ int Intercom_Incoming::_fsmUpdate(void) {
   switch (_fsmState) {
     case INCOMING_FSM_STATE_LISTENING:
       if (usedSpace > INTERCOM_INCOMING_BUFFER_DRAIN_THRESHOLD) {
-        _volumeControl.enableAmp(true);
+        _volumeControl.enableVol(true);
         _movingAvg = INTERCOM_INCOMING_BUFFER_DRAIN_THRESHOLD;
         _fsmState = INCOMING_FSM_STATE_DRAINING;
         PLF_PRINT(PRNTGRP_DFLT, "Intercom_Incoming FSM -> DRAINING.\n");
       }
       else if (usedSpace > 0) {
-        _volumeControl.enableAmp(true);
+        _volumeControl.enableVol(true);
         _fsmState = INCOMING_FSM_STATE_BUFFERING;
         PLF_PRINT(PRNTGRP_DFLT, "Intercom_Incoming FSM -> BUFFERING.\n");
       }
@@ -51,7 +51,7 @@ int Intercom_Incoming::_fsmUpdate(void) {
         PLF_PRINT(PRNTGRP_DFLT, "Intercom_Incoming FSM -> DRAINING.\n");
       }
       else if (usedSpace == 0) {
-        _volumeControl.enableAmp(false);
+        _volumeControl.enableVol(false);
         _fsmState = INCOMING_FSM_STATE_LISTENING;
         PLF_PRINT(PRNTGRP_DFLT, "Intercom_Incoming FSM -> LISTENING.\n");
       }
@@ -60,7 +60,7 @@ int Intercom_Incoming::_fsmUpdate(void) {
 
     case INCOMING_FSM_STATE_DRAINING:
       if (usedSpace == 0) {
-        _volumeControl.enableAmp(false);
+        _volumeControl.enableVol(false);
         _fsmState = INCOMING_FSM_STATE_LISTENING;
         PLF_PRINT(PRNTGRP_DFLT, "Intercom_Incoming FSM -> LISTENING.\n");
       }

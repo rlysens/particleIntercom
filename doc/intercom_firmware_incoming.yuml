@@ -4,6 +4,6 @@
 [Intercom_Incoming]-PlayBuf()\nStreamBufferFreeBytes()\nWriteVS10xxMem32(PAR_RATE_TUNE)>[VS1063_Codec{bg:green}]
 [Intercom_Incoming]->[Plf_CircularBuffer|reset();freeSpace();usedSpace();sutff();write();readStart();readRelease(){bg:green}]
 [Intercom_Incoming]-registerFunction()>[Plf_DataDump]
-[Intercom_Incoming]-enableAmp()>[Intercom_VolumeControl]
+[Intercom_Incoming]-enableVol()>[Intercom_VolumeControl]
 
 

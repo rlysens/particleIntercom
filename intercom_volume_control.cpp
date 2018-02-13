@@ -16,27 +16,24 @@
 #define VOL_CTRL_BUTTON_FSM_NUM_STATES (VOL_CTRL_BUTTON_FSM_PLUS_PRESSED+1)
 
 #define LED_BAR_TIMEOUT_MS 1000
+#define VOL_TIMEOUT_MS 400
 
 #define INTERCOM_VOL_CTRL_TICK_INTER_MS 20
 
 void Intercom_VolumeControl::_decVol(void) {
-	if (_curAtt + ATT_STEP < MAX_VOL) {
+	if (_curAtt + ATT_STEP < MAX_ATT) {
 		_curAtt += ATT_STEP;
 	}
 
-	PLF_PRINT(PRNTGRP_DFLT, "Vol=%d\n", (int)(MAX_VOL-_curAtt));
+	PLF_PRINT(PRNTGRP_DFLT, "Vol=%d\n", (int)(MAX_ATT-_curAtt));
 
-	VS1063SetVol(_curAtt);
-
-	if (!_ampEnabled) {
-		_doEnableAmp(true);
+	if (!_volEnabled) {
+		_doEnableVol(true);
 	}
 
 	VS1063PlayBuf(sine_g711_ulaw_wav, sizeof(sine_g711_ulaw_wav));
 
-	if (!_ampEnabled) {
-		_doEnableAmp(false);
-	}
+	_startVolTimer();
 }
 
 void Intercom_VolumeControl::_incVol(void) {
@@ -44,29 +41,38 @@ void Intercom_VolumeControl::_incVol(void) {
 		_curAtt -= ATT_STEP;
 	}
 
-	PLF_PRINT(PRNTGRP_DFLT, "Vol=%d\n", (int)(MAX_VOL-_curAtt));
+	PLF_PRINT(PRNTGRP_DFLT, "Vol=%d\n", (int)(MAX_ATT-_curAtt));
 
-	VS1063SetVol(_curAtt);
-
-	if (!_ampEnabled) {
-		_doEnableAmp(true);
+	if (!_volEnabled) {
+		_doEnableVol(true);
 	}
 
 	VS1063PlayBuf(sine_g711_ulaw_wav, sizeof(sine_g711_ulaw_wav));
 
-	if (!_ampEnabled) {
-		_doEnableAmp(false);
+	_startVolTimer();
+}
+
+void Intercom_VolumeControl::_onVolTimeout(void) {
+	_volTimerRunning = false;
+
+	if (!_volEnabled) {
+		_doEnableVol(false);
 	}
 }
 
-void Intercom_VolumeControl::_onTimeout(void) {
-	_timerRunning = false;
+void Intercom_VolumeControl::_startVolTimer(void) {
+	_volTurnOffTime = millis() + VOL_TIMEOUT_MS;
+	_volTimerRunning = true;
+}
+
+void Intercom_VolumeControl::_onLedTimeout(void) {
+	_ledTimerRunning = false;
 	_intercom_buttonsAndLeds.getLedBar().setLevel(0);
 }
 
-void Intercom_VolumeControl::_startTimer(void) {
+void Intercom_VolumeControl::_startLedTimer(void) {
 	_ledTurnOffTime = millis() + LED_BAR_TIMEOUT_MS;
-	_timerRunning = true;
+	_ledTimerRunning = true;
 }
 
 void Intercom_VolumeControl::_setLedBar(void) {
@@ -93,28 +99,34 @@ void Intercom_VolumeControl::_setLedBar(void) {
 		}
 
 		_intercom_buttonsAndLeds.getLedBar().setLevel(level);
-		_startTimer();
+		_startLedTimer();
 	}
 }
 
-void Intercom_VolumeControl::_doEnableAmp(bool enable) {
+void Intercom_VolumeControl::_doEnableVol(bool enable) {
+	VS1063SetVol(enable ? _curAtt : MAX_ATT);
 	digitalWrite(AMP_SHUTDOWN, enable ? HIGH : LOW);
 }
 
-void Intercom_VolumeControl::enableAmp(bool enable) {
-	_doEnableAmp(enable);
-	_ampEnabled = enable;
+void Intercom_VolumeControl::enableVol(bool enable) {
+	if (enable) {
+		_doEnableVol(true);
+		_volEnabled = true;
+	}
+	else {
+		_volEnabled = false;
+		_startVolTimer();
+	}
 }
 
 Intercom_VolumeControl::Intercom_VolumeControl(Intercom_ButtonsAndLeds& intercom_buttonsAndLeds) : 
 	Plf_TickerBase(INTERCOM_VOL_CTRL_TICK_INTER_MS),
 	_intercom_buttonsAndLeds(intercom_buttonsAndLeds), _curAtt(DEFAULT_VOL), _fsm(VOL_CTRL_BUTTON_FSM_ALL_RELEASED),
-	_ledTurnOffTime(0), _timerRunning(false), _ampEnabled(false) {
+	_ledTurnOffTime(0), _volTurnOffTime(0), _ledTimerRunning(false), _volTimerRunning(false), _volEnabled(false) {
 
-	VS1063SetVol(_curAtt);
 	_setLedBar();
 	pinMode(AMP_SHUTDOWN, OUTPUT);
-	digitalWrite(AMP_SHUTDOWN, LOW);
+	_doEnableVol(false);
 
 	dataDump.registerFunction("VolumeControl", &Intercom_VolumeControl::_dataDump, this);
 }
@@ -161,10 +173,17 @@ void Intercom_VolumeControl::checkButtons(void) {
 
 void Intercom_VolumeControl::_tickerHook(void) {
 	/*That last clause is to protect agains wraparound. Difference between current time and turnoff time should be reasonable*/
-	if (_timerRunning) {
+	if (_ledTimerRunning) {
 		unsigned long curTime = millis();
 		if ((curTime >= _ledTurnOffTime) && ((curTime-_ledTurnOffTime)<((~0UL)/2))) {
-			_onTimeout();
+			_onLedTimeout();
+		}
+	}
+
+	if (_volTimerRunning) {
+		unsigned long curTime = millis();
+		if ((curTime >= _volTurnOffTime) && ((curTime-_volTurnOffTime)<((~0UL)/2))) {
+			_onVolTimeout();
 		}
 	}
 }

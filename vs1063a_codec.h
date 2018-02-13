@@ -4,7 +4,7 @@
 #include "Particle.h"
 #include "vs10xx_uc.h"
 
-#define MAX_VOL 255
+#define MAX_ATT 255
 
 uint32_t ReadVS10xxMem32Counter(uint16_t addr);
 uint32_t ReadVS10xxMem32(uint16_t addr);
