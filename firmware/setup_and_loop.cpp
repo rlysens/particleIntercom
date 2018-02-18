@@ -1,5 +1,5 @@
+#include "application.h"
 #include "Particle.h"
-
 #include "vs1063a_spi.h"
 #include "vs1063a_codec.h"
 #include "intercom_tests.h"
@@ -28,7 +28,7 @@ MAX17043 *lipop = NULL;
 SYSTEM_MODE(SEMI_AUTOMATIC);
 
 void setup() {
-  delay(3000);
+  delay(3000); /*Just enough to connect serial collect first traces*/
 
   /*Only enable default printgroup by default*/
   printGroupEnable(PRNTGRP_DFLT, true);
@@ -46,14 +46,14 @@ void setup() {
     PLF_PRINT(PRNTGRP_DFLT, "This is a real setup.");
   }
 
+  WiFi.on();
   if (dummySetup) {
-    STARTUP(WiFi.selectAntenna(ANT_INTERNAL));
+    WiFi.selectAntenna(ANT_INTERNAL);
   }
   else {
-    STARTUP(WiFi.selectAntenna(ANT_EXTERNAL));
+    WiFi.selectAntenna(ANT_EXTERNAL);
   }
   
-
   VS1063InitHardware();
 
   PLF_PRINT(PRNTGRP_DFLT, "VS1063InitHardware done");
@@ -61,8 +61,6 @@ void setup() {
   PLF_PRINT(PRNTGRP_DFLT, "VS1063InitSoftware done");
   VS1063RecordInit();
   PLF_PRINT(PRNTGRP_DFLT, "VS1063RecordInit done");
-
-  //VS1063PrintState();
 
   System.set(SYSTEM_CONFIG_SOFTAP_PREFIX, "Photon");
   Particle.connect();
@@ -73,7 +71,7 @@ void setup() {
     intercom_rootp = &intercom_root;
   }
   else {
-    // Define a static MAX17043 object called lipo, which we'll use in the sketches.
+    // Define a static MAX17043 object called lipo.
     static MAX17043 lipo;
 
     lipop = &lipo;

@@ -6,9 +6,9 @@
 
 #define MODULE_ID 1400
 
-#define DEFAULT_VOL 40
+#define DEFAULT_ATT 40
 #define ATT_STEP 20
-#define MAX_ATT (5*ATT_STEP)
+#define MAX_ATT_VOL_CTRL (5*ATT_STEP)
 
 #define VOL_CTRL_BUTTON_FSM_ALL_RELEASED 0
 #define VOL_CTRL_BUTTON_FSM_MIN_PRESSED 1
@@ -21,7 +21,7 @@
 #define INTERCOM_VOL_CTRL_TICK_INTER_MS 20
 
 void Intercom_VolumeControl::_decVol(void) {
-	if (_curAtt + ATT_STEP < MAX_ATT) {
+	if (_curAtt + ATT_STEP < MAX_ATT_VOL_CTRL) {
 		_curAtt += ATT_STEP;
 	}
 
@@ -121,7 +121,7 @@ void Intercom_VolumeControl::enableVol(bool enable) {
 
 Intercom_VolumeControl::Intercom_VolumeControl(Intercom_ButtonsAndLeds& intercom_buttonsAndLeds) : 
 	Plf_TickerBase(INTERCOM_VOL_CTRL_TICK_INTER_MS),
-	_intercom_buttonsAndLeds(intercom_buttonsAndLeds), _curAtt(DEFAULT_VOL), _fsm(VOL_CTRL_BUTTON_FSM_ALL_RELEASED),
+	_intercom_buttonsAndLeds(intercom_buttonsAndLeds), _curAtt(DEFAULT_ATT), _fsm(VOL_CTRL_BUTTON_FSM_ALL_RELEASED),
 	_ledTurnOffTime(0), _volTurnOffTime(0), _ledTimerRunning(false), _volTimerRunning(false), _volEnabled(false) {
 
 	_setLedBar();
@@ -190,6 +190,6 @@ void Intercom_VolumeControl::_tickerHook(void) {
 
 void Intercom_VolumeControl::_dataDump(void) {
 	const char *fsmStateStrings[] = {"AllReleased", "MinPressed", "PlusPressed"};
-	PLF_PRINT(PRNTGRP_DFLT, "CurrentAttenuation: %d (-%2.2fdB)", _curAtt, (float)_curAtt*0.5);
+	PLF_PRINT(PRNTGRP_DFLT, "CurrentAttenuation: %d (-%2.2fdB)", (int)_curAtt, (float)_curAtt*0.5);
 	PLF_PRINT(PRNTGRP_DFLT, "FSMstate: %s", fsmStateStrings[_fsm]);
 }

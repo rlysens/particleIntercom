@@ -89,11 +89,11 @@ int Intercom_Incoming::_rxVoiceDataMsg(Intercom_Message &msg, int payloadSize) {
       }
 
       /*Did we miss anything?*/
-      if (_seqNumber != voiceData.seq_number) {
+      if (_seqNumber != (uint32_t)voiceData.seq_number) {
         uint32_t bytesMissed = voiceData.seq_number - _seqNumber;
         PLF_COUNT_VAL(BYTES_MISSED, bytesMissed);
-        PLF_PRINT(PRNTGRP_DFLT, "Missed seq# %d, Rx: %d, Missing: %d\n", _seqNumber, voiceData.seq_number, 
-          voiceData.seq_number - _seqNumber);
+        PLF_PRINT(PRNTGRP_DFLT, "Missed seq# %d, Rx: %d, Missing: %d\n", (int)_seqNumber, (int)voiceData.seq_number, 
+          (int)(voiceData.seq_number - _seqNumber));
 
         /*stuff the circular buffer with the amount of bytes missed*/
         retCode |= _stuff(bytesMissed); 
@@ -197,7 +197,7 @@ void Intercom_Incoming::_tickerHook(void) {
     rateTuneValue = MAX(-RATE_TUNE_LIMIT, rateTuneValue);
     _rateTuneValue = rateTuneValue;
     WriteVS10xxMem32(PAR_RATE_TUNE, (uint32_t)rateTuneValue);
-    PLF_PRINT(PRNTGRP_RATETN,"a:%d c:%d e:%d r:%d\n", _movingAvg, newValue, error, rateTuneValue);
+    PLF_PRINT(PRNTGRP_RATETN,"a:%d c:%d e:%d r:%d\n", (int)_movingAvg, newValue, (int)error, (int)rateTuneValue);
   }
   else {
     _rateTuneValue = 0;
@@ -256,7 +256,7 @@ void Intercom_Incoming::_dataDump(void) {
   const char* fsmStateStrings[INCOMING_FSM_NUM_STATES] = {"Listening", "Buffering", "Draining"};
 
   PLF_PRINT(PRNTGRP_DFLT, "FSMstate: %s", fsmStateStrings[_fsmState]);
-  PLF_PRINT(PRNTGRP_DFLT, "BufferFillingLevelAvg: %d/%d", _movingAvg, CIRCULAR_BUFFER_SIZE);
+  PLF_PRINT(PRNTGRP_DFLT, "BufferFillingLevelAvg: %d/%d", (int)_movingAvg, CIRCULAR_BUFFER_SIZE);
   PLF_PRINT(PRNTGRP_DFLT, "ActiveSender: %d", (int)_activeSender);
   PLF_PRINT(PRNTGRP_DFLT, "RateTuningEnabled: %d", (int)_rateTuningEnable);
   PLF_PRINT(PRNTGRP_DFLT, "RateTuningValue: %d", (int)_rateTuneValue);

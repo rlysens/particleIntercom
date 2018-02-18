@@ -1,22 +1,25 @@
-import getopt, sys, subprocess, glob, pdb
+import getopt, sys, subprocess, glob, pdb, os
 import json
 
 def usage():
 	print "build.py --device device_id/all [--flash]"
 
 def build():
-	cpp_files = ' '.join(glob.glob("*.cpp"))
-	h_files = ' '.join(glob.glob("*.h"))
-	subprocess.call("particle compile photon intercom.ino %s %s"%(cpp_files, h_files), shell=True)
-
-def flash_dev(device):
+    os.chdir('firmware')
     cpp_files = ' '.join(glob.glob("*.cpp"))
     h_files = ' '.join(glob.glob("*.h"))
-    print "particle flash %s intercom.ino %s %s"%(device, cpp_files, h_files)
-    subprocess.call("particle flash %s intercom.ino %s %s"%(device, cpp_files, h_files), shell=True)
+    subprocess.call("particle compile photon %s %s"%(cpp_files, h_files), shell=True)
+    os.chdir('..')
+
+def flash_dev(device):
+    os.chdir('firmware')
+    cpp_files = ' '.join(glob.glob("*.cpp"))
+    h_files = ' '.join(glob.glob("*.h"))
+    subprocess.call("particle flash %s %s %s"%(device, cpp_files, h_files), shell=True)
+    os.chdir('..')
 
 def genMessages():
-	subprocess.call("cd lcm && python genMessages.py && cd ..", shell=True)
+	subprocess.call("cd lcm && python genMessages.py", shell=True)
 
 def main():
     try:

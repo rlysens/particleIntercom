@@ -136,7 +136,7 @@ void WriteVS10xxMem32(uint16_t addr, uint32_t data) {
 }
 
 void LoadUserCode(void) {
-  int i = 0;
+  unsigned i = 0;
 
   while (i<sizeof(plugin)/sizeof(plugin[0])) {
     unsigned short addr, n, val;
@@ -511,7 +511,7 @@ void VS1063InitSoftware(void) {
 
     /*Setup Equalizer*/
     int16_t eqVector[] = {0, -32, 100, -32, 300, 32, 2000, 32, 3400, -32};
-    int ii;
+    unsigned ii;
 
     for (ii=0; ii<sizeof(eqVector)/sizeof(eqVector[0]); ii++) {
       WriteVS10xxMem(PAR_EQ5_DUMMY+ii, eqVector[ii]);

@@ -109,10 +109,7 @@ void Intercom_Outgoing::run(void) {
 
   _seqNumber += recordedNumBytes;
 
-  uint32_t buddyId;
-  int ii;
-
-  for (ii=0; ii<NUM_BUDDIES;++ii) {
+  for (int ii=0; ii<NUM_BUDDIES;++ii) {
     if (_intercom_buddiesp[ii].outgoingCommRequested()) {
       voice_data.destination_id = _intercom_buddiesp[ii].getBuddyId();
 
@@ -130,7 +127,6 @@ void Intercom_Outgoing::run(void) {
 }
 
 void Intercom_Outgoing::_dataDump(void) {
-  int ii;
   PLF_PRINT(PRNTGRP_DFLT, "FSMstate: %s", _fsmState == INTERCOM_OUTGOING_FSM_IDLE ? "Idle" : "Recording");
   PLF_PRINT(PRNTGRP_DFLT, "NumBytesSent: %d", _numBytesSentAcc);
 }

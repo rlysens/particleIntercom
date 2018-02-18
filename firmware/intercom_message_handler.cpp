@@ -172,7 +172,7 @@ uint32_t Intercom_MessageHandler::getMyId(void) {
 
 int Intercom_MessageHandler::send(Intercom_Message &msg, uint32_t msgId, uint32_t destination_id, int payloadSize, bool encrypted) {
   PLF_PRINT(PRNTGRP_MSGS, "Tx Msg %s(%d), dest: %d\n", 
-    msgId < sizeof(messageNameTable) ? messageNameTable[msgId] : "X", (int)msgId, destination_id);
+    msgId < sizeof(messageNameTable) ? messageNameTable[msgId] : "X", (int)msgId, (int)destination_id);
 
   msg.msgId = msgId;
   msg.source_id = _myId;
@@ -232,7 +232,7 @@ int Intercom_MessageHandler::receive(void) {
 
   PLF_COUNT_VAL(UDP_BYTES_RX, rxDataLength);
   PLF_PRINT(PRNTGRP_MSGS, "Rx Msg %s(%d), src:%d", 
-    msg.msgId < sizeof(messageNameTable) ? messageNameTable[msg.msgId] : "X", (int)msg.msgId, msg.source_id);
+    msg.msgId < sizeof(messageNameTable) ? messageNameTable[msg.msgId] : "X", (int)msg.msgId, (int)msg.source_id);
 
   payloadSize = rxDataLength - 8;
 
@@ -315,11 +315,11 @@ void Intercom_MessageHandler::_dataDump(void) {
   int ii;
   for (ii=0; ii<NUM_BUDDIES; ii++) {
     PLF_PRINT(PRNTGRP_DFLT, "RxMsgCounters[%d].source_id = %d, rxMsgCounter=%d",
-      ii, _msgRxCounters[ii].source_id, _msgRxCounters[ii].rxMsgCounter);
+      ii, (int)_msgRxCounters[ii].source_id, (int)_msgRxCounters[ii].rxMsgCounter);
   }
 
   for (ii=0; ii<NUM_BUDDIES; ii++) {
     PLF_PRINT(PRNTGRP_DFLT, "TxMsgCounters[%d].destination_id = %d, txMsgCounter=%d",
-      ii, _msgTxCounters[ii].destination_id, _msgTxCounters[ii].txMsgCounter);
+      ii, (int)_msgTxCounters[ii].destination_id, (int)_msgTxCounters[ii].txMsgCounter);
   }
 }

@@ -11,7 +11,7 @@ def main(argv):
 	for filename in os.listdir("."):
 		if filename.endswith(".h"):
 			inFile = filename
-			outFile = os.path.join("../", filename)
+			outFile = os.path.join("../firmware/", filename)
 
 			outFileFd = open(outFile, 'w')
 
@@ -20,7 +20,7 @@ def main(argv):
 					repLine = re.sub('#include <lcm/lcm_coretypes.h>', '#include "lcm_coretypes.h"', line)
 					outFileFd.write(repLine)
 
-	os.system("copy *.c ..\\*.cpp")
+	os.system("copy *.c ..\\firmware\\*.cpp")
 	os.system("lcm-gen -p messages.lcm")
 	os.system("copy *.py ..\\python\\messages")
 
