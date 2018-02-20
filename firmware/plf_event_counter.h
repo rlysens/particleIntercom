@@ -54,11 +54,14 @@ void plf_eventCounterTick(void);
 class Plf_EvenCounter {
 private:
     EventTuple_t _plfEventArray[PLF_EVENT_LAST];
+    bool _initialized;
 
     void _dataDump(void);
 
 public:
     Plf_EvenCounter();
+
+    void init(void);
 
     inline void countEvent(int eventId, const char* eventName) {
         ++(_plfEventArray[eventId].eventCount); 
@@ -66,6 +69,7 @@ public:
     }
 
     inline void countVal(int eventId, int val, const char* eventName) {
+        plf_assert("EventCounter not initialized", _initialized);
         _plfEventArray[eventId].eventCount += val; 
         _plfEventArray[eventId].eventName = eventName;
     }

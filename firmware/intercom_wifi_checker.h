@@ -8,7 +8,8 @@
 class Intercom_WifiChecker : public Intercom_LevelCheckerBase {
 private:
 	virtual int _getLevel(void);
-	
+	virtual void _longPress(void);
+
 	void _dataDump(void);
 	
 public:

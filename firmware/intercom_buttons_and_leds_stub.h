@@ -6,6 +6,7 @@
 class Intercom_LedBar_Stub: public Intercom_LedBar {
 public:
 	virtual void setLevel(int level);
+	virtual void blink(unsigned long tOn, unsigned long tOff, byte onIntensity = 255, byte offIntensity = 0);
 };
 
 class Intercom_Led_Stub : public Intercom_Led {

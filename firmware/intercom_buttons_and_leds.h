@@ -13,6 +13,7 @@
 class Intercom_LedBar {
 public:
 	virtual void setLevel(int level)=0;
+	virtual void blink(unsigned long tOn, unsigned long tOff, byte onIntensity = 255, byte offIntensity = 0)=0;
 };
 
 class Intercom_Led {

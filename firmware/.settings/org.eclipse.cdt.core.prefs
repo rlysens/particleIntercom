@@ -1,0 +1,21 @@
+eclipse.preferences.version=1
+environment/project/ilg.gnuarmeclipse.managedbuild.cross.toolchain.base.719874791/APPDIR/delimiter=;
+environment/project/ilg.gnuarmeclipse.managedbuild.cross.toolchain.base.719874791/APPDIR/operation=replace
+environment/project/ilg.gnuarmeclipse.managedbuild.cross.toolchain.base.719874791/APPDIR/value=C\:/Users/rlysens/Documents/particleIntercom/firmware
+environment/project/ilg.gnuarmeclipse.managedbuild.cross.toolchain.base.719874791/FIRMWARE/delimiter=;
+environment/project/ilg.gnuarmeclipse.managedbuild.cross.toolchain.base.719874791/FIRMWARE/operation=replace
+environment/project/ilg.gnuarmeclipse.managedbuild.cross.toolchain.base.719874791/FIRMWARE/value=C\:/Users/rlysens/Documents/particleFirmware/firmware
+environment/project/ilg.gnuarmeclipse.managedbuild.cross.toolchain.base.719874791/MAKEOPTS/delimiter=;
+environment/project/ilg.gnuarmeclipse.managedbuild.cross.toolchain.base.719874791/MAKEOPTS/operation=append
+environment/project/ilg.gnuarmeclipse.managedbuild.cross.toolchain.base.719874791/MAKEOPTS/value=MODULAR\=n DEBUG_BUILD\=y USE_SWD_JTAG\=y program-dfu
+environment/project/ilg.gnuarmeclipse.managedbuild.cross.toolchain.base.719874791/PATH/delimiter=;
+environment/project/ilg.gnuarmeclipse.managedbuild.cross.toolchain.base.719874791/PATH/operation=replace
+environment/project/ilg.gnuarmeclipse.managedbuild.cross.toolchain.base.719874791/PATH/value=C\:/Program Files/Java/jre1.8.0_161/bin/server;C\:/Program Files/Java/jre1.8.0_161/bin;C\:/Program Files/Java/jre1.8.0_161/lib/amd64;;C\:/cygwin64/bin;C\:/cygwin64/usr/local/bin;C\:\\Program Files (x86)\\GNU Tools ARM Embedded\\4.9 2015q3\\bin;C\:\\MinGW\\msys\\1.0\\bin;C\:\\dfu-util-0.7-binaries\\win32-mingw32;C\:\\ProgramData\\Oracle\\Java\\javapath;C\:\\Program Files (x86)\\NVIDIA Corporation\\PhysX\\Common;C\:\\Program Files\\Common Files\\Microsoft Shared\\Windows Live;C\:\\Program Files (x86)\\Common Files\\Microsoft Shared\\Windows Live;C\:\\WINDOWS\\system32;C\:\\WINDOWS;C\:\\WINDOWS\\System32\\Wbem;C\:\\WINDOWS\\System32\\WindowsPowerShell\\v1.0\\;C\:\\Program Files (x86)\\Windows Live\\Shared;C\:\\Program Files (x86)\\IVI Foundation\\VISA\\WinNT\\Bin;C\:\\Program Files\\nodejs\\;C\:\\WINDOWS\\system32\\config\\systemprofile\\.dnx\\bin;C\:\\Program Files\\Microsoft DNX\\Dnvm\\;C\:\\Program Files\\Microsoft SQL Server\\130\\Tools\\Binn\\;C\:\\Program Files (x86)\\Windows Kits\\8.1\\Windows Performance Toolkit\\;C\:\\glib\\glib_2.34.3\\bin;C\:\\glib\\gettext_0.18.2.1\\bin;C\:\\MinGW\\bin;C\:\\lcm\\lcm-1.3.1\\bin;c\:\\Python27;C\:\\Users\\rlysens\\AppData\\Local\\Android\\sdk\\platform-tools;C\:\\Program Files (x86)\\Skype\\Phone\\;C\:\\Python27\\Scripts;C\:\\Program Files (x86)\\WinMerge;C\:\\Program Files\\Sublime Text 3;C\:\\Users\\rlysens\\AppData\\Roaming\\npm;C\:\\Users\\rlysens\\AppData\\Local\\particle\\bin;C\:\\Users\\rlysens\\AppData\\Local\\Microsoft\\WindowsApps;C\:\\glib\\glib_2.34.3\\bin;C\:\\Users\\rlysens\\AppData\\Local\\GitHub\\PortableGit_f02737a78695063deace08e96d5042710d3e32db\\cmd
+environment/project/ilg.gnuarmeclipse.managedbuild.cross.toolchain.base.719874791/PLATFORM/delimiter=;
+environment/project/ilg.gnuarmeclipse.managedbuild.cross.toolchain.base.719874791/PLATFORM/operation=append
+environment/project/ilg.gnuarmeclipse.managedbuild.cross.toolchain.base.719874791/PLATFORM/value=photon
+environment/project/ilg.gnuarmeclipse.managedbuild.cross.toolchain.base.719874791/TARGETBIN/delimiter=;
+environment/project/ilg.gnuarmeclipse.managedbuild.cross.toolchain.base.719874791/TARGETBIN/operation=append
+environment/project/ilg.gnuarmeclipse.managedbuild.cross.toolchain.base.719874791/TARGETBIN/value=target/${ProjName}.bin
+environment/project/ilg.gnuarmeclipse.managedbuild.cross.toolchain.base.719874791/append=true
+environment/project/ilg.gnuarmeclipse.managedbuild.cross.toolchain.base.719874791/appendContributed=true

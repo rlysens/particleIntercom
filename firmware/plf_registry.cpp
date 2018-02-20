@@ -11,6 +11,7 @@ int Plf_Registry::set(int key, String& value, bool valid, bool persistent) {
 	String oldValue;
 	bool oldValid;
 
+	plf_assert("Registry not initialized", _initialized);
 	plf_assert("Out of range registry key",key<=MAX_KEY_VAL);
 	plf_assert("Out of range registry key",(key<=MAX_PERSISTENT_KEY_VAL)||(!persistent));
 	plf_assert("Out of range registry key",key>=0);
@@ -45,6 +46,7 @@ int Plf_Registry::set(int key, String& value, bool valid, bool persistent) {
 int Plf_Registry::get(int key, String& value, bool& valid) {
 	RegistryEntry_t *regEntryp=0;
 
+	plf_assert("Registry not initialized", _initialized);
 	plf_assert("Out of range registry key",key<=MAX_KEY_VAL);
 	plf_assert("Out of range registry key",key>=0);
 
@@ -110,12 +112,14 @@ void Plf_Registry::_walkHandlers(void) {
 }
 
 int Plf_Registry::go(void) {
+	plf_assert("Registry not initialized", _initialized);
 	_live = true;
 	_walkHandlers();
 	return 0;
 }
 
 int Plf_Registry::erase(void) {
+	plf_assert("Registry not initialized", _initialized);
 	EEPROM.clear();
 	memset(_registryShadow, 0, sizeof(_registryShadow));
 	_walkHandlers();
@@ -123,10 +127,14 @@ int Plf_Registry::erase(void) {
 	return 0;
 }
 
+Plf_Registry::Plf_Registry() : _initialized(false) {
 
-Plf_Registry::Plf_Registry() : _live(false) {
+}
+
+void Plf_Registry::init(void) {
 	int key;
 
+	_live = false;
 	memset(_regHandlers, 0, sizeof(_regHandlers));
 	memset(_registryShadow, 0, sizeof(_registryShadow));
 
@@ -137,6 +145,8 @@ Plf_Registry::Plf_Registry() : _live(false) {
 	}
 
 	dataDump.registerFunction("Registry", &Plf_Registry::_dataDump, this);
+
+	_initialized = true;
 }
 
 void Plf_Registry::_dataDump(void) {

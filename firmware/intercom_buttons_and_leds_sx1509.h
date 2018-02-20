@@ -14,6 +14,8 @@ public:
 
 	virtual void setLevel(int level);
 
+	virtual void blink(unsigned long tOn, unsigned long tOff, byte onIntensity = 255, byte offIntensity = 0);
+
 	/*private*/
 	void init(SX1509& io, byte pins[LED_BAR_MAX_LEVEL]);
 };

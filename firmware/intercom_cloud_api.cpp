@@ -172,8 +172,12 @@ int Intercom_CloudAPI::ddump(String name) {
   	return 0;
 }
 
+extern retained bool enterListenMode;
+
 int Intercom_CloudAPI::testfun(String name) {
 	PLF_PRINT(PRNTGRP_DFLT, "testfun called\n");
+	enterListenMode = true;
+	System.reset();
   	return 0;
 }
 

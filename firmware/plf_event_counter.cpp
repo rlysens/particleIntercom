@@ -6,13 +6,19 @@
 
 #define READ_RESET_MODE
 
-Plf_EvenCounter::Plf_EvenCounter() {
+Plf_EvenCounter::Plf_EvenCounter() : _initialized(false) {
+}
+
+void Plf_EvenCounter::init(void) {
   memset(_plfEventArray, 0, sizeof(_plfEventArray));
   dataDump.registerFunction("Stats", &Plf_EvenCounter::_dataDump, this);
+  _initialized = true;
 }
 
 void Plf_EvenCounter::_dataDump(void) {
   int eventIndex;
+  
+  plf_assert("EventCounter not initialized", _initialized);
   
   for (eventIndex=0; eventIndex<PLF_EVENT_LAST; eventIndex++) {
     //if ((icomEventArray[eventIndex].eventCount != 0) || (icomEventArray[eventIndex].initVal != 0)

@@ -3,14 +3,19 @@
 #include "plf_utils.h"
 #include "plf_data_dump.h"
 
-#define WIFI_CHECK_FSM_BUTTON_RELEASED 0
-#define WIFI_CHECK_FSM_BUTTON_PRESSED 1
-
 #define MODULE_ID 1600
+
+extern retained bool enterListenMode;
 
 Intercom_WifiChecker::Intercom_WifiChecker(Intercom_ButtonsAndLeds& intercom_buttonsAndLeds) : 
 	Intercom_LevelCheckerBase(intercom_buttonsAndLeds, WIFI_CHECK_BUTTON) {
 	dataDump.registerFunction("WifiChecker", &Intercom_WifiChecker::_dataDump, this);
+}
+
+void Intercom_WifiChecker::_longPress(void) {
+	PLF_PRINT(PRNTGRP_DFLT, "Wifi Button Long Press.\n");
+	enterListenMode = true;
+	System.reset();
 }
 
 int Intercom_WifiChecker::_getLevel(void) {

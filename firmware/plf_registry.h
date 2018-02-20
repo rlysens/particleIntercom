@@ -39,6 +39,7 @@ private:
 	RegHandlerEntry_t _regHandlers[MAX_KEY_VAL+1];
 
 	bool _live;
+	bool _initialized;
 
 	void _walkHandlers(void);
 	void _invokeHandler(int key, String& value, bool valid);
@@ -48,6 +49,8 @@ private:
 	
 public:
 	Plf_Registry();
+	
+	void init(void);
 
 	int set(int key, String& value, bool valid, bool persistent);
 	int get(int key, String& value, bool& valid);

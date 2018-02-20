@@ -48,3 +48,9 @@ Temporary Items
 
 # JSON files
 *.json
+
+target
+firmware\.settings
+firwmare\photon_firmware_*.bin
+
+

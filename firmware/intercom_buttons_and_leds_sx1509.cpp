@@ -20,6 +20,14 @@ void Intercom_LedBar_SX1509::init(SX1509& io, byte pins[LED_BAR_MAX_LEVEL]) {
 	setLevel(0);
 }
 
+void Intercom_LedBar_SX1509::blink(unsigned long tOn, unsigned long tOff, byte onIntensity, byte offIntensity) {
+	int ii;
+
+	for (ii=0; ii<LED_BAR_MAX_LEVEL; ++ii) {
+		_iop->blink(_pins[ii], tOn, tOff, onIntensity, offIntensity);
+	}	
+}
+
 void Intercom_LedBar_SX1509::setLevel(int level) {
 	int ii;
 

@@ -7,6 +7,9 @@
 void Intercom_LedBar_Stub::setLevel(int level) {
 }
 
+void Intercom_LedBar_Stub::blink(unsigned long tOn, unsigned long tOff, byte onIntensity, byte offIntensity) {
+}
+
 void Intercom_Led_Stub::init(byte pin) {
 	_pin = pin;
 	pinMode(_pin, OUTPUT);
