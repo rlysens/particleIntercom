@@ -210,6 +210,7 @@ int Intercom_MessageHandler::send(Intercom_Message &msg, uint32_t msgId, uint32_
       _remoteIpAddress, _remotePort);
   if (res != payloadSize+8) {
       PLF_PRINT(PRNTGRP_DFLT, "UDP packet send failed. Could not send all data: %d", res);
+      _udp.begin(_localPort); /*Socket closes on error. Reopen it.*/
       return -(MODULE_ID+3);
   }
 
@@ -227,6 +228,14 @@ int Intercom_MessageHandler::receive(void) {
   Intercom_MessageHandlerTableElement *msgEntryp = &_msgTable[msg.msgId];
   int ii;
 
+  #if 0
+  if (rxDataLength < 0) {
+    PLF_PRINT(PRNTGRP_DFLT, "UDP packet receive failed: %d", rxDataLength);
+    _udp.begin(_localPort); /*Socket closes on error. Reopen it.*/
+    return -(MODULE_ID+5);
+  }
+  #endif
+  
   if (rxDataLength < 8)
     return 0;
 
@@ -241,7 +250,7 @@ int Intercom_MessageHandler::receive(void) {
 
   if (msgEntryp->encrypted) {
     if (_decryptMsg(msg, payloadSize) != 0) {
-      return -101;
+      return -(MODULE_ID+6);
     }
   }
 
@@ -278,7 +287,7 @@ int Intercom_MessageHandler::_registerHandler(int id,
 Intercom_MessageHandler::Intercom_MessageHandler(int localPort, 
 	IPAddress remoteIpAddress, int remotePort) : 
 	_remoteIpAddress(remoteIpAddress),
-	_remotePort(remotePort), _msgTable(), _myId(ID_UNKNOWN),
+	_localPort(localPort), _remotePort(remotePort), _msgTable(), _myId(ID_UNKNOWN),
   _encryptionKeyIsSet(false) {
 
 	if (!_udp.setBuffer(sizeof(Intercom_Message))) {

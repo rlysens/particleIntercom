@@ -42,6 +42,7 @@ typedef struct {
 class Intercom_MessageHandler {
 private:
 	IPAddress _remoteIpAddress;
+	int _localPort;
 	int _remotePort;
 	UDP _udp;
 	Intercom_MessageHandlerTableElement _msgTable[MAX_MESSAGE_ID];

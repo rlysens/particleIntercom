@@ -71,19 +71,21 @@ static int endFillByte = 0;          // What byte value to send after file
   read MSB's twice and decide which is the correct one.
 */
 /* RL port complete*/
-uint32_t ReadVS10xxMem32Counter(uint16_t addr) {
+uint32_t ReadVS10xxMem32Counter(uint16_t addr) {  
   uint16_t msbV1, lsb, msbV2;
   uint32_t res;
 
-  WriteSci(SCI_WRAMADDR, addr+1);
-  msbV1 = ReadSci(SCI_WRAM);
-  WriteSci(SCI_WRAMADDR, addr);
-  lsb = ReadSci(SCI_WRAM);
-  msbV2 = ReadSci(SCI_WRAM);
-  if (lsb < 0x8000U) {
-    msbV1 = msbV2;
+  SINGLE_THREADED_BLOCK() {
+    WriteSci(SCI_WRAMADDR, addr+1);
+    msbV1 = ReadSci(SCI_WRAM);
+    WriteSci(SCI_WRAMADDR, addr);
+    lsb = ReadSci(SCI_WRAM);
+    msbV2 = ReadSci(SCI_WRAM);
+    if (lsb < 0x8000U) {
+      msbV1 = msbV2;
+    }
+    res = ((uint32_t)msbV1 << 16) | lsb;
   }
-  res = ((uint32_t)msbV1 << 16) | lsb;
 
   return res;
 }
@@ -93,14 +95,16 @@ uint32_t ReadVS10xxMem32Counter(uint16_t addr) {
 */
 /*RL port complete*/
 uint32_t ReadVS10xxMem32(uint16_t addr) {
-    uint32_t readResult;
-    uint16_t lsb;
+  uint32_t readResult;
+  uint16_t lsb;
 
+  SINGLE_THREADED_BLOCK() {
     WriteSci(SCI_WRAMADDR, addr);
     lsb = ReadSci(SCI_WRAM);
     readResult = lsb | ((uint32_t)ReadSci(SCI_WRAM) << 16);
-
-    return readResult;
+  }
+  
+  return readResult;
 }
 
 /*
@@ -108,12 +112,14 @@ uint32_t ReadVS10xxMem32(uint16_t addr) {
 */
 /*RL port complete*/
 uint16_t ReadVS10xxMem(uint16_t addr) {
-    uint16_t readResult;
+  uint16_t readResult;
 
+  SINGLE_THREADED_BLOCK() {
     WriteSci(SCI_WRAMADDR, addr);
     readResult = ReadSci(SCI_WRAM);
-
-    return readResult;
+  }
+  
+  return readResult;
 }
 
 /*
@@ -121,8 +127,10 @@ uint16_t ReadVS10xxMem(uint16_t addr) {
 */
 /*RL port complete*/
 void WriteVS10xxMem(uint16_t addr, uint16_t data) {
+  SINGLE_THREADED_BLOCK() {
     WriteSci(SCI_WRAMADDR, addr);
     WriteSci(SCI_WRAM, data);
+  }
 }
 
 /*
@@ -130,28 +138,32 @@ void WriteVS10xxMem(uint16_t addr, uint16_t data) {
 */
 /*RL port complete*/
 void WriteVS10xxMem32(uint16_t addr, uint32_t data) {
+  SINGLE_THREADED_BLOCK() {
     WriteSci(SCI_WRAMADDR, addr);
     WriteSci(SCI_WRAM, (uint16_t)data);
     WriteSci(SCI_WRAM, (uint16_t)(data>>16));
+  }
 }
 
 void LoadUserCode(void) {
-  unsigned i = 0;
+  SINGLE_THREADED_BLOCK() {
+    unsigned i=0;
 
-  while (i<sizeof(plugin)/sizeof(plugin[0])) {
-    unsigned short addr, n, val;
-    addr = plugin[i++];
-    n = plugin[i++];
-    if (n & 0x8000U) { /* RLE run, replicate n samples */
-      n &= 0x7FFF;
-      val = plugin[i++];
-      while (n--) {
-        WriteSci(addr, val);
-      }
-    } else {           /* Copy run, copy n samples */
-      while (n--) {
+    while (i<sizeof(plugin)/sizeof(plugin[0])) {
+      unsigned short addr, n, val;
+      addr = plugin[i++];
+      n = plugin[i++];
+      if (n & 0x8000U) { /* RLE run, replicate n samples */
+        n &= 0x7FFF;
         val = plugin[i++];
-        WriteSci(addr, val);
+        while (n--) {
+          WriteSci(addr, val);
+        }
+      } else {           /* Copy run, copy n samples */
+        while (n--) {
+          val = plugin[i++];
+          WriteSci(addr, val);
+        }
       }
     }
   }
@@ -164,20 +176,22 @@ int VS1063aStreamOutputBuffer(uint16_t invert) {
   int16_t /*bufStart, bufEnd,*/ bufSize;
   int16_t res;
 
-  WriteSci(SCI_WRAMADDR, 0x5A8F);
-  wrp = ReadSci(SCI_WRAM);
-  rdp = ReadSci(SCI_WRAM);
-  /*bufStart =*/ ReadSci(SCI_WRAM);
-  /*bufEnd =*/ ReadSci(SCI_WRAM);
-  bufSize = ReadSci(SCI_WRAM);
-  res = wrp-rdp;
-  if (res < 0) {
-    res += bufSize;
-  }
-  if (invert) {
-    res = bufSize - res - 2;
+  SINGLE_THREADED_BLOCK() {
+    WriteSci(SCI_WRAMADDR, 0x5A8F);
+    wrp = ReadSci(SCI_WRAM);
+    rdp = ReadSci(SCI_WRAM);
+    /*bufStart =*/ ReadSci(SCI_WRAM);
+    /*bufEnd =*/ ReadSci(SCI_WRAM);
+    bufSize = ReadSci(SCI_WRAM);
+    res = wrp-rdp;
     if (res < 0) {
-      res = 0;
+      res += bufSize;
+    }
+    if (invert) {
+      res = bufSize - res - 2;
+      if (res < 0) {
+        res = 0;
+      }
     }
   }
 
@@ -191,21 +205,23 @@ int VS1063aAudioInputBuffer(uint16_t invert) {
   int16_t /*bufStart, bufEnd,*/ bufSize;
   int16_t res;
 
-  WriteSci(SCI_WRAMADDR, 0x1a70);
-  wrp = ReadSci(SCI_WRAM);
-  rdp = ReadSci(SCI_WRAM);
-  WriteSci(SCI_WRAMADDR, 0x2033);
-  /*bufStart =*/ ReadSci(SCI_WRAM);
-  /*bufEnd =*/ ReadSci(SCI_WRAM);
-  bufSize = ReadSci(SCI_WRAM);
-  res = wrp-rdp;
-  if (res < 0) {
-    res += bufSize;
-  }
-  if (invert) {
-    res = bufSize - res - 2;
+  SINGLE_THREADED_BLOCK() {
+    WriteSci(SCI_WRAMADDR, 0x1a70);
+    wrp = ReadSci(SCI_WRAM);
+    rdp = ReadSci(SCI_WRAM);
+    WriteSci(SCI_WRAMADDR, 0x2033);
+    /*bufStart =*/ ReadSci(SCI_WRAM);
+    /*bufEnd =*/ ReadSci(SCI_WRAM);
+    bufSize = ReadSci(SCI_WRAM);
+    res = wrp-rdp;
     if (res < 0) {
-      res = 0;
+      res += bufSize;
+    }
+    if (invert) {
+      res = bufSize - res - 2;
+      if (res < 0) {
+        res = 0;
+      }
     }
   }
 
@@ -216,12 +232,16 @@ int VS1063aAudioInputBuffer(uint16_t invert) {
 int VS1063aStreamBufferFillWords(void) {
   int16_t wrp, rdp;
   /* For FLAC files, stream buffer is larger */
-  int16_t bufSize = (ReadSci(SCI_HDAT1) == 0x664C) ? 0x1800 : 0x400;
+  int16_t bufSize;
   int16_t res;
 
-  WriteSci(SCI_WRAMADDR, 0x5A7D);
-  wrp = ReadSci(SCI_WRAM);
-  rdp = ReadSci(SCI_WRAM);
+  SINGLE_THREADED_BLOCK() {
+    bufSize = (ReadSci(SCI_HDAT1) == 0x664C) ? 0x1800 : 0x400;
+
+    WriteSci(SCI_WRAMADDR, 0x5A7D);
+    wrp = ReadSci(SCI_WRAM);
+    rdp = ReadSci(SCI_WRAM);
+  }
 
   res = wrp-rdp;
   if (res < 0) {
@@ -234,12 +254,14 @@ int VS1063aStreamBufferFillWords(void) {
 int VS1063aStreamBufferFreeWordsAlt(void) {
   int16_t bufSize, res;
 
-  /* For FLAC files, stream buffer is larger */
-  bufSize = (ReadSci(SCI_HDAT1) == 0x664C) ? 0x1800 : 0x400;
-  res = bufSize - VS1063aStreamBufferFillWords();
+  SINGLE_THREADED_BLOCK() {
+    /* For FLAC files, stream buffer is larger */
+    bufSize = (ReadSci(SCI_HDAT1) == 0x664C) ? 0x1800 : 0x400;
+    res = bufSize - VS1063aStreamBufferFillWords();
+  }
 
   if (res < 2) {
-      return 0;
+    res = 2;
   }
 
   return res-2;
@@ -249,10 +271,12 @@ int VS1063aStreamBufferFreeWordsAlt(void) {
 int VS1063aStreamBufferFreeWords(void) {
   int16_t res;
 
-  WriteSci(SCI_WRAMADDR, 0xc0c0); /*Force an update of sdiFree*/
-  WriteSci(SCI_WRAM, 0);
-  WriteSci(SCI_WRAMADDR, 0x1e1f); /*Read sdiFree*/
-  res = ReadSci(SCI_WRAM);
+  SINGLE_THREADED_BLOCK() {
+    WriteSci(SCI_WRAMADDR, 0xc0c0); /*Force an update of sdiFree*/
+    WriteSci(SCI_WRAM, 0);
+    WriteSci(SCI_WRAMADDR, 0x1e1f); /*Read sdiFree*/
+    res = ReadSci(SCI_WRAM);
+  }
 
   return res;
 }
@@ -262,14 +286,19 @@ int VS1063aAudioBufferFillWords(void) {
   uint16_t wrp, rdp;
   int16_t bufSize;
   int16_t res;
-  WriteSci(SCI_WRAMADDR, 0x5B0F);
-  wrp = ReadSci(SCI_WRAM);
-  rdp = ReadSci(SCI_WRAM);
-  bufSize = (ReadSci(SCI_WRAM) & 0x7FFF) - 1;
-  res = wrp-rdp;
+
+  SINGLE_THREADED_BLOCK() {
+    WriteSci(SCI_WRAMADDR, 0x5B0F);
+    wrp = ReadSci(SCI_WRAM);
+    rdp = ReadSci(SCI_WRAM);
+    bufSize = (ReadSci(SCI_WRAM) & 0x7FFF) - 1;
+    res = wrp-rdp;
+  }
+  
   if (res < 0) {
     return res + bufSize;
   }
+
   return res;
 }
 
@@ -277,12 +306,17 @@ int VS1063aAudioBufferFillWords(void) {
 int VS1063aAudioBufferFreeWords(void) {
   int16_t bufSize;
   int16_t res;
-  WriteSci(SCI_WRAMADDR, 0x5B0F+2);
-  bufSize = (ReadSci(SCI_WRAM) & 0x7FFF) - 1;
-  res = bufSize - VS1063aAudioBufferFillWords();
-  if (res < 2) {
-    return 0;
+
+  SINGLE_THREADED_BLOCK() {
+    WriteSci(SCI_WRAMADDR, 0x5B0F+2);
+    bufSize = (ReadSci(SCI_WRAM) & 0x7FFF) - 1;
+    res = bufSize - VS1063aAudioBufferFillWords();
   }
+
+  if (res < 2) {
+    res=2;
+  }
+  
   return res-2;
 }
 
@@ -299,10 +333,12 @@ int16_t VS1063aAudioBufferUnderflow(void) {
   static uint16_t oldUFlows = 0;
   int16_t uFlows, newUFlows;
 
-  WriteSci(SCI_WRAMADDR, 0x5B0F+5);
-  newUFlows = ReadSci(SCI_WRAM);
-  uFlows = newUFlows - oldUFlows;
-  oldUFlows = newUFlows;
+  SINGLE_THREADED_BLOCK() {
+    WriteSci(SCI_WRAMADDR, 0x5B0F+5);
+    newUFlows = ReadSci(SCI_WRAM);
+    uFlows = newUFlows - oldUFlows;
+    oldUFlows = newUFlows;
+  }
 
   return uFlows;
 }
@@ -345,6 +381,7 @@ void VS1063PlayBufOrig(uint8_t *bufP, uint32_t bytesInBuffer) {
 
 /*RL port complete*/
 static void VS1063PlayBufCPU(uint8_t *bufP, uint32_t bytesInBuffer) {
+  SINGLE_THREADED_BLOCK() {
     while (bytesInBuffer) {
         int t = MIN(SDI_MAX_TRANSFER_SIZE, bytesInBuffer);
 
@@ -355,6 +392,7 @@ static void VS1063PlayBufCPU(uint8_t *bufP, uint32_t bytesInBuffer) {
         bufP += t;
         bytesInBuffer -= t;
     }
+  }
 }
 
 #if 0
@@ -365,13 +403,14 @@ static void VS1063PlayBufDMA(uint8_t *bufP, uint32_t bytesInBuffer) {
 
 /*RL port complete*/
 void VS1063PlayBuf(uint8_t *bufP, uint32_t bytesInBuffer) {
-    if (bytesInBuffer) {
-        VS1063PlayBufCPU(bufP, bytesInBuffer);
-    }
+  if (bytesInBuffer) {
+    VS1063PlayBufCPU(bufP, bytesInBuffer);
+  }
 }
 
 /*RL port complete*/
 void VS1063PlayCancel(void) {
+  SINGLE_THREADED_BLOCK() {
     static uint8_t playBuf[SDI_END_FILL_BYTES];
     unsigned short oldMode;
     int i;
@@ -387,6 +426,7 @@ void VS1063PlayCancel(void) {
     WriteSci(SCI_MODE, oldMode | SM_CANCEL);
     while (ReadSci(SCI_MODE) & SM_CANCEL)
         WriteSdi(playBuf, 2);
+  }
 }
 
 /* RL port complete */
@@ -394,11 +434,14 @@ void VS1063SetVol(uint32_t attLevel) {
     if (attLevel > MAX_ATT)
         attLevel = MAX_ATT;
 
-    WriteSci(SCI_VOL, attLevel*0x101);
+    SINGLE_THREADED_BLOCK() {
+      WriteSci(SCI_VOL, attLevel*0x101);
+    }
 }
 
 /* RL port complete */
 void VS1063RecordInit(void) {
+  SINGLE_THREADED_BLOCK() {
     /* Initialize recording */
     WriteSci(SCI_RECRATE, 8000 /*Sample rate*/);
     WriteSci(SCI_RECGAIN, 0); /* 1024 = gain 1 = best quality */
@@ -409,12 +452,14 @@ void VS1063RecordInit(void) {
     WriteSci(SCI_MODE, ReadSci(SCI_MODE)| SM_ENCODE);
     /*Disabling automatic sample fill is N/A in codec mode => Keeping vector at 0x50*/
     WriteSci(SCI_AIADDR, 0x0050); /* Activate recording! */
+  }
 }
 
 /* RL port complete */
 int VS1063RecordBuf(uint8_t *recBuf, uint32_t recBufferSize) {
-    unsigned n=0;
+  unsigned n=0;
 
+  SINGLE_THREADED_BLOCK() {
     /* See if there is some data available */
     if ((n = ReadSci(SCI_RECWORDS)) > 0) {
         unsigned i;
@@ -426,8 +471,9 @@ int VS1063RecordBuf(uint8_t *recBuf, uint32_t recBufferSize) {
             *recBuf++ = (uint8_t)(w & 0xFF);
         }
     }
-
-    return n*2;
+  }
+  
+  return n*2;
 }
 
 /* RL port complete*/
@@ -441,11 +487,13 @@ void VS1063RecordBufFull(uint8_t *recBuf, uint32_t recBufferSize) {
 
 /* RL port complete*/
 void VS1063RecordCancel(void) {
+  SINGLE_THREADED_BLOCK() {
     /* The following read from SCI_RECWORDS may appear redundant.
        But it's not: SCI_RECWORDS needs to be rechecked AFTER we
        have seen that SM_CANCEL have cleared. */
     ReadSci(SCI_MODE);
     ReadSci(SCI_RECWORDS);
+  }
 }
 
 /*
@@ -453,10 +501,12 @@ void VS1063RecordCancel(void) {
 */
 /* RL port complete */
 void VS1063InitHardware(void) {
+  SINGLE_THREADED_BLOCK() {
   /* Write here your microcontroller code which puts VS10xx in hardware
      reset and back (set xRESET to 0 for at least a few clock cycles,
      then to 1). */
     VS1063InitSPI();
+  }
 }
 
 /*
@@ -466,6 +516,7 @@ void VS1063InitHardware(void) {
 */
 /*RL port complete*/
 void VS1063InitSoftware(void) {
+  SINGLE_THREADED_BLOCK() {
     /* Start initialization with a dummy read, which makes sure our
      microcontoller chips selects and everything are where they
      are supposed to be and that VS10xx's SCI bus is in a known state. */
@@ -520,8 +571,9 @@ void VS1063InitSoftware(void) {
     uint16_t playMode = ReadVS10xxMem(PAR_PLAY_MODE);
     playMode |= PAR_PLAY_MODE_EQ5_ENA;
     WriteVS10xxMem(PAR_PLAY_MODE, playMode);
-
-    /* We're ready to go. */
+  }
+  
+  /* We're ready to go. */
 }
 
 /*RL port complete*/
@@ -539,7 +591,12 @@ void VS1063PrintState(void) {
 
 /*RL port complete*/
 uint16_t VS1063AdjustClock(int val) {
-    uint16_t clock = ReadSci(SCI_CLOCKF) + val;
+  uint16_t clock;
+  
+  SINGLE_THREADED_BLOCK() {
+    clock = ReadSci(SCI_CLOCKF) + val;
     WriteSci(SCI_CLOCKF, clock);
-    return clock;
+  }
+
+  return clock;
 }
