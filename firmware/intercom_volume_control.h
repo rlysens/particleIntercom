@@ -8,6 +8,8 @@
 class Intercom_VolumeControl : public Plf_TickerBase {
 private:
 	Intercom_ButtonsAndLeds& _intercom_buttonsAndLeds;
+	Intercom_LedBar& _ledBar;
+	
 	uint32_t _curAtt;
 	int32_t _fsm;
 	unsigned long _ledTurnOffTime;
@@ -15,6 +17,7 @@ private:
 	bool _ledTimerRunning;
 	bool _volTimerRunning;
 	bool _volEnabled;
+	bool _ledBarExclusive;
 
 	void _incVol(void);
 	void _decVol(void);

@@ -39,6 +39,8 @@ void Intercom_Root::loop(void) {
     _intercom_incoming.drain();
 
     _intercom_batteryChecker.checkButton();
+    _intercom_batteryChecker.tick();
+    
     _intercom_wifiChecker.checkButton();
     
     if (!_intercom_buddies[0].checkButton()) {

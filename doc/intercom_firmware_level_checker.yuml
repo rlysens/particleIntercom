@@ -1,9 +1,13 @@
-[Intercom_LevelCheckerBase|checkButton()|_getLevel()|_longPress()]getLedBar();buttonIsPressed()->[Intercom_ButtonsAndLeds]
-[Intercom_LevelCheckerBase]-setLevel()>[Intercom_LedBar]
+[Intercom_LevelCheckerBase|checkButton()|_getLevel()|_longPress()]-getLedBar();buttonIsPressed()>[Intercom_ButtonsAndLeds]
+[Intercom_LevelCheckerBase]-setLevel();getExclusive()>[Intercom_LedBar]
 [Intercom_LevelCheckerBase]-getSOC()>[MAX17043]
 
 [Intercom_LevelCheckerBase]^-[Intercom_BatteryChecker|getBatteryPct()|_getLevel()]
 [Intercom_LevelCheckerBase]^-[Intercom_WifiChecker|getRSSIPct()|_getLevel()|_longPress()]
 
+[Plf_TickerBase]^-[Intercom_BatteryChecker]
+
 [Intercom_WifiChecker]-registerFunction()>[Plf_DataDump]
 [Intercom_BatteryChecker]-registerFunction()>[Plf_DataDump]
+[Intercom_BatteryChecker]breathe();isExclusive()->[Intercom_LedBar]
+

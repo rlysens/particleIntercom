@@ -10,7 +10,8 @@
 #define MODULE_ID 1700
 
 Intercom_LevelCheckerBase::Intercom_LevelCheckerBase(Intercom_ButtonsAndLeds& intercom_buttonsAndLeds, int buttonId) : 
-_intercom_buttonsAndLeds(intercom_buttonsAndLeds), _buttonPressStartTime(0), _fsm(LEVEL_CHECK_FSM_BUTTON_RELEASED), _buttonId(buttonId) {
+_intercom_buttonsAndLeds(intercom_buttonsAndLeds), _buttonPressStartTime(0), _fsm(LEVEL_CHECK_FSM_BUTTON_RELEASED), _buttonId(buttonId),
+_gotLedBarExclusive(false), _ledBar(intercom_buttonsAndLeds.getLedBar()) {
 }
 
 void Intercom_LevelCheckerBase::_longPress(void) {
@@ -18,12 +19,16 @@ void Intercom_LevelCheckerBase::_longPress(void) {
 
 void Intercom_LevelCheckerBase::checkButton(void) {
 	bool buttonPressed = _intercom_buttonsAndLeds.buttonIsPressed(_buttonId);
-
+	
 	if (_fsm == LEVEL_CHECK_FSM_BUTTON_RELEASED) {
 		if (buttonPressed) {
-			_buttonPressStartTime = millis();
-			int lvl = _getLevel();
-			_intercom_buttonsAndLeds.getLedBar().setLevel(lvl);
+			_buttonPressStartTime = millis(); 
+			_gotLedBarExclusive |= _ledBar.setExclusive(true);
+			if (_gotLedBarExclusive) {
+				_ledBar.reset();
+				int lvl = _getLevel();
+				_ledBar.setLevel(lvl);
+			}
 			_fsm = LEVEL_CHECK_FSM_BUTTON_PRESSED;
 		}
 	}
@@ -34,7 +39,12 @@ void Intercom_LevelCheckerBase::checkButton(void) {
 			}
 		}
 		else {
-			_intercom_buttonsAndLeds.getLedBar().setLevel(0);
+			if (_gotLedBarExclusive) {
+				_ledBar.setLevel(0);
+				_ledBar.setExclusive(false);
+				_gotLedBarExclusive = false;
+			}
+
 			_fsm = LEVEL_CHECK_FSM_BUTTON_RELEASED;
 		}
 	}

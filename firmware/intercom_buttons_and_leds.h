@@ -8,12 +8,25 @@
 #define BUDDY_1_IDX 1
 #define BUDDY_2_IDX 2
 
-#define LED_BAR_MAX_LEVEL 5
+#define LED_BAR_NUM_LEDS 5
 
 class Intercom_LedBar {
+private:
+	bool _exclusive;
+
 public:
-	virtual void setLevel(int level)=0;
-	virtual void blink(unsigned long tOn, unsigned long tOff, byte onIntensity = 255, byte offIntensity = 0)=0;
+	Intercom_LedBar();
+
+	/*Returns true is successful*/
+	bool setExclusive(bool enable);
+	bool isExclusive(void);
+	
+	virtual void reset(void);
+	virtual void setLevel(int level);
+	virtual void blink(unsigned long tOn, unsigned long tOff, byte onIntensity = 255, byte offIntensity = 0);
+	virtual void breathe(unsigned long tOn, unsigned long tOff, unsigned long rise, unsigned long fall,
+		unsigned long startIdx=0, unsigned long stopIdx=LED_BAR_NUM_LEDS, 
+		byte onInt = 255, byte offInt = 0);
 };
 
 class Intercom_Led {
@@ -26,7 +39,7 @@ public:
 	//		- iOn: should be a 0-255 value setting the intensity of the LED
 	//			- 0 is completely off, 255 is 100% on.
 	// -----------------------------------------------------------------------------
-	virtual void analogWrite(byte iOn)=0;
+	virtual void analogWrite(byte iOn);
 
 	// -----------------------------------------------------------------------------
 	// blink(unsigned long tOn, unsigned long tOff, byte onIntensity, byte offIntensity);
@@ -39,7 +52,7 @@ public:
 	//   	- offIntensity: 0-255 value determining LED off brightness
 	// 	 Notes: 
 	// -----------------------------------------------------------------------------
-	virtual void blink(unsigned long tOn, unsigned long tOff, byte onIntensity = 255, byte offIntensity = 0)=0;
+	virtual void blink(unsigned long tOn, unsigned long tOff, byte onIntensity = 255, byte offIntensity = 0);
 
 	// -----------------------------------------------------------------------------
 	// breathe(unsigned long tOn, unsigned long tOff, unsigned long rise, unsigned long fall, byte onInt, byte offInt, bool log);
@@ -55,17 +68,17 @@ public:
 	//   	- offIntensity: 0-255 value determining LED off brightness
 	// -----------------------------------------------------------------------------
 	virtual void breathe(unsigned long tOn, unsigned long tOff, unsigned long rise, unsigned long fall, 
-		byte onInt = 255, byte offInt = 0) =0;
+		byte onInt = 255, byte offInt = 0);
 };
 
 class Intercom_ButtonsAndLeds {
 public:
 	/*Button IDs: WIFI_CHECK_BUTTON, BATTERY_CHECK_BUTTON, VOL_INC_BUTTON, VOL_DEC_BUTTON. See board.h*/
-	virtual bool buttonIsPressed(int buttonId) =0;
+	virtual bool buttonIsPressed(int buttonId);
 
-	virtual bool buddyButtonIsPressed(int buddyIndex) =0;
-	virtual Intercom_Led& getBuddyLed(int buddyIndex) =0;
-	virtual Intercom_LedBar& getLedBar(void) =0;
+	virtual bool buddyButtonIsPressed(int buddyIndex);
+	virtual Intercom_Led& getBuddyLed(int buddyIndex)=0;
+	virtual Intercom_LedBar& getLedBar(void)=0;
 };
 
 #endif /*INTERCOM_BUTTONS_AND_LEDS_H*/

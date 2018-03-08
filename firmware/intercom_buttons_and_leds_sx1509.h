@@ -7,17 +7,22 @@
 class Intercom_LedBar_SX1509 : public Intercom_LedBar {
 private:
 	SX1509* _iop;
-	byte _pins[LED_BAR_MAX_LEVEL];
+	byte _pins[LED_BAR_NUM_LEDS];
 
 public:
 	Intercom_LedBar_SX1509();
 
+	virtual void reset(void);
 	virtual void setLevel(int level);
 
 	virtual void blink(unsigned long tOn, unsigned long tOff, byte onIntensity = 255, byte offIntensity = 0);
 
+	virtual void breathe(unsigned long tOn, unsigned long tOff, unsigned long rise, unsigned long fall,
+		unsigned long startIdx=0, unsigned long stopIdx=LED_BAR_NUM_LEDS, 
+		byte onInt = 255, byte offInt = 0);
+
 	/*private*/
-	void init(SX1509& io, byte pins[LED_BAR_MAX_LEVEL]);
+	void init(SX1509& io, byte pins[LED_BAR_NUM_LEDS]);
 };
 
 class Intercom_Led_SX1509 : public Intercom_Led {

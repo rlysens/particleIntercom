@@ -7,31 +7,54 @@
 Intercom_LedBar_SX1509::Intercom_LedBar_SX1509() : Intercom_LedBar(), _iop(0) {
 }
 
-void Intercom_LedBar_SX1509::init(SX1509& io, byte pins[LED_BAR_MAX_LEVEL]) {
+void Intercom_LedBar_SX1509::init(SX1509& io, byte pins[LED_BAR_NUM_LEDS]) {
 	int ii;
 
 	_iop = &io;
 
-	for (ii=0;ii<LED_BAR_MAX_LEVEL; ii++) {
+	for (ii=0;ii<LED_BAR_NUM_LEDS; ii++) {
 		_pins[ii] = pins[ii];
+		_iop->pinMode(pins[ii], OUTPUT);
 		_iop->ledDriverInit(pins[ii]);
 	}
 
 	setLevel(0);
 }
 
+void Intercom_LedBar_SX1509::reset(void) {
+	int ii;
+
+	for (ii=0; ii<LED_BAR_NUM_LEDS; ++ii) {
+		_iop->setupBlink(_pins[ii], 0, 0, 0, 0);
+	}
+}
+
 void Intercom_LedBar_SX1509::blink(unsigned long tOn, unsigned long tOff, byte onIntensity, byte offIntensity) {
 	int ii;
 
-	for (ii=0; ii<LED_BAR_MAX_LEVEL; ++ii) {
+	plf_assert("Led bar io=0", _iop);
+
+	for (ii=0; ii<LED_BAR_NUM_LEDS; ++ii) {
 		_iop->blink(_pins[ii], tOn, tOff, onIntensity, offIntensity);
+	}	
+}
+
+void Intercom_LedBar_SX1509::breathe(unsigned long tOn, unsigned long tOff, unsigned long rise, unsigned long fall, 
+		unsigned long startIdx, unsigned long stopIdx, 
+		byte onInt, byte offInt) {
+	plf_assert("Led bar idx out of range.", startIdx<LED_BAR_NUM_LEDS);
+	plf_assert("Led bar idx out of range.", stopIdx<=LED_BAR_NUM_LEDS);
+	plf_assert("Led bar io=0", _iop);
+
+	for (unsigned ii=startIdx; ii<stopIdx; ++ii) {
+		_iop->breathe(_pins[ii], tOn, tOff, rise, fall, onInt, offInt);
 	}	
 }
 
 void Intercom_LedBar_SX1509::setLevel(int level) {
 	int ii;
 
-	plf_assert("Led bar level out of range.", level <= LED_BAR_MAX_LEVEL);
+	plf_assert("Led bar level out of range.", level <= LED_BAR_NUM_LEDS);
 	plf_assert("Led bar level out of range.", level >= 0);
 	plf_assert("Led bar io=0", _iop);
 
@@ -39,7 +62,7 @@ void Intercom_LedBar_SX1509::setLevel(int level) {
 		_iop->analogWrite(_pins[ii], 255);
 	}
 
-	for (ii=level; ii<LED_BAR_MAX_LEVEL; ++ii) {
+	for (ii=level; ii<LED_BAR_NUM_LEDS; ++ii) {
 		_iop->analogWrite(_pins[ii], 0);
 	}
 }
@@ -50,6 +73,7 @@ Intercom_Led_SX1509::Intercom_Led_SX1509() : Intercom_Led(), _iop(0), _pin(255) 
 void Intercom_Led_SX1509::init(SX1509& io, byte pin) {
 	_iop = &io;
 	_pin = pin;
+	_iop->pinDir(pin, OUTPUT);
 	_iop->ledDriverInit(pin);
 	analogWrite(0);
 }

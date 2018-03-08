@@ -6,9 +6,9 @@
 
 #define MODULE_ID 1400
 
-#define DEFAULT_ATT 40
-#define ATT_STEP 20
-#define MAX_ATT_VOL_CTRL (5*ATT_STEP)
+#define ATT_STEP 25
+#define DEFAULT_ATT (2*ATT_STEP)
+#define MAX_ATT_VOL_CTRL (6*ATT_STEP)
 
 #define VOL_CTRL_BUTTON_FSM_ALL_RELEASED 0
 #define VOL_CTRL_BUTTON_FSM_MIN_PRESSED 1
@@ -25,7 +25,7 @@ void Intercom_VolumeControl::_decVol(void) {
 		_curAtt += ATT_STEP;
 	}
 
-	PLF_PRINT(PRNTGRP_DFLT, "Vol=%d\n", (int)(MAX_ATT-_curAtt));
+	PLF_PRINT(PRNTGRP_DFLT, "Att=%d\n", (int)_curAtt);
 
 	if (!_volEnabled) {
 		_doEnableVol(true);
@@ -41,7 +41,7 @@ void Intercom_VolumeControl::_incVol(void) {
 		_curAtt -= ATT_STEP;
 	}
 
-	PLF_PRINT(PRNTGRP_DFLT, "Vol=%d\n", (int)(MAX_ATT-_curAtt));
+	PLF_PRINT(PRNTGRP_DFLT, "Att=%d\n", (int)_curAtt);
 
 	if (!_volEnabled) {
 		_doEnableVol(true);
@@ -67,7 +67,11 @@ void Intercom_VolumeControl::_startVolTimer(void) {
 
 void Intercom_VolumeControl::_onLedTimeout(void) {
 	_ledTimerRunning = false;
-	_intercom_buttonsAndLeds.getLedBar().setLevel(0);
+	if (_ledBarExclusive) {
+		_ledBar.setLevel(0);
+		_ledBar.setExclusive(false);
+		_ledBarExclusive = false;
+	}
 }
 
 void Intercom_VolumeControl::_startLedTimer(void) {
@@ -77,7 +81,7 @@ void Intercom_VolumeControl::_startLedTimer(void) {
 
 void Intercom_VolumeControl::_setLedBar(void) {
 	if (_fsm != VOL_CTRL_BUTTON_FSM_ALL_RELEASED) {
-		int level=0;
+		int level;
 
 		if (_curAtt >= 5*ATT_STEP) {
 			level = 0;
@@ -91,15 +95,19 @@ void Intercom_VolumeControl::_setLedBar(void) {
 		else if (_curAtt >= 2*ATT_STEP) {
 			level = 3;
 		}
-		else if (_curAtt >= ATT_STEP) {
+		else if (_curAtt >= 1*ATT_STEP) {
 			level = 4;
 		}
 		else {
 			level = 5;
 		}
 
-		_intercom_buttonsAndLeds.getLedBar().setLevel(level);
-		_startLedTimer();
+		_ledBarExclusive |= _ledBar.setExclusive(true);
+		if (_ledBarExclusive) {
+			_ledBar.reset();
+			_ledBar.setLevel(level);
+			_startLedTimer();
+		}
 	}
 }
 
@@ -121,8 +129,10 @@ void Intercom_VolumeControl::enableVol(bool enable) {
 
 Intercom_VolumeControl::Intercom_VolumeControl(Intercom_ButtonsAndLeds& intercom_buttonsAndLeds) : 
 	Plf_TickerBase(INTERCOM_VOL_CTRL_TICK_INTER_MS),
-	_intercom_buttonsAndLeds(intercom_buttonsAndLeds), _curAtt(DEFAULT_ATT), _fsm(VOL_CTRL_BUTTON_FSM_ALL_RELEASED),
-	_ledTurnOffTime(0), _volTurnOffTime(0), _ledTimerRunning(false), _volTimerRunning(false), _volEnabled(false) {
+	_intercom_buttonsAndLeds(intercom_buttonsAndLeds), _ledBar(intercom_buttonsAndLeds.getLedBar()),
+	_curAtt(DEFAULT_ATT), _fsm(VOL_CTRL_BUTTON_FSM_ALL_RELEASED),
+	_ledTurnOffTime(0), _volTurnOffTime(0), _ledTimerRunning(false), _volTimerRunning(false), _volEnabled(false),
+	_ledBarExclusive(false) {
 
 	_setLedBar();
 	pinMode(AMP_SHUTDOWN, OUTPUT);

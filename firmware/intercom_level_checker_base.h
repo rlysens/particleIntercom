@@ -10,7 +10,9 @@ private:
 	unsigned long _buttonPressStartTime;
 	int32_t _fsm;
 	int _buttonId;
-	
+	bool _gotLedBarExclusive;
+	Intercom_LedBar& _ledBar;
+
 	virtual int _getLevel(void)=0;
 	virtual void _longPress(void);
 

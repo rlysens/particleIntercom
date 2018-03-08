@@ -3,12 +3,6 @@
 
 #include "intercom_buttons_and_leds.h"
 
-class Intercom_LedBar_Stub: public Intercom_LedBar {
-public:
-	virtual void setLevel(int level);
-	virtual void blink(unsigned long tOn, unsigned long tOff, byte onIntensity = 255, byte offIntensity = 0);
-};
-
 class Intercom_Led_Stub : public Intercom_Led {
 private:
 	byte _pin;
@@ -59,13 +53,10 @@ public:
 class Intercom_ButtonsAndLeds_Stub: public Intercom_ButtonsAndLeds {
 private:
 	Intercom_Led_Stub _leds[NUM_LEDS];
-	Intercom_LedBar_Stub _ledBar;
+	Intercom_LedBar _ledBar;
 
 public:
 	Intercom_ButtonsAndLeds_Stub();
-	
-	/*Button IDs: WIFI_CHECK_BUTTON, BATTERY_CHECK_BUTTON, VOL_INC_BUTTON, VOL_DEC_BUTTON. See board.h*/
-	virtual bool buttonIsPressed(int buttonId);
 
 	virtual bool buddyButtonIsPressed(int buddyIndex);
 	virtual Intercom_Led& getBuddyLed(int buddyIndex);

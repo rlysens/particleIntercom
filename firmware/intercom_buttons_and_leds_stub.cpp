@@ -4,12 +4,6 @@
 
 #define MODULE_ID 200
 
-void Intercom_LedBar_Stub::setLevel(int level) {
-}
-
-void Intercom_LedBar_Stub::blink(unsigned long tOn, unsigned long tOff, byte onIntensity, byte offIntensity) {
-}
-
 void Intercom_Led_Stub::init(byte pin) {
 	_pin = pin;
 	pinMode(_pin, OUTPUT);
@@ -35,10 +29,6 @@ Intercom_ButtonsAndLeds_Stub::Intercom_ButtonsAndLeds_Stub() : Intercom_ButtonsA
 
 	pinMode(BUDDY_0_BUTTON_DUMMY, INPUT_PULLUP);
 	pinMode(BUDDY_1_BUTTON_DUMMY, INPUT_PULLUP);
-}
-
-bool Intercom_ButtonsAndLeds_Stub::buttonIsPressed(int buttonId) {
-	return false;
 }
 
 bool Intercom_ButtonsAndLeds_Stub::buddyButtonIsPressed(int buddyIndex) {

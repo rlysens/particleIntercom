@@ -1,5 +1,5 @@
 [Intercom_ButtonsAndLeds|buttonIsPressed();buddyButtonIsPressed();getBuddyLed();reset()]->[Intercom_Led|analogWrite();blink();breathe();init()]
-[Intercom_ButtonsAndLeds]->[Intercom_LedBar|setLevel(); blink()]
+[Intercom_ButtonsAndLeds]->[Intercom_LedBar|setLevel();blink();breathe();setExclusive();isExclusive();reset()]
 [Intercom_ButtonsAndLeds]^-[Intercom_ButtonsAndLeds_SX1509]
 [Intercom_ButtonsAndLeds_SX1509]++-1>[SX1509]
 [Intercom_ButtonsAndLeds_SX1509]++-n>[Intercom_Led_SX1509]

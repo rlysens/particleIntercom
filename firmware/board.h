@@ -13,7 +13,7 @@
 #define AMP_SHUTDOWN D5
 
 #define BATTERY_CHECK_BUTTON 0
-#define WIFI_CHECK_BUTTON 7
+#define WIFI_CHECK_BUTTON 10
 
 #define NUM_LEDS 3
 #define NUM_BUDDIES 3
@@ -34,8 +34,8 @@
 #define VOL_DEC_BUTTON 8
 #define VOL_INC_BUTTON 9
 
-#define LED_BAR_0_LED 10
-#define LED_BAR_1_LED 11
+#define LED_BAR_0_LED 15
+#define LED_BAR_1_LED 7
 #define LED_BAR_2_LED 12
 #define LED_BAR_3_LED 13
 #define LED_BAR_4_LED 14
