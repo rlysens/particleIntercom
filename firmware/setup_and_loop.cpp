@@ -12,6 +12,7 @@
 #include "plf_event_counter.h"
 #include "intercom_buttons_and_leds_sx1509.h"
 #include "intercom_buttons_and_leds_stub.h"
+#include "intercom_power_management.h"
 
 #define WIFI_CONNECT_TIMEOUT_MS 10000
 
@@ -27,7 +28,7 @@ retained bool enterListenMode;
 static bool isDummySetup(void) {
   /*On a real setup the SX1509 reset pin is pulled high. On a dummy setup it's pulled low*/
   pinMode(SX1509_RESET_PIN, INPUT);
-  bool dummySetup = (digitalRead(SX1509_RESET_PIN) == LOW);
+  bool dummySetup = (digitalRead(SX1509_RESET_PIN) == HIGH);
   
   return dummySetup;
 }
@@ -36,6 +37,8 @@ static bool listenModeCheck() {
   if (enterListenMode) {
       enterListenMode = false;
 
+      printGroupEnable(PRNTGRP_DFLT, true);
+      PLF_PRINT(PRNTGRP_DFLT, "Entered Listen mode.");
       if (!isDummySetup()) {
         // Begin I2C
         Wire.begin();
@@ -62,11 +65,15 @@ Plf_Registry plf_registry;
 Plf_EvenCounter plf_eventCounter;
 
 Intercom_Root *intercom_rootp = NULL;
+Intercom_PowerManagement *intercom_powerManagementp = NULL;
+
 MAX17043 *lipop = NULL;
 
 SYSTEM_MODE(SEMI_AUTOMATIC);
 
 void setup() {
+  intercom_powerManagementp = new Intercom_PowerManagement();
+
   /*Listening mode requires a lot of memory and can't coexist with the footprint
    *of our application. As a workaround we enter listening mode very early in setup(), 
    *i.e. before setup() allocates the memory for the majority of our application objects
@@ -90,7 +97,7 @@ void setup() {
     
     WiFi.on();
     WiFi.selectAntenna(dummySetup? ANT_INTERNAL : ANT_EXTERNAL);
-    
+
     /*If we don't have any credentials, we enter listening mode through a reset.*/
     if (!WiFi.hasCredentials()) {
       enterListenMode = true;
@@ -101,6 +108,7 @@ void setup() {
 
     /*If we failed to connect, we enter listening mode through a reset.*/
     if (!waitFor(WiFi.ready, WIFI_CONNECT_TIMEOUT_MS)) {
+      PLF_PRINT(PRNTGRP_DFLT, "Can't connect to WiFi. Entering listen mode.");
       enterListenMode = true;
       System.reset();
     }
@@ -156,6 +164,10 @@ void setup() {
 void loop() {
   if (intercom_rootp) {
     intercom_rootp->loop();
+  }
+
+  if (intercom_powerManagementp) {
+    intercom_powerManagementp->checkPowerSwitch();
   }
   Particle.process();
 }
