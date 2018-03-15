@@ -125,6 +125,8 @@ void SX1509::pinDir(byte pin, byte inOut)
 	// If INPUT_PULLUP was called, set up the pullup too:
 	if (inOut == INPUT_PULLUP)
 		writePin(pin, HIGH);
+	else if (inOut == INPUT_PULLDOWN)
+		writePin(pin, LOW);
 	
 	if (inOut == ANALOG_OUTPUT)
 	{

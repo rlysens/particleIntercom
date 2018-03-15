@@ -47,4 +47,6 @@
 #define INTERCOM_CODEC_XRESET A1
 #define INTERCOM_CODEC_DREQ A0
 
+#define POWER_DOWN_PIN WKP
+
 #endif /*BOARD_H*/
