@@ -25,6 +25,7 @@ public:
 	int set_buddy_1_name(String name);
 	int set_buddy_2_name(String name);
 	int erase(String name);
+	int clr_creds(String name);
 	int enable_printgroup(String name);
 	int disable_printgroup(String name);
 	int set_key(String key_val);

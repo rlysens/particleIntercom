@@ -63,6 +63,11 @@ int Intercom_CloudAPI::erase(String name) {
 	return 0;
 }
 
+int Intercom_CloudAPI::clr_creds(String name) {
+	WiFi.clearCredentials();
+	return 0;
+}
+
 int Intercom_CloudAPI::updateVars(void) {
 	bool valid;
 
@@ -193,6 +198,7 @@ Intercom_CloudAPI::Intercom_CloudAPI(Intercom_ButtonsAndLeds& intercom_buttonsAn
 	Particle.function("buddy_1_name", &Intercom_CloudAPI::set_buddy_1_name, this);
 	Particle.function("buddy_2_name", &Intercom_CloudAPI::set_buddy_2_name, this);
 	Particle.function("erase", &Intercom_CloudAPI::erase, this);
+	Particle.function("clr_creds", &Intercom_CloudAPI::clr_creds, this);
 	Particle.function("en_prntgrp", &Intercom_CloudAPI::enable_printgroup, this);
 	Particle.function("dis_prntgrp", &Intercom_CloudAPI::disable_printgroup, this);
 	Particle.function("set_key", &Intercom_CloudAPI::set_key, this);

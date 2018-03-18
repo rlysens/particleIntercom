@@ -24,6 +24,20 @@ SYSTEM_THREAD(ENABLED);
 STARTUP(System.enableFeature(FEATURE_RETAINED_MEMORY));
 
 retained bool enterListenMode;
+bool inListenMode;
+
+// Use primary serial over USB interface for logging output. Used by PLF_PRINT
+SerialLogHandler logHandler;
+Plf_DataDump dataDump;
+Plf_Registry plf_registry;
+Plf_EvenCounter plf_eventCounter;
+
+Intercom_Root *intercom_rootp = NULL;
+Intercom_PowerManagement *intercom_powerManagementp = NULL;
+
+MAX17043 *lipop = NULL;
+
+SYSTEM_MODE(MANUAL);
 
 static bool isDummySetup(void) {
   /*On a real setup the SX1509 reset pin is pulled high. On a dummy setup it's pulled low*/
@@ -58,29 +72,19 @@ static bool listenModeCheck() {
   }
 }
 
-// Use primary serial over USB interface for logging output. Used by PLF_PRINT
-SerialLogHandler logHandler;
-Plf_DataDump dataDump;
-Plf_Registry plf_registry;
-Plf_EvenCounter plf_eventCounter;
-
-Intercom_Root *intercom_rootp = NULL;
-Intercom_PowerManagement *intercom_powerManagementp = NULL;
-
-MAX17043 *lipop = NULL;
-
-SYSTEM_MODE(SEMI_AUTOMATIC);
-
 void setup() {
+  delay(3000); /*Just enough to connect serial collect first traces*/
+
   intercom_powerManagementp = new Intercom_PowerManagement();
+  plf_assert("intercom_powerManagementp NULL ptr", intercom_powerManagementp);
 
   /*Listening mode requires a lot of memory and can't coexist with the footprint
    *of our application. As a workaround we enter listening mode very early in setup(), 
    *i.e. before setup() allocates the memory for the majority of our application objects
    *(i.e. new Intercom).*/
-  if (!listenModeCheck()) {
-    delay(3000); /*Just enough to connect serial collect first traces*/
+  inListenMode = listenModeCheck();
 
+  if (!inListenMode) {
     /*Using an init function instead of constructor for these globals to avoid running
      *code before setup()*/
     plf_registry.init();
@@ -114,7 +118,6 @@ void setup() {
     }
 
     VS1063InitHardware();
-
     PLF_PRINT(PRNTGRP_DFLT, "VS1063InitHardware done");
     VS1063InitSoftware();
     PLF_PRINT(PRNTGRP_DFLT, "VS1063InitSoftware done");
@@ -127,6 +130,7 @@ void setup() {
       /*We use dynamic memory allocation here to ensure that this memory is
        *only allocated when we get here, i.e. when we're not in listening mode.*/
       intercom_rootp = new Intercom_Root(*intercom_buttonsAndLeds);
+      plf_assert("intercom_rootp NULL ptr", intercom_rootp);
     }
     else {
       lipop = new MAX17043();
@@ -152,6 +156,7 @@ void setup() {
       /*We use dynamic memory allocation here to ensure that this memory is
        *only allocated when we get here, i.e. when we're not in listening mode.*/
       intercom_rootp = new Intercom_Root(*intercom_buttonsAndLeds);
+      plf_assert("intercom_rootp NULL ptr", intercom_rootp);
     }
 
     /*Connect to the cloud.*/
@@ -162,12 +167,19 @@ void setup() {
 }
 
 void loop() {
-  if (intercom_rootp) {
-    intercom_rootp->loop();
+  if (inListenMode) {
+    waitUntil(WiFi.listening);
+    waitUntil(WiFi.ready);
+    
+    PLF_PRINT(PRNTGRP_DFLT, "Listening mode completed. Restarting...");
+    /*When done, restart in regular mode.*/
+    enterListenMode = false;
+    System.reset();
+  }
+  else {
+      intercom_rootp->loop();
+      intercom_powerManagementp->checkPowerSwitch();
   }
 
-  if (intercom_powerManagementp) {
-    intercom_powerManagementp->checkPowerSwitch();
-  }
   Particle.process();
 }

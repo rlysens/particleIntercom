@@ -39,4 +39,6 @@ void Intercom_WifiChecker::_dataDump(void) {
 	else {
 		PLF_PRINT(PRNTGRP_DFLT, "RSSIerrorCode: %d", rssi);
 	}
+
+	PLF_PRINT(PRNTGRP_DFLT, "SSID: %s", WiFi.SSID());
 }
