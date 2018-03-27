@@ -16,6 +16,7 @@
 #define REG_KEY_BUDDY_2_ID 8
 
 #define MAX_KEY_LEN 64
+#define MAX_PERSISTENT_KEY_VAL 5 /*Max.2047 bytes persistent storage*/
 #define MAX_KEY_VAL 8
 
 #define MAX_NUM_FUNS_PER_KEY 8
