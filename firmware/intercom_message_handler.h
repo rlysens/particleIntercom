@@ -43,7 +43,6 @@ class Intercom_MessageHandler {
 private:
 	IPAddress _remoteIpAddress;
 	int _localPort;
-	int _remotePort;
 	UDP _udp;
 	Intercom_MessageHandlerTableElement _msgTable[MAX_MESSAGE_ID];
 	Intercom_RxMessageCounter _msgRxCounters[NUM_BUDDIES];
@@ -53,6 +52,7 @@ private:
 	unsigned char _ivDec[8];
 	uint32_t _myId;
 	bool _encryptionKeyIsSet;
+	bool _srvrAddrSet;
 
 	void _countRxMsg(Intercom_Message &msg);
 	void _countTxMsg(uint32_t destination_id);
@@ -60,13 +60,15 @@ private:
 	int _encryptMsg(Intercom_Message &msg, int payloadSize);
 	int _decryptMsg(Intercom_Message &msg, int payloadSize);
 
-	int _registryHandler(int key, String& value, bool valid);
+	int _registryHandlerSecretKey(int key, String& value, bool valid);
+	int _registryHandlerSrvrAddr(int key, String& value, bool valid);
+
 	void _dataDump(void);
 	
 	int _registerHandler(int id, std_function_int_Intercom_MessageRef_int_t func, bool encrypted);
 
 public:
-	Intercom_MessageHandler(int localPort, IPAddress remoteIpAddress, int remotePort);
+	Intercom_MessageHandler(int localPort);
 
 	void setMyId(uint32_t myId);
 	uint32_t getMyId(void); /*Returns ID_UNKNOWN if unknown*/

@@ -162,6 +162,7 @@ void setup() {
     /*Connect to the cloud.*/
     Particle.connect();
 
+    PLF_PRINT(PRNTGRP_DFLT, "Free memory: %d", (int)System.freeMemory());
     PLF_PRINT(PRNTGRP_DFLT, "Starting loop, exiting setup()");
   }
 }

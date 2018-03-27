@@ -31,6 +31,7 @@ public:
 	int set_key(String key_val);
 	int list_ddump(String dummy);
 	int ddump(String name);
+	int set_srvr_name(String name);
 	int testfun(String name);
 
 	/*private*/

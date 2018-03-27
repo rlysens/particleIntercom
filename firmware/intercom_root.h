@@ -13,8 +13,6 @@
 #include "intercom_wifi_checker.h"
 
 #define LOCAL_PORT 50007
-#define REMOTE_PORT 50007
-#define REMOTE_IP (IPAddress(52,26,112,44))
 
 class Intercom_Root {
 private:

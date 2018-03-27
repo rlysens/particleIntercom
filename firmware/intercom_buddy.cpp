@@ -253,7 +253,7 @@ int Intercom_Buddy::_rxWhoIsRep(Intercom_Message& msg, int payloadSize) {
 
 	/*Put a string version of the buddy_id in the registry*/
 	buddyId_s = String(who_is_reply.id);
-	plf_registry.set(regKey_buddyId[_buddyIdx], buddyId_s, true /*validity*/, false /*persistency*/);
+	plf_registry.set(regKey_buddyId[_buddyIdx], buddyId_s, true /*validity*/);
 	_buddyId = who_is_reply.id;
 
 	/*Configure this buddy as the source_id for the counter object*/

@@ -9,7 +9,7 @@
 
 Intercom_Message intercom_message; /*Shared by all message_handler users*/
 
-int Intercom_MessageHandler::_registryHandler(int key, String& value, bool valid) {
+int Intercom_MessageHandler::_registryHandlerSecretKey(int key, String& value, bool valid) {
   plf_assert("invalid reg key", key == REG_KEY_SECRET_KEY);
 
   if (valid) {
@@ -21,6 +21,21 @@ int Intercom_MessageHandler::_registryHandler(int key, String& value, bool valid
   return 0;
 }
 
+int Intercom_MessageHandler::_registryHandlerSrvrAddr(int key, String& value, bool valid) {
+  plf_assert("invalid reg key", key == REG_KEY_SRVR_NAME);
+
+  if (valid) {
+    _remoteIpAddress = WiFi.resolve(value);
+    if (!_remoteIpAddress) {
+      PLF_PRINT(PRNTGRP_DFLT, "Could not resolve server name.");
+    }
+    else {
+      _srvrAddrSet = true;
+    }
+  }
+
+  return 0;
+}
 
 void Intercom_MessageHandler::setEncryptionKey(uint8_t key[16]) {
   _encryptionKeyIsSet = true;
@@ -205,9 +220,13 @@ int Intercom_MessageHandler::send(Intercom_Message &msg, uint32_t msgId, uint32_
   }
 #endif
 
+  if (!_srvrAddrSet) {
+    return -(MODULE_ID+7);
+  }
+
   /* Send the UDP packet */
   int res = _udp.sendPacket((uint8_t*)&msg, payloadSize+8, 
-      _remoteIpAddress, _remotePort);
+      _remoteIpAddress, _localPort /*Use same port number as local port for remote port.*/);
   if (res != payloadSize+8) {
       PLF_PRINT(PRNTGRP_DFLT, "UDP packet send failed. Could not send all data: %d", res);
       _udp.begin(_localPort); /*Socket closes on error. Reopen it.*/
@@ -284,14 +303,11 @@ int Intercom_MessageHandler::_registerHandler(int id,
   return 0;
 }
 
-Intercom_MessageHandler::Intercom_MessageHandler(int localPort, 
-	IPAddress remoteIpAddress, int remotePort) : 
-	_remoteIpAddress(remoteIpAddress),
-	_localPort(localPort), _remotePort(remotePort), _msgTable(), _myId(ID_UNKNOWN),
-  _encryptionKeyIsSet(false) {
-
+Intercom_MessageHandler::Intercom_MessageHandler(int localPort) : 
+	_localPort(localPort), _msgTable(), _myId(ID_UNKNOWN),
+  _encryptionKeyIsSet(false), _srvrAddrSet(false) {
 	if (!_udp.setBuffer(sizeof(Intercom_Message))) {
-      PLF_PRINT(PRNTGRP_DFLT, "Couldn't allocate outgoing packet buffer\n");
+      PLF_PRINT(PRNTGRP_DFLT, "Couldn't allocate outgoing packet buffer.");
   }
 
   memset(_msgRxCounters, 0, sizeof(_msgRxCounters));
@@ -301,7 +317,8 @@ Intercom_MessageHandler::Intercom_MessageHandler(int localPort,
 
   mbedtls_xtea_init(&_xteaCtxt);
 
-  PLF_REGISTRY_REGISTER_HANDLER(REG_KEY_SECRET_KEY, &Intercom_MessageHandler::_registryHandler, this);
+  PLF_REGISTRY_REGISTER_HANDLER(REG_KEY_SECRET_KEY, &Intercom_MessageHandler::_registryHandlerSecretKey, this);
+  PLF_REGISTRY_REGISTER_HANDLER(REG_KEY_SRVR_NAME, &Intercom_MessageHandler::_registryHandlerSrvrAddr, this);
 
 	_udp.begin(localPort);
 
@@ -310,7 +327,6 @@ Intercom_MessageHandler::Intercom_MessageHandler(int localPort,
 
 void Intercom_MessageHandler::_dataDump(void) {
   PLF_PRINT(PRNTGRP_DFLT, "RemoteIPaddress: %s", _remoteIpAddress.toString().c_str());
-  PLF_PRINT(PRNTGRP_DFLT, "RemotePort: %d", _remotePort);
 #if MBEDTLS_CIPHER_MODE==MBEDTLS_CIPHER_MODE_CBC
   PLF_PRINT(PRNTGRP_DFLT, "EncryptionMode: CBC");
 #elif MBEDTLS_CIPHER_MODE==MBEDTLS_CIPHER_MODE_ECB

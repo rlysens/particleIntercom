@@ -5,7 +5,7 @@
 #define MODULE_ID 800
 
 Intercom_Root::Intercom_Root(Intercom_ButtonsAndLeds& intercom_buttonsAndLeds) :
-	_messageHandler(LOCAL_PORT, REMOTE_IP, REMOTE_PORT),
+	_messageHandler(LOCAL_PORT),
 	_intercom_controller(_messageHandler),
     _intercom_volumeControl(intercom_buttonsAndLeds),
     _intercom_incoming(_messageHandler, _intercom_volumeControl),

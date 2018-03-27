@@ -30,31 +30,31 @@ void Intercom_CloudAPI::_tickerHook(void) {
 }
 
 int Intercom_CloudAPI::set_my_name(String name) {
-	plf_registry.set(REG_KEY_MY_NAME, name, true /*validity*/, true /*persistency*/);
+	plf_registry.set(REG_KEY_MY_NAME, name, true /*validity*/);
   	return 0;
 }
 
 int Intercom_CloudAPI::set_buddy_0_name(String name) {
 	String dummyId = "-1";
 	/*Erase buddy_id when setting a new name*/
-	plf_registry.set(REG_KEY_BUDDY_0_ID, dummyId, false /*validity*/, false /*persistency*/);
-	plf_registry.set(REG_KEY_BUDDY_0_NAME, name, true /*validity*/, true /*persistency*/);
+	plf_registry.set(REG_KEY_BUDDY_0_ID, dummyId, false /*validity*/);
+	plf_registry.set(REG_KEY_BUDDY_0_NAME, name, true /*validity*/);
 	return 0;
 }
 
 int Intercom_CloudAPI::set_buddy_1_name(String name) {
 	String dummyId = "-1";
 	/*Erase buddy_id when setting a new name*/
-	plf_registry.set(REG_KEY_BUDDY_1_ID, dummyId, false /*validity*/, false /*persistency*/);
-	plf_registry.set(REG_KEY_BUDDY_1_NAME, name, true /*validity*/, true /*persistency*/);
+	plf_registry.set(REG_KEY_BUDDY_1_ID, dummyId, false /*validity*/);
+	plf_registry.set(REG_KEY_BUDDY_1_NAME, name, true /*validity*/);
 	return 0;
 }
 
 int Intercom_CloudAPI::set_buddy_2_name(String name) {
 	String dummyId = "-1";
 	/*Erase buddy_id when setting a new name*/
-	plf_registry.set(REG_KEY_BUDDY_2_ID, dummyId, false /*validity*/, false /*persistency*/);
-	plf_registry.set(REG_KEY_BUDDY_2_NAME, name, true /*validity*/, true /*persistency*/);
+	plf_registry.set(REG_KEY_BUDDY_2_ID, dummyId, false /*validity*/);
+	plf_registry.set(REG_KEY_BUDDY_2_NAME, name, true /*validity*/);
 	return 0;
 }
 
@@ -65,6 +65,11 @@ int Intercom_CloudAPI::erase(String name) {
 
 int Intercom_CloudAPI::clr_creds(String name) {
 	WiFi.clearCredentials();
+	return 0;
+}
+
+int Intercom_CloudAPI::set_srvr_name(String name) {
+	plf_registry.set(REG_KEY_SRVR_NAME, name, true /*validity*/);
 	return 0;
 }
 
@@ -163,7 +168,7 @@ int Intercom_CloudAPI::disable_printgroup(String name) {
 }
 
 int Intercom_CloudAPI::set_key(String key_val) {
-	plf_registry.set(REG_KEY_SECRET_KEY, key_val, true /*validity*/, true /*persistency*/);
+	plf_registry.set(REG_KEY_SECRET_KEY, key_val, true /*validity*/);
   	return 0;
 }
 
@@ -204,6 +209,7 @@ Intercom_CloudAPI::Intercom_CloudAPI(Intercom_ButtonsAndLeds& intercom_buttonsAn
 	Particle.function("set_key", &Intercom_CloudAPI::set_key, this);
 	Particle.function("list_ddump", &Intercom_CloudAPI::list_ddump, this);
 	Particle.function("ddump", &Intercom_CloudAPI::ddump, this);
+	Particle.function("srvr_name", &Intercom_CloudAPI::set_srvr_name, this);
 	Particle.function("testfun", &Intercom_CloudAPI::testfun, this);
 
 	Particle.variable("my_name", my_name);

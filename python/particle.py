@@ -157,6 +157,8 @@ class Particle(object):
         response = session.get(url)
         if response.ok and response.status_code == 200:
             return response.json()
+
+        print response.text
         return None
 
     def claim_device(self, device_serial):
@@ -166,6 +168,7 @@ class Particle(object):
         if response.ok and response.status_code == 200:
             return True
         else:
+            print response.text
             return False
 
     def unclaim_device(self, device_serial):
@@ -174,6 +177,7 @@ class Particle(object):
         response = session.delete(url)
         if response.ok and response.status_code == 200:
             return response.json()
+        print response.text
         return None
 
     def get_variable(self, device_serial, variable_name):
@@ -182,6 +186,7 @@ class Particle(object):
         response = session.get(url)
         if response.ok and response.status_code == 200:
             return response.json()
+        print response.text
         return None
 
     def call_function(self, device_serial, function_name, function_arg):
@@ -191,6 +196,7 @@ class Particle(object):
         if response.ok and response.status_code == 200:
             return True
         else:
+            print response.text
             return False
 
     def execute(self, commands):
@@ -205,6 +211,7 @@ class Particle(object):
 
     def flash(self, device_serial, image_path):
         command = "particle flash %s %s"%(device_serial, image_path)
+        print command
         commandList = command.split(' ')
         output = self.execute(commandList)
         return output
@@ -257,12 +264,12 @@ class Local(object):
         return ports
 
     def identify_device(self, port):
-        serial = self.execute(["particle", "serial", "identify", str(port)])
+        serial = self.execute(["particle", "serial", "identify", "--port", str(port)])
         m=re.match(r'\sYour device id is (\w+)', serial)
         if m:
             return m.group(1)
         else:
-            return None
+            raise UnexpectedResponse("Response was not as expected")
 
     def get_serials(self, port_list):
         if not port_list:
@@ -291,6 +298,17 @@ class Local(object):
                 return device['port']
         return None
 
+    def flash(self, image_path):
+        child = pexpect.popen_spawn.PopenSpawn("particle flash --serial %s"%(image_path))
+        #pdb.set_trace()
+        _ignore = child.expect('when your device is blinking')
+        if not _ignore == 0:
+            raise UnexpectedResponse("Response was not as expected")
+        _ignore = child.sendline('\n')
+        _ignore = child.expect('Flash success!')
+        if not _ignore == 0:
+            raise UnexpectedResponse("Response was not as expected")
+
     def set_wifi(self, port=None, serial=None):
         _target = None
         if not any([port, serial]):
@@ -304,7 +322,7 @@ class Local(object):
         ssid = self.ssid
         password = self.password
         encryption = self.encryption
-        child = pexpect.popen_spawn.PopenSpawn('particle serial wifi %s' % _target)
+        child = pexpect.popen_spawn.PopenSpawn('particle serial wifi --port %s' % _target)
         #pdb.set_trace()
         _ignore = child.expect('(Y/n)')
         if not _ignore == 0:
@@ -317,12 +335,6 @@ class Local(object):
             raise UnexpectedResponse("Response was not as expected")
         _ignore = child.sendline('%s\n' % self.ssid)
         #if not _ignore == len(self.ssid) + 2:
-        #    raise UnexpectedResponse("Response was not as expected")
-        _ignore = child.expect('Security Type')
-        if not _ignore == 0:
-            raise UnexpectedResponse("Response was not as expected")
-        _ignore = child.sendline('%s\n' % self.encryption)
-        #if not _ignore == len(self.encryption) + 2:
         #    raise UnexpectedResponse("Response was not as expected")
         _ignore = child.expect('Wi-Fi Password')
         if not _ignore == 0:

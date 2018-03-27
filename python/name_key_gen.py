@@ -25,6 +25,9 @@ class NameKeyGenerator:
 		json.dump(self.nameKeys, nameKeyJsonFile, indent=4, separators=(',', ': '))
 		nameKeyJsonFile.close()
 
+	def lookup_key(self, name):
+		return self.nameKeys.get(name)
+		
 	def gen_name_and_key(self):
 		name = None
 		while not name:

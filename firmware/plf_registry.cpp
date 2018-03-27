@@ -6,14 +6,13 @@
 
 #define VALID_KEY_VAL 0x10D0BABA
 
-int Plf_Registry::set(int key, String& value, bool valid, bool persistent) {
+int Plf_Registry::set(int key, String& value, bool valid) {
 	RegistryEntry_t regEntry;
 	String oldValue;
 	bool oldValid;
 
 	plf_assert("Registry not initialized", _initialized);
 	plf_assert("Out of range registry key",key<=MAX_KEY_VAL);
-	plf_assert("Out of range registry key",(key<=MAX_PERSISTENT_KEY_VAL)||(!persistent));
 	plf_assert("Out of range registry key",key>=0);
 
 	get(key, oldValue, oldValid);
@@ -32,7 +31,7 @@ int Plf_Registry::set(int key, String& value, bool valid, bool persistent) {
 	if (_live &&
 		((oldValid != valid) || (!oldValue.equals(value))) &&
 		(_regHandlers[key].fun!=0)) {
-		if (persistent) {
+		if (key<=MAX_PERSISTENT_KEY_VAL) {
 			EEPROM.put(key*sizeof(RegistryEntry_t), regEntry);
 		}
 
