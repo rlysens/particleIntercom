@@ -6,7 +6,7 @@
 
 Intercom_Root::Intercom_Root(Intercom_ButtonsAndLeds& intercom_buttonsAndLeds) :
 	_messageHandler(LOCAL_PORT),
-	_intercom_controller(_messageHandler),
+    _intercom_controller(_messageHandler),
     _intercom_volumeControl(intercom_buttonsAndLeds),
     _intercom_incoming(_messageHandler, _intercom_volumeControl),
     _intercom_batteryChecker(intercom_buttonsAndLeds),
@@ -35,6 +35,7 @@ void Intercom_Root::loop(void) {
       PLF_PRINT(PRNTGRP_DFLT, "msg_hdlr rx code %d\n", res);
     }	
 
+    _intercom_controller.tick();
     _intercom_incoming.tick();
     _intercom_incoming.drain();
 
@@ -53,8 +54,6 @@ void Intercom_Root::loop(void) {
     
     _intercom_volumeControl.checkButtons();
     _intercom_volumeControl.tick();
-
-    _intercom_controller.tick();
 
     for (ii=0; ii<NUM_BUDDIES; ++ii) {
         _intercom_buddies[ii].tick();

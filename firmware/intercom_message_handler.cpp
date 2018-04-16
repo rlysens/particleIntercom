@@ -4,6 +4,7 @@
 #include "plf_data_dump.h"
 #include "plf_registry.h"
 #include "message_name_table.h"
+#include "messages.h"
 
 #define MODULE_ID 600
 
@@ -21,17 +22,11 @@ int Intercom_MessageHandler::_registryHandlerSecretKey(int key, String& value, b
   return 0;
 }
 
-int Intercom_MessageHandler::_registryHandlerSrvrAddr(int key, String& value, bool valid) {
-  plf_assert("invalid reg key", key == REG_KEY_SRVR_NAME);
+int Intercom_MessageHandler::_registryHandlerMyId(int key, String& value, bool valid) {
+  plf_assert("invalid reg key", key == REG_KEY_MY_ID);
 
   if (valid) {
-    _remoteIpAddress = WiFi.resolve(value);
-    if (!_remoteIpAddress) {
-      PLF_PRINT(PRNTGRP_DFLT, "Could not resolve server name.");
-    }
-    else {
-      _srvrAddrSet = true;
-    }
+    _myId = value.toInt();
   }
 
   return 0;
@@ -177,15 +172,11 @@ int Intercom_MessageHandler::_decryptMsg(Intercom_Message &msg, int payloadSize)
   return result;
 }
 
-void Intercom_MessageHandler::setMyId(uint32_t myId) {
-  _myId = myId;
-}
-
 uint32_t Intercom_MessageHandler::getMyId(void) {
   return _myId;
 }
 
-int Intercom_MessageHandler::send(Intercom_Message &msg, uint32_t msgId, uint32_t destination_id, int payloadSize, bool encrypted) {
+int Intercom_MessageHandler::send(Intercom_Message &msg, uint32_t msgId, uint32_t destination_id, int payloadSize, IPAddress& serverAddress) {
   PLF_PRINT(PRNTGRP_MSGS, "Tx Msg %s(%d), dest: %d\n", 
     msgId < sizeof(messageNameTable) ? messageNameTable[msgId] : "X", (int)msgId, (int)destination_id);
 
@@ -203,10 +194,8 @@ int Intercom_MessageHandler::send(Intercom_Message &msg, uint32_t msgId, uint32_
   }
 #endif
   
-  if (encrypted) {
-    if (_encryptMsg(msg, payloadSize)!=0) {
-      return -(MODULE_ID+2);
-    }
+  if (_encryptMsg(msg, payloadSize)!=0) {
+    return -(MODULE_ID+2);
   }
 
 #if 0
@@ -220,13 +209,14 @@ int Intercom_MessageHandler::send(Intercom_Message &msg, uint32_t msgId, uint32_
   }
 #endif
 
-  if (!_srvrAddrSet) {
+  if (!serverAddress) {
     return -(MODULE_ID+7);
   }
 
   /* Send the UDP packet */
   int res = _udp.sendPacket((uint8_t*)&msg, payloadSize+8, 
-      _remoteIpAddress, _localPort /*Use same port number as local port for remote port.*/);
+      serverAddress, 
+      _localPort /*Use same port number as local port for remote port.*/);
   if (res != payloadSize+8) {
       PLF_PRINT(PRNTGRP_DFLT, "UDP packet send failed. Could not send all data: %d", res);
       _udp.begin(_localPort); /*Socket closes on error. Reopen it.*/
@@ -305,7 +295,7 @@ int Intercom_MessageHandler::_registerHandler(int id,
 
 Intercom_MessageHandler::Intercom_MessageHandler(int localPort) : 
 	_localPort(localPort), _msgTable(), _myId(ID_UNKNOWN),
-  _encryptionKeyIsSet(false), _srvrAddrSet(false) {
+  _encryptionKeyIsSet(false) {
 	if (!_udp.setBuffer(sizeof(Intercom_Message))) {
       PLF_PRINT(PRNTGRP_DFLT, "Couldn't allocate outgoing packet buffer.");
   }
@@ -318,7 +308,7 @@ Intercom_MessageHandler::Intercom_MessageHandler(int localPort) :
   mbedtls_xtea_init(&_xteaCtxt);
 
   PLF_REGISTRY_REGISTER_HANDLER(REG_KEY_SECRET_KEY, &Intercom_MessageHandler::_registryHandlerSecretKey, this);
-  PLF_REGISTRY_REGISTER_HANDLER(REG_KEY_SRVR_NAME, &Intercom_MessageHandler::_registryHandlerSrvrAddr, this);
+  PLF_REGISTRY_REGISTER_HANDLER(REG_KEY_MY_ID, &Intercom_MessageHandler::_registryHandlerMyId, this);
 
 	_udp.begin(localPort);
 
@@ -326,7 +316,6 @@ Intercom_MessageHandler::Intercom_MessageHandler(int localPort) :
 }
 
 void Intercom_MessageHandler::_dataDump(void) {
-  PLF_PRINT(PRNTGRP_DFLT, "RemoteIPaddress: %s", _remoteIpAddress.toString().c_str());
 #if MBEDTLS_CIPHER_MODE==MBEDTLS_CIPHER_MODE_CBC
   PLF_PRINT(PRNTGRP_DFLT, "EncryptionMode: CBC");
 #elif MBEDTLS_CIPHER_MODE==MBEDTLS_CIPHER_MODE_ECB

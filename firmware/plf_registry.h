@@ -4,20 +4,19 @@
 #include "Particle.h"
 #include <functional>
 
-#define REG_KEY_MY_NAME 0
+#define REG_KEY_MY_ID 0
 #define REG_KEY_SECRET_KEY 1
-#define REG_KEY_BUDDY_0_NAME 2
-#define REG_KEY_BUDDY_1_NAME 3
-#define REG_KEY_BUDDY_2_NAME 4
-#define REG_KEY_SRVR_NAME 5
+#define REG_KEY_SRVR_NAME 2
 
-#define REG_KEY_BUDDY_0_ID 6
-#define REG_KEY_BUDDY_1_ID 7
-#define REG_KEY_BUDDY_2_ID 8
+#define REG_KEY_BUDDY_0_ID 3
+#define REG_KEY_BUDDY_1_ID 4
+#define REG_KEY_BUDDY_2_ID 5
+
+#define REG_KEY_SRVR_ADDR 6
 
 #define MAX_KEY_LEN 64
 #define MAX_PERSISTENT_KEY_VAL 5 /*Max.2047 bytes persistent storage*/
-#define MAX_KEY_VAL 8
+#define MAX_KEY_VAL 6
 
 #define MAX_NUM_FUNS_PER_KEY 8
 

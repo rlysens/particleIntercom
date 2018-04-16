@@ -41,7 +41,6 @@ typedef struct {
 
 class Intercom_MessageHandler {
 private:
-	IPAddress _remoteIpAddress;
 	int _localPort;
 	UDP _udp;
 	Intercom_MessageHandlerTableElement _msgTable[MAX_MESSAGE_ID];
@@ -52,7 +51,6 @@ private:
 	unsigned char _ivDec[8];
 	uint32_t _myId;
 	bool _encryptionKeyIsSet;
-	bool _srvrAddrSet;
 
 	void _countRxMsg(Intercom_Message &msg);
 	void _countTxMsg(uint32_t destination_id);
@@ -61,19 +59,18 @@ private:
 	int _decryptMsg(Intercom_Message &msg, int payloadSize);
 
 	int _registryHandlerSecretKey(int key, String& value, bool valid);
-	int _registryHandlerSrvrAddr(int key, String& value, bool valid);
+	int _registryHandlerMyId(int key, String& value, bool valid);
 
 	void _dataDump(void);
 	
 	int _registerHandler(int id, std_function_int_Intercom_MessageRef_int_t func, bool encrypted);
-
+	
 public:
 	Intercom_MessageHandler(int localPort);
 
-	void setMyId(uint32_t myId);
 	uint32_t getMyId(void); /*Returns ID_UNKNOWN if unknown*/
 
-	int send(Intercom_Message &msg, uint32_t msgId, uint32_t destination_id, int payloadSize, bool encrypted);
+	int send(Intercom_Message &msg, uint32_t msgId, uint32_t destination_id, int payloadSize, IPAddress &serverAddress);
 	int receive(void);
 
 	template <typename T>

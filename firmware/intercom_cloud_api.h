@@ -20,16 +20,15 @@ public:
 	Intercom_CloudAPI(Intercom_ButtonsAndLeds& intercom_buttonsAndLeds, 
 		Intercom_WifiChecker& intercom_wifiChecker, Intercom_BatteryChecker& intercom_batteryChecker);
 
-	int set_my_name(String name);
-	int set_buddy_0_name(String name);
-	int set_buddy_1_name(String name);
-	int set_buddy_2_name(String name);
+	int set_my_id(String id);
+	int set_buddy_0_id(String id);
+	int set_buddy_1_id(String id);
+	int set_buddy_2_id(String id);
 	int erase(String name);
 	int clr_creds(String name);
 	int enable_printgroup(String name);
 	int disable_printgroup(String name);
 	int set_key(String key_val);
-	int list_ddump(String dummy);
 	int ddump(String name);
 	int set_srvr_name(String name);
 	int testfun(String name);

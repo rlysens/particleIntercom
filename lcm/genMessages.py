@@ -12,7 +12,7 @@ def main(argv):
 		if filename.endswith(".h"):
 			inFile = filename
 			outFile = os.path.join("../firmware/", filename)
-
+			print outFile
 			outFileFd = open(outFile, 'w')
 
 			with open(inFile) as f:

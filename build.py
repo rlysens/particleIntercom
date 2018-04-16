@@ -30,7 +30,7 @@ def main():
         usage()
         sys.exit(2)
 
-    device = None
+    device = "Intercom1"
     flash = False
 
     for o, a in opts:

@@ -16,10 +16,27 @@
 #define PRNTGRP_RATETN 2
 #define NUM_PRINT_GROUPS 3
 
-bool printGroupEnabled(int printGroup);
-void printGroupEnable(int printGroup, bool enable);
+class Plf_TracePrint {
+private:
+	// Use primary serial over USB interface for logging output. Used by PLF_PRINT
+	SerialLogHandler _logHandler;
+	bool _printGroupEnableFlag[NUM_PRINT_GROUPS];
+	String _printGroupNames[NUM_PRINT_GROUPS];
 
-#define PLF_PRINT(group, ...) {if (printGroupEnabled((group))) {Log.info(__VA_ARGS__);}}
+	void _dataDump(void);
+
+public:
+	Plf_TracePrint();
+	void init();
+	
+	String& getPrintGroupName(int printGroup);
+	void printGroupEnable(int printGroup, bool enable);
+	bool printGroupEnabled(int printGroup);
+};
+
+extern Plf_TracePrint tracePrint;
+
+#define PLF_PRINT(group, ...) {if (tracePrint.printGroupEnabled((group))) {Log.info(__VA_ARGS__);}}
 
 #ifndef MIN
 #define MIN(x,y)  ((x) < (y) ? (x) : (y))

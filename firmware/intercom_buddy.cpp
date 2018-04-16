@@ -29,7 +29,32 @@
 #define INTERCOM_BUDDY_TICK_INTER_MS 500
 
 static const int regKey_buddyId[NUM_BUDDIES] = {REG_KEY_BUDDY_0_ID, REG_KEY_BUDDY_1_ID, REG_KEY_BUDDY_2_ID};
-static const int regKey_buddyName[NUM_BUDDIES] = {REG_KEY_BUDDY_0_NAME, REG_KEY_BUDDY_1_NAME, REG_KEY_BUDDY_2_NAME};
+
+int Intercom_Buddy::_rxKeepAliveResp(Intercom_Message& msg, int payloadSize) {
+	static keep_alive_resp_t keep_alive_resp;
+	int numDecodedBytes = keep_alive_resp_t_decode(msg.data, 0, payloadSize, &keep_alive_resp);
+
+	if (numDecodedBytes < 0)
+		return -(MODULE_ID+1);
+
+	_buddyServerAddress = IPAddress(keep_alive_resp.redirect_addr);
+
+	return 0;
+}
+
+int Intercom_Buddy::_setServerAddr(int key, String& value, bool valid) {
+	if (valid) {
+		IPAddress address = IPAddress(value.toInt());
+		_myServerAddress = address;
+		if (!_buddyServerAddress) {
+			_buddyServerAddress = address;
+		}
+
+		_txSetBuddy();
+	}
+
+	return 0;
+}
 
 void Intercom_Buddy::_txSetBuddy(void) {
 	int numEncodedBytes;
@@ -42,6 +67,11 @@ void Intercom_Buddy::_txSetBuddy(void) {
 	if (_buddyId == ID_UNKNOWN)
 		return;
 
+	/*Configure this buddy as the source_id for the counter object*/
+	plf_assert("counter ptr NULL", _rxMsgCounterp);
+	_rxMsgCounterp->source_id = _buddyId;
+	_txMsgCounterp->destination_id = _buddyId;
+	
 	/*Set my buddy server side. Keep in mind that this code runs periodically. So if one message gets lost, no problem.*/
 	set_buddy.my_id = myId;
 	set_buddy.buddy_id = _buddyId; /*Note that this is 0 if buddy_id is unknown*/
@@ -49,7 +79,34 @@ void Intercom_Buddy::_txSetBuddy(void) {
 	numEncodedBytes = set_buddy_t_encode(intercom_message.data, 0, sizeof(intercom_message.data), &set_buddy);
 	plf_assert("Msg Encode Error", numEncodedBytes>=0);
 
-	_messageHandlerp->send(intercom_message, SET_BUDDY_T_MSG_ID, INTERCOM_SERVER_ID, numEncodedBytes, true);
+	if (_myServerAddress) {
+		_messageHandlerp->send(intercom_message, SET_BUDDY_T_MSG_ID, INTERCOM_SERVER_ID, numEncodedBytes, _myServerAddress);
+	}
+}
+
+int Intercom_Buddy::_setBuddy(int key, String& value, bool valid) {
+	_buddyId = valid ? value.toInt() : ID_UNKNOWN;
+
+	_txSetBuddy();
+
+	_sendSetBuddy=true; /*Retransmit until ack is received.*/
+
+	return 0;
+}
+
+int Intercom_Buddy::_rxSetBuddyAck(Intercom_Message& msg, int payloadSize) {
+	static set_buddy_ack_t set_buddy_ack;
+	int numDecodedBytes = set_buddy_ack_t_decode(msg.data, 0, payloadSize, &set_buddy_ack);
+
+	if (numDecodedBytes < 0)
+		return -(MODULE_ID+1);
+
+	if (set_buddy_ack.buddy_id != _buddyId) {
+		return -(MODULE_ID+2);
+	}
+
+	_sendSetBuddy = false; /*We can stop sending now.*/
+	return 0;
 }
 
 int Intercom_Buddy::_rxCommStart(Intercom_Message& msg, int payloadSize) {
@@ -78,7 +135,7 @@ int Intercom_Buddy::_rxCommStart(Intercom_Message& msg, int payloadSize) {
 	numEncodedBytes = comm_start_ack_t_encode(intercom_message.data, 0, sizeof(intercom_message.data), &comm_start_ack);
 	plf_assert("Msg Encode Error", numEncodedBytes>=0);
 
-	_messageHandlerp->send(intercom_message, COMM_START_ACK_T_MSG_ID, comm_start.source_id, numEncodedBytes, true);
+	_messageHandlerp->send(intercom_message, COMM_START_ACK_T_MSG_ID, comm_start.source_id, numEncodedBytes, _buddyServerAddress);
 
 	return 0;
 }
@@ -109,7 +166,7 @@ int Intercom_Buddy::_rxCommStop(Intercom_Message& msg, int payloadSize) {
 	numEncodedBytes = comm_stop_ack_t_encode(intercom_message.data, 0, sizeof(intercom_message.data), &comm_stop_ack);
 	plf_assert("Msg Encode Error", numEncodedBytes>=0);
 
-	_messageHandlerp->send(intercom_message, COMM_STOP_ACK_T_MSG_ID, comm_stop.source_id, numEncodedBytes, true);
+	_messageHandlerp->send(intercom_message, COMM_STOP_ACK_T_MSG_ID, comm_stop.source_id, numEncodedBytes, _buddyServerAddress);
 
 	return 0;
 }
@@ -131,7 +188,7 @@ void Intercom_Buddy::_txCommStart(void) {
 	numEncodedBytes = comm_start_t_encode(intercom_message.data, 0, sizeof(intercom_message.data), &comm_start);
 	plf_assert("Msg Encode Error", numEncodedBytes>=0);
 
-	_messageHandlerp->send(intercom_message, COMM_START_T_MSG_ID, _buddyId, numEncodedBytes, true);
+	_messageHandlerp->send(intercom_message, COMM_START_T_MSG_ID, _buddyId, numEncodedBytes, _buddyServerAddress);
 }
 
 int Intercom_Buddy::_rxCommStartAck(Intercom_Message& msg, int payloadSize) {
@@ -164,7 +221,7 @@ void Intercom_Buddy::_txCommStop(void) {
 	numEncodedBytes = comm_stop_t_encode(intercom_message.data, 0, sizeof(intercom_message.data), &comm_stop);
 	plf_assert("Msg Encode Error", numEncodedBytes>=0);
 
-	_messageHandlerp->send(intercom_message, COMM_STOP_T_MSG_ID, _buddyId, numEncodedBytes, true);
+	_messageHandlerp->send(intercom_message, COMM_STOP_T_MSG_ID, _buddyId, numEncodedBytes, _buddyServerAddress);
 }
 
 int Intercom_Buddy::_rxCommStopAck(Intercom_Message& msg, int payloadSize) {
@@ -205,63 +262,7 @@ void Intercom_Buddy::_txKeepAlive(void) {
 	numEncodedBytes = keep_alive_t_encode(intercom_message.data, 0, sizeof(intercom_message.data), &keep_alive);
 	plf_assert("Msg Encode Error", numEncodedBytes>=0);
 
-	_messageHandlerp->send(intercom_message, KEEP_ALIVE_T_MSG_ID, _buddyId, numEncodedBytes, true);
-}
-
-void Intercom_Buddy::_txWhoIsReq(void) {
-	int numEncodedBytes;
-	static who_is_t who_is;
-	String buddyName;
-	bool buddyNameIsSet;
-
-	plf_registry.get(regKey_buddyName[_buddyIdx], buddyName, buddyNameIsSet);
-	if (!buddyNameIsSet)
-		return;
-
-	buddyName.getBytes((unsigned char*)who_is.name, sizeof(who_is.name));
-
-	numEncodedBytes = who_is_t_encode(intercom_message.data, 0, sizeof(intercom_message.data), &who_is);
-	plf_assert("Msg Encode Error", numEncodedBytes>=0);
-
-	_messageHandlerp->send(intercom_message, WHO_IS_T_MSG_ID, INTERCOM_SERVER_ID, numEncodedBytes, true);
-}
-
-int Intercom_Buddy::_rxWhoIsRep(Intercom_Message& msg, int payloadSize) {
-	static who_is_reply_t who_is_reply;
-	String buddyName;
-	String buddyId_s;
-	bool buddyNameIsSet;
-	int numDecodedBytes = who_is_reply_t_decode(msg.data, 0, payloadSize, &who_is_reply);
-
-	if (numDecodedBytes < 0)
-		return -(MODULE_ID+2);
-
-	plf_registry.get(regKey_buddyName[_buddyIdx], buddyName, buddyNameIsSet);
-	if (!buddyNameIsSet) {
-		return -(MODULE_ID+3);
-	}
-
-	/*zero terminate*/
-	who_is_reply.name[sizeof(who_is_reply.name)-1] = 0;
-
-	if (!String((const char*)who_is_reply.name).equals(buddyName))
-		return -(MODULE_ID+4);
-
-	if (_buddyId == ID_UNKNOWN) {
-		PLF_PRINT(PRNTGRP_DFLT, "Buddy id received %d, buddyIdx %d\n", (int)who_is_reply.id, _buddyIdx);
-	}
-
-	/*Put a string version of the buddy_id in the registry*/
-	buddyId_s = String(who_is_reply.id);
-	plf_registry.set(regKey_buddyId[_buddyIdx], buddyId_s, true /*validity*/);
-	_buddyId = who_is_reply.id;
-
-	/*Configure this buddy as the source_id for the counter object*/
-	plf_assert("counter ptr NULL", _rxMsgCounterp);
-	_rxMsgCounterp->source_id = _buddyId;
-	_txMsgCounterp->destination_id = _buddyId;
-
-	return 0;
+	_messageHandlerp->send(intercom_message, KEEP_ALIVE_T_MSG_ID, _buddyId, numEncodedBytes, _buddyServerAddress);
 }
 
 void Intercom_Buddy::_listeningStateUpdate(void) {
@@ -454,11 +455,13 @@ void Intercom_Buddy::_tickerHook(void) {
 		_txCommStop();
 	}
 
+	if (_sendSetBuddy) {
+		_txSetBuddy();
+	}
+
 	if (++_tickCount>=10) {
 		_tickCount=0;
 		/*Do these every 10 ticks (5s)*/
-		_txSetBuddy();
-		_txWhoIsReq();
 		_listeningStateUpdate();
 	}
 }
@@ -496,17 +499,23 @@ void Intercom_Buddy::init(Intercom_Incoming* intercom_incomingp,
 	_buttonState = INTERCOM_BUDDY_BUTTON_STATE_RELEASED;
 
 	memset(_outgoingCommRequests, 0, sizeof(_outgoingCommRequests));
-
-	_messageHandlerp->registerHandler(WHO_IS_REPLY_T_MSG_ID, &Intercom_Buddy::handleMessage, this, true);	
+	
 	_messageHandlerp->registerHandler(COMM_START_ACK_T_MSG_ID, &Intercom_Buddy::handleMessage, this, true);
 	_messageHandlerp->registerHandler(COMM_STOP_ACK_T_MSG_ID, &Intercom_Buddy::handleMessage, this, true);
 	_messageHandlerp->registerHandler(COMM_START_T_MSG_ID, &Intercom_Buddy::handleMessage, this, true);
 	_messageHandlerp->registerHandler(COMM_STOP_T_MSG_ID, &Intercom_Buddy::handleMessage, this, true);
+	_messageHandlerp->registerHandler(KEEP_ALIVE_RESP_T_MSG_ID, &Intercom_Buddy::handleMessage, this, true);
+	_messageHandlerp->registerHandler(SET_BUDDY_ACK_T_MSG_ID, &Intercom_Buddy::handleMessage, this, true);
+
+
+	PLF_REGISTRY_REGISTER_HANDLER(regKey_buddyId[_buddyIdx], &Intercom_Buddy::_setBuddy, this);
+	PLF_REGISTRY_REGISTER_HANDLER(REG_KEY_SRVR_ADDR, &Intercom_Buddy::_setServerAddr, this);
 
 	_buddyLedp->analogWrite(0); /*Off*/
 
 	_sendCommStart = false;
 	_sendCommStop = false;
+	_sendSetBuddy = false;
 
 	dataDump.registerFunction(String::format("Buddy%d", _buddyIdx), &Intercom_Buddy::_dataDump, this);
 
@@ -517,9 +526,6 @@ int Intercom_Buddy::handleMessage(Intercom_Message& msg, int payloadSize) {
 	plf_assert("IntercomBuddy not initialized", _initialized);
 
 	switch (msg.msgId) {
-    case WHO_IS_REPLY_T_MSG_ID:
-    	return _rxWhoIsRep(msg, payloadSize);
-
     case COMM_START_ACK_T_MSG_ID:
     	return _rxCommStartAck(msg, payloadSize);
 
@@ -531,6 +537,12 @@ int Intercom_Buddy::handleMessage(Intercom_Message& msg, int payloadSize) {
 
 	case COMM_STOP_T_MSG_ID:
     	return _rxCommStop(msg, payloadSize);
+
+	case KEEP_ALIVE_RESP_T_MSG_ID:
+    	return _rxKeepAliveResp(msg, payloadSize);
+
+    case SET_BUDDY_ACK_T_MSG_ID:
+    	return _rxSetBuddyAck(msg, payloadSize);
 
     default:
       return -(MODULE_ID+5);

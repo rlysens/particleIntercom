@@ -28,29 +28,35 @@ private:
 	int32_t _ledState;
 	int32_t _outgoingCommFsmState;
 	unsigned long _prevMillis;
+	IPAddress _buddyServerAddress;
+	IPAddress _myServerAddress;
 	int _buttonState;
 	int _tickCount;
 	bool _sendCommStart;
 	bool _sendCommStop;
 	bool _outgoingCommRequests[INTERCOM_BUDDY_NUM_OUTGOING_REQ_TYPES];
+	bool _sendSetBuddy;
 	bool _initialized;
 
+	int _rxKeepAliveResp(Intercom_Message& msg, int payloadSize);
 	int _rxCommStart(Intercom_Message& msg, int payloadSize);
 	int _rxCommStop(Intercom_Message& msg, int payloadSize);
 	void _txCommStop(void);
 	void _txCommStart(void);
 	int _rxCommStartAck(Intercom_Message& msg, int payloadSize);
 	int _rxCommStopAck(Intercom_Message& msg, int payloadSize);
+	int _rxSetBuddyAck(Intercom_Message& msg, int payloadSize);
+	int _setBuddy(int key, String& value, bool valid);
 	void _txSetBuddy(void);
 	void _txKeepAlive(void);
-	void _txWhoIsReq(void);
-	int _rxWhoIsRep(Intercom_Message& msg, int payloadSize);
 	void _listeningStateUpdate(void);
 	void _buddyLedUpdate(void);
 	void _incomingCommStateSuspendCheck(void);
 	void _outgoingCommRequest(unsigned requestType, bool enable);
 
 	virtual void _tickerHook(void);
+
+	int _setServerAddr(int key, String& value, bool valid); 
 
 	void _dataDump(void);
 
@@ -67,6 +73,10 @@ public:
 
 	inline uint32_t getBuddyId(void) {
 		return _buddyId;
+	}
+
+	IPAddress& getBuddyServerAddress(void) {
+		return _buddyServerAddress;
 	}
 
 	/*private*/

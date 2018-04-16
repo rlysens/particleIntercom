@@ -2,8 +2,8 @@
 #define INTERCOM_ROOT_H
 
 #include "intercom_message_handler.h"
-#include "intercom_incoming.h"
 #include "intercom_controller.h"
+#include "intercom_incoming.h"
 #include "intercom_buddy.h"
 #include "intercom_cloud_api.h"
 #include "intercom_buttons_and_leds.h"
@@ -17,8 +17,8 @@
 class Intercom_Root {
 private:
 	Intercom_MessageHandler _messageHandler;
-	Intercom_Outgoing _intercom_outgoing;
 	Intercom_Controller _intercom_controller;
+	Intercom_Outgoing _intercom_outgoing;
 	Intercom_Buddy _intercom_buddies[NUM_BUDDIES];
 	Intercom_VolumeControl _intercom_volumeControl;
 	Intercom_Incoming _intercom_incoming;

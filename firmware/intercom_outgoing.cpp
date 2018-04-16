@@ -116,8 +116,12 @@ void Intercom_Outgoing::run(void) {
       numEncodedBytes = voice_data_t_encode(intercom_message.data, 
         0, sizeof(intercom_message.data), &voice_data);
 
-      if (_messageHandlerp->send(intercom_message, VOICE_DATA_T_MSG_ID, 
-        voice_data.destination_id, numEncodedBytes, true)) {
+      if (_messageHandlerp->send(
+        intercom_message, 
+        VOICE_DATA_T_MSG_ID, 
+        voice_data.destination_id, 
+        numEncodedBytes,
+        _intercom_buddiesp[ii].getBuddyServerAddress())) {
         PLF_PRINT(PRNTGRP_DFLT, "Voice data send failed.\n");
       }
     }

@@ -8,22 +8,20 @@
 class Intercom_Controller : public Plf_TickerBase {
 private:
 	Intercom_MessageHandler& _messageHandler;
-	int32_t _fsmState;
-	unsigned long _prevMillis;
-	
+	IPAddress _myServerAddress;
+
 	void _i_am(void);
-	int _i_am_reply(Intercom_Message& msg, int payloadSize);
 
 	virtual void _tickerHook(void);
 
 	void _dataDump(void);
+	int _registryHandlerSrvrAddr(int key, String& value, bool valid);
 	
 public:
 	Intercom_Controller(Intercom_MessageHandler& messageHandler);
 	
 	/*private*/
 	int handleMessage(Intercom_Message &msg, int payloadSize);
-	int registryHandler(int key, String& value, bool valid);
 };
 
 #endif /*INTERCOM_CONTROLLER_H*/

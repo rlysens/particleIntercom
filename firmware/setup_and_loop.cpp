@@ -26,8 +26,7 @@ STARTUP(System.enableFeature(FEATURE_RETAINED_MEMORY));
 retained bool enterListenMode;
 bool inListenMode;
 
-// Use primary serial over USB interface for logging output. Used by PLF_PRINT
-SerialLogHandler logHandler;
+Plf_TracePrint tracePrint;
 Plf_DataDump dataDump;
 Plf_Registry plf_registry;
 Plf_EvenCounter plf_eventCounter;
@@ -51,7 +50,6 @@ static bool listenModeCheck() {
   if (enterListenMode) {
       enterListenMode = false;
 
-      printGroupEnable(PRNTGRP_DFLT, true);
       PLF_PRINT(PRNTGRP_DFLT, "Entered Listen mode.");
       if (!isDummySetup()) {
         // Begin I2C
@@ -89,9 +87,8 @@ void setup() {
      *code before setup()*/
     plf_registry.init();
     plf_eventCounter.init();
-
-    /*Only enable default printgroup by default*/
-    printGroupEnable(PRNTGRP_DFLT, true);
+    /*Only default printgroup is enabled by default*/
+    tracePrint.init();
 
     String deviceID = System.deviceID();
     PLF_PRINT(PRNTGRP_DFLT, "Entered setup(). Device ID: %s", deviceID.c_str());

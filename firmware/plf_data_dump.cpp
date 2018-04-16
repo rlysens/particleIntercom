@@ -7,8 +7,6 @@ Plf_DataDump::Plf_DataDump() : _curIdx(0) {
 }
 
 int Plf_DataDump::dataDump(String name) {
-	int res=0;
-
 	if (name.equalsIgnoreCase("All")) {
 		_dataDump();
 	}
@@ -16,7 +14,7 @@ int Plf_DataDump::dataDump(String name) {
 		int idx = _lookup(name);
 
 		if (idx < 0) {
-			res=0;
+			listNames();
 		}
 		else {
 			PLF_PRINT(PRNTGRP_DFLT, "----------------");
@@ -26,7 +24,7 @@ int Plf_DataDump::dataDump(String name) {
 		}
 	}
 
-	return res;
+	return 0;
 }
 
 void Plf_DataDump::listNames(void) {

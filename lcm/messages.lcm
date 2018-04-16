@@ -12,29 +12,22 @@ struct voice_data_t
 struct i_am_t
 {
 	const int32_t MSG_ID=2;
-	int32_t restarted;
-	int8_t name[20];
+	int32_t my_id;
+	int32_t srvr_addr;
 }
 
-struct i_am_reply_t
+struct retire_t
 {
 	const int32_t MSG_ID=3;
-	int32_t id;
-	int8_t name[20];
+	int32_t my_id;
+	int8_t dummy[4];
 }
 
-struct who_is_t
-{
-	const int32_t MSG_ID=4;
-	int8_t name[20];
-	int8_t padding[4];
-}
-
-struct who_is_reply_t
+struct set_buddy_ack_t
 {
 	const int32_t MSG_ID=5;
-	int32_t id;
-	int8_t name[20];
+	int32_t buddy_id;
+	int8_t dummy[4];
 }
 
 struct set_buddy_t
@@ -49,6 +42,13 @@ struct keep_alive_t
 	const int32_t MSG_ID=7;
 	int32_t source_id;
 	int32_t destination_id;
+}
+
+struct keep_alive_resp_t
+{
+	const int32_t MSG_ID=8;
+	int32_t redirect_addr;
+	int32_t dummy;
 }
 
 struct comm_start_t

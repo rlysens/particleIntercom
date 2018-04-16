@@ -17,6 +17,10 @@ def createParticleCloud(credentials):
 		credentials['particle_username'],
 		credentials['particle_password'])
 
+def restart():
+	print "Please restart the device. Press ENTER to continue."
+	raw_input()
+
 def enterListeningMode():
 	print "Please re-enter listening mode. Press ENTER to continue."
 	raw_input()
@@ -39,15 +43,17 @@ def manufConfig(skipClaim, skipFlash, imageFilename, deviceName):
 	#Only generate name if no name is given
 	if deviceName is None:
 		print "Generating name and key..."
-		name, keyString = nameKeyGen.gen_name_and_key()
-		print name
-		nameKeyGen.commit()
+		intercomId, name, keyString = nameKeyGen.gen_name_key_id()
+		print (intercomId, name, keyString)
+		nameKeyGen.commit(intercomId, name, keyString)
 	else:
 		name = deviceName
-		keyString = nameKeyGen.lookup_key(name)
-		if not keyString:
+		item = nameKeyGen.lookup_item_by_name(name)
+		if not item:
 			print "Device name not found. Aborting..."
 			return
+		intercomId = item['intercom_id']
+		keyString = item['intercom_secret_key']
 
 	print "Logging into cloud..."
 	particleCloud = createParticleCloud(credentials)
@@ -56,19 +62,20 @@ def manufConfig(skipClaim, skipFlash, imageFilename, deviceName):
 	particleId = particleLocal.identify_device(serialPort)
 	print "particleId: %s"%(particleId)
 
-	if not skipFlash:
-		print "Flashing device..."
-		res = particleLocal.flash(imageFilename)
-		time.sleep(20)
-		enterListeningMode()
-
 	print "Setting WiFi..."
 	particleLocal.set_wifi(port=serialPort)
-	time.sleep(20)
+	time.sleep(30)
 
 	if not skipClaim:
 		print "Claiming device..."
 		particleCloud.claim_device(particleId)
+
+	if skipFlash:
+		restart()
+	else:
+		print "Flashing device..."
+		res = particleLocal.flash(imageFilename)
+		time.sleep(30)
 
 	print "Erasing..."
 	callFunctionSuccess = False
@@ -82,14 +89,14 @@ def manufConfig(skipClaim, skipFlash, imageFilename, deviceName):
 		time.sleep(5)
 		print ".",
 
-	print "Setting name (%s) and key (%s)..."%(name, keyString)
+	print "Setting id(%d) and key (%s)..."%(intercomId, keyString)
 	callFunctionSuccess = False
 	attemptCount = 0
 	while not callFunctionSuccess:
-		callFunctionSuccess = particleCloud.call_function(particleId, "my_name", name)
+		callFunctionSuccess = particleCloud.call_function(particleId, "my_id", intercomId)
 		attemptCount += 1
 		if attemptCount >= 5:
-			print "Setting name failed. Aborting..."
+			print "Setting id failed. Aborting..."
 			return
 		time.sleep(5)
 		print ".",

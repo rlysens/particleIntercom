@@ -1,0 +1,1 @@
+scp -i amazonec3.pem python/intercom_server.py ec2-user@54.203.201.139:/home/ec2-user/python

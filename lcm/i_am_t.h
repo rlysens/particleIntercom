@@ -19,8 +19,8 @@ extern "C" {
 typedef struct _i_am_t i_am_t;
 struct _i_am_t
 {
-    int32_t    restarted;
-    int8_t     name[20];
+    int32_t    my_id;
+    int32_t    srvr_addr;
 };
 
 /**
