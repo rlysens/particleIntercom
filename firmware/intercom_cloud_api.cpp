@@ -93,7 +93,7 @@ int Intercom_CloudAPI::updateVars(void) {
 		secret_key = String();
 	}
 
-	plf_registry.get(REG_KEY_SRVR_NAME, secret_key, valid);
+	plf_registry.get(REG_KEY_SRVR_NAME, srvr_name, valid);
 	if (!valid) {
 		srvr_name = String();
 	}

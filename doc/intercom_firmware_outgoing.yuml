@@ -1,5 +1,5 @@
 [Intercom_Outgoing|run()|recordRequest()]-send(VOICE_DATA)>[Intercom_MessageHandler]
-[Intercom_Outgoing]-outgoingCommRequested()>[Intercom_Buddy]
+[Intercom_Outgoing]outgoingCommRequested();getBuddyServerAddress()->[Intercom_Buddy]
 [Intercom_Outgoing]-RecordBuf();OutputBufferFillBytes()>[VS1063_Codec]
 [Intercom_Outgoing]-registerFunction()>[Plf_DataDump]
 

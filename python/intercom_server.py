@@ -116,7 +116,7 @@ class Intercom_LocalTables:
 			return intercomId
 
 		#ID not found locally. Check the database.
-		if lookupInDBifNotFound:
+		if lookupInDBifNotLocal:
 			return intercomDB.lookupIdByName(name)
 
 		return None
@@ -350,7 +350,8 @@ def msg_i_am_handler(msg_data, address, msg_handler, intercom):
 	#Compare the stored server address with the message's server address
 	#to find out if this intercom migrated here from another server,
 	#in which case we should send a retire message to the previous server.
-	if intercom.getServerAddress() != i_am.srvr_addr:
+	intercomOldServerAddress = intercom.getServerAddress()
+	if (intercomOldServerAddress != None) and (intercomOldServerAddress != i_am.srvr_addr):
 		retire = retire_t.retire_t()
 		retire.my_id = i_am.my_id
 		data = retire.encode()

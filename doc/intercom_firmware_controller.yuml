@@ -1,6 +1,7 @@
 [Plf_TickerBase|tick();_tickerHook()]^-[Intercom_Controller]
-[Intercom_Controller|_tickerHook()]send(I_AM);registerHandler(I_AM_REPLY KEEP_ALIVE);setMyId()->[Intercom_MessageHandler]
-[Intercom_Controller]-get(MY_NAME)>[Plf_Registry]
+[Intercom_Controller]send(I_AM);registerHandler(KEEP_ALIVE);setMyId()->[Intercom_MessageHandler]
+[Intercom_Controller]-registerHandler(SRVR_NAME);set(SRVR_ADDR)>[Plf_Registry]
 [Intercom_Controller]-.->[Intercom_Message]
 [Intercom_Controller]-registerFunction()>[Plf_DataDump]
+[Intercom_Controller]resolve()->[WiFi]
 

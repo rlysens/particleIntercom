@@ -46,11 +46,14 @@ int Intercom_Controller::_registryHandlerSrvrAddr(int key, String& value, bool v
   plf_assert("invalid reg key", key == REG_KEY_SRVR_NAME);
 
   if (valid) {
-    _myServerAddress = WiFi.resolve(value);
+  	int resolveAttempts = 0;
 
-    if (!_myServerAddress) {
-      PLF_PRINT(PRNTGRP_DFLT, "Could not resolve server name.");
-    }
+    do {
+    	_myServerAddress = WiFi.resolve(value);
+    	if (!_myServerAddress) {
+      		PLF_PRINT(PRNTGRP_DFLT, "Could not resolve server name.");
+    	}
+	} while ((!_myServerAddress) && (resolveAttempts++ < 5));
 
     String serverAddrString = String(_myServerAddress.raw().ipv4);
     plf_registry.set(REG_KEY_SRVR_ADDR, serverAddrString, _myServerAddress);

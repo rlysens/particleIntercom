@@ -1,12 +1,12 @@
 [Intercom_Message|id;data]^-[voice_data|source_id;destination_id;seq_number;data_size;data{bg:yellow}],
 [Intercom_Message]^-[keep_alive|source_id;destination_id{bg:yellow}],
-[Intercom_Message]^-[i_am|name;restarted{bg:yellow}]
-[Intercom_Message]^-[i_am_reply|id;name{bg:yellow}]
-[Intercom_Message]^-[who_is|name{bg:yellow}]
-[Intercom_Message]^-[who_is_reply|id;name{bg:yellow}]
+[Intercom_Message]^-[keep_alive_resp|redirect_addr{bg:yellow}],
+[Intercom_Message]^-[i_am|my_id;srvr_addr{bg:yellow}]
 [Intercom_Message]^-[set_buddy|my_id;buddy_id{bg:yellow}]
+[Intercom_Message]^-[set_buddy_ack|buddy_id{bg:yellow}]
 [Intercom_Message]^-[comm_start|source_id;destination_id{bg:yellow}]
 [Intercom_Message]^-[comm_start_ack|source_id;destination_id{bg:yellow}]
 [Intercom_Message]^-[comm_stop|source_id;destination_id{bg:yellow}]
 [Intercom_Message]^-[comm_stop_ack|source_id;destination_id{bg:yellow}]
+[Intercom_Message]^-[retire|my_id{bg:yellow}]
 

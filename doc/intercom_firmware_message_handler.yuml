@@ -1,5 +1,5 @@
-[Intercom_MessageHandler|setMyId();send();receive();allocRxCounter();allocTxCounter();freeRxCounter();freeTxCounter();registerHandler()]++-1>[UDP]
+[Intercom_MessageHandler|send();receive();allocRxCounter();allocTxCounter();freeRxCounter();freeTxCounter();registerHandler()]++-1>[UDP]
 [Intercom_MessageHandler]-.->[Intercom_Message]
-[Intercom_MessageHandler]-registerHandler\n(SECRET_KEY REG_KEY_SRVR_NAME)>[Plf_Registry]
+[Intercom_MessageHandler]-registerHandler\n(SECRET_KEY MY_ID)>[Plf_Registry]
 [Intercom_MessageHandler]-registerFunction()>[Plf_DataDump]
 

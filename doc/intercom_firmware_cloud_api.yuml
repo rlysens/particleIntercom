@@ -1,5 +1,5 @@
 [Plf_TickerBase|tick();_tickerHook()]^-[Intercom_CloudAPI]
-[Intercom_CloudAPI|my_name;buddy_X_name;buddy_X_id;secret_key;battery_pct;wifi_pct|_tickerHook();my_name();buddy_name();set_key();set_srvr_name();enable_printgroup();disable_printgroup();list_ddump();ddump(){bg:orange}]-erase();set();get();registerHandler(MY_NAME BUDDY_NAME BUDDY_ID SECRET_KEY REG_KEY_SRVR_NAME)>[Plf_Registry]
+[Intercom_CloudAPI|srvr_name;my_id;buddy_X_id;secret_key;battery_pct;wifi_pct|_tickerHook();my_id();buddy_X_id();set_key();set_srvr_name();enable_printgroup();disable_printgroup();ddump(){bg:orange}]-erase();set();get();registerHandler(MY_ID BUDDY_ID SECRET_KEY REG_KEY_SRVR_NAME)>[Plf_Registry]
 [Intercom_CloudAPI]getSOC()->[MAX17043]
 [Intercom_CloudAPI]getRSSIPct()->[Intercom_WifiChecker]
 [Intercom_CloudAPI]getBatteryPct()->[Intercom_BatteryChecker]

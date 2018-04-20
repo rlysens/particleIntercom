@@ -1,9 +1,18 @@
+
+[IntercomDB|lookupIdByName();lookupAttributes();setServer()]-1>[Intercom_Table]
+[Intercom_Table]->[dynamodb]
+
+[Intercom_LocalTables|getIdByName();getIntercomById();addIntercom()]-1>[intercom_name_to_id_table]
+[Intercom_LocalTables]-1>[intercom_id_to_intercom_table]
+
 [Message_Handler|send();receive()]->[MSG_TABLE]
 [Message_Handler]-1>[socket]
 
+[Intercom|getId();getName();getServerAddress();setServerAddress();isLocal();getAddress();setAddress();sendTo();getBuddies();setBuddy();getEncoderCryptoCodec();getDecoderCryptoCodec()]n-1>[Message_Handler]
+
 [MSG_TABLE]->[Msg_voice_data_handler]
 [MSG_TABLE]->[Msg_i_am_handler]
-[MSG_TABLE]->[Msg_who_is_handler]
+[MSG_TABLE]->[Msg_retire_handler]
 [MSG_TABLE]->[Msg_set_buddy_handler]
 [MSG_TABLE]->[Msg_keep_alive_handler]
 [MSG_TABLE]->[Msg_comm_start_handler]
@@ -11,27 +20,32 @@
 [MSG_TABLE]->[Msg_comm_stop_handler]
 [MSG_TABLE]->[Msg_comm_stop_ack_handler]
 
-[Msg_voice_data_handler]->[Message_Handler]
+[Msg_voice_data_handler]->[Intercom_LocalTables]
+[Msg_voice_data_handler]->[Intercom]
+
 [Msg_i_am_handler]->[Message_Handler]
-[Msg_who_is_handler]->[Message_Handler]
-[Msg_set_buddy_handler]->[Message_Handler]
+[Msg_i_am_handler]->[Intercom]
+[Msg_i_am_handler]->[IntercomDB]
+
+[Msg_set_buddy_handler]->[Intercom_LocalTables]
+[Msg_set_buddy_handler]->[Intercom]
+
 [Msg_keep_alive_handler]->[Message_Handler]
-[Msg_comm_start_handler]->[Message_Handler]
-[Msg_comm_start_ack_handler]->[Message_Handler]
-[Msg_comm_stop_handler]->[Message_Handler]
-[Msg_comm_stop_ack_handler]->[Message_Handler]
+[Msg_keep_alive_handler]->[IntercomDB]
+[Msg_keep_alive_handler]->[Intercom_LocalTables]
+[Msg_keep_alive_handler]->[Intercom]
 
-[Msg_voice_data_handler]->[Intercom_id_to_intercom_table]
-[Msg_i_am_handler]->[Intercom_id_to_intercom_table]
-[Msg_who_is_handler]->[Intercom_id_to_intercom_table]
-[Msg_set_buddy_handler]->[Intercom_id_to_intercom_table]
-[Msg_keep_alive_handler]->[Intercom_id_to_intercom_table]
-[Msg_comm_start_handler]->[Intercom_id_to_intercom_table]
-[Msg_comm_start_ack_handler]->[Intercom_id_to_intercom_table]
-[Msg_comm_stop_handler]->[Intercom_id_to_intercom_table]
-[Msg_comm_stop_ack_handler]->[Intercom_id_to_intercom_table]
+[Msg_comm_start_handler]->[Intercom_LocalTables]
+[Msg_comm_start_handler]->[Intercom]
 
-[Msg_i_am_handler]->[Intercom_name_to_id_table]
-[Msg_who_is_handler]->[Intercom_name_to_id_table]
+[Msg_comm_start_ack_handler]->[Intercom_LocalTables]
+[Msg_comm_start_ack_handler]->[Intercom]
 
-[Intercom|sendTo();setBuddy();getEncoderCryptoCodec();getDecoderCryptoCodec()]n-1>[Message_Handler]
+[Msg_comm_stop_handler]->[Intercom_LocalTables]
+[Msg_comm_stop_handler]->[Intercom]
+
+[Msg_comm_stop_ack_handler]->[Intercom_LocalTables]
+[Msg_comm_stop_ack_handler]->[Intercom]
+
+[Msg_retire_handler]->[Intercom]
+
