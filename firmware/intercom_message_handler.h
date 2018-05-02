@@ -58,8 +58,8 @@ private:
 	int _encryptMsg(Intercom_Message &msg, int payloadSize);
 	int _decryptMsg(Intercom_Message &msg, int payloadSize);
 
-	int _registryHandlerSecretKey(int key, String& value, bool valid);
-	int _registryHandlerMyId(int key, String& value, bool valid);
+	int _registryHandlerSecretKey(int key);
+	int _registryHandlerMyId(int key);
 
 	void _dataDump(void);
 	

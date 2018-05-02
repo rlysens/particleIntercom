@@ -42,9 +42,14 @@ int Intercom_Buddy::_rxKeepAliveResp(Intercom_Message& msg, int payloadSize) {
 	return 0;
 }
 
-int Intercom_Buddy::_setServerAddr(int key, String& value, bool valid) {
+int Intercom_Buddy::_setServerAddr(int key) {
+	int value;
+	bool valid;
+
+	plf_registry.getInt(key, value, valid);
+
 	if (valid) {
-		IPAddress address = IPAddress(value.toInt());
+		IPAddress address = IPAddress(value);
 		_myServerAddress = address;
 		if (!_buddyServerAddress) {
 			_buddyServerAddress = address;
@@ -84,8 +89,12 @@ void Intercom_Buddy::_txSetBuddy(void) {
 	}
 }
 
-int Intercom_Buddy::_setBuddy(int key, String& value, bool valid) {
-	_buddyId = valid ? value.toInt() : ID_UNKNOWN;
+int Intercom_Buddy::_setBuddy(int key) {
+	int value = ID_UNKNOWN;
+	bool valid;
+
+	plf_registry.getInt(key, value, valid);
+	_buddyId = value;
 
 	_txSetBuddy();
 

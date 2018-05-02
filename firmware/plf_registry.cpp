@@ -6,7 +6,7 @@
 
 #define VALID_KEY_VAL 0x10D0BABA
 
-int Plf_Registry::set(int key, String& value, bool valid) {
+int Plf_Registry::setString(int key, String& value, bool valid) {
 	RegistryEntry_t regEntry;
 	String oldValue;
 	bool oldValid;
@@ -15,7 +15,7 @@ int Plf_Registry::set(int key, String& value, bool valid) {
 	plf_assert("Out of range registry key",key<=MAX_KEY_VAL);
 	plf_assert("Out of range registry key",key>=0);
 
-	get(key, oldValue, oldValid);
+	getString(key, oldValue, oldValid);
 
 	memset(regEntry.value, 0, sizeof(regEntry.value));
 
@@ -36,13 +36,13 @@ int Plf_Registry::set(int key, String& value, bool valid) {
 		}
 
 		PLF_PRINT(PRNTGRP_DFLT, "Registry change: key %d, value %s, valid %d\n", key, regEntry.value, (int)valid);
-		_invokeHandler(key, value, valid);
+		_invokeHandler(key);
 	}
 
 	return 0;
 }
 
-int Plf_Registry::get(int key, String& value, bool& valid) {
+int Plf_Registry::getString(int key, String& value, bool& valid) {
 	RegistryEntry_t *regEntryp=0;
 
 	plf_assert("Registry not initialized", _initialized);
@@ -62,13 +62,28 @@ int Plf_Registry::get(int key, String& value, bool& valid) {
 	return 0;
 }
 
-int Plf_Registry::_registerHandler(int key, String name, std_function_int_int_StringRef_bool_t func) {
+int Plf_Registry::setInt(int key, int value, bool valid) {
+	String valueString = String(value);
+	return setString(key, valueString, valid);
+}
+
+int Plf_Registry::getInt(int key, int& value, bool& valid) {
+	String stringValue;
+	int res = getString(key, stringValue, valid);
+	if ((res == 0) && valid) {
+		value = stringValue.toInt();
+	}
+	
+	return res;
+}
+
+int Plf_Registry::_registerHandler(int key, String name, std_function_int_int_t func) {
 	RegHandlerEntry_t *regHandlerEntryp;
 
 	plf_assert("Out of range registry key",key<=MAX_KEY_VAL);
 	plf_assert("Out of range registry key",key>=0);
 
-	auto wrapper = new std_function_int_int_StringRef_bool_t(func);
+	auto wrapper = new std_function_int_int_t(func);
 
     plf_assert("_registerHandler new fail", wrapper!=NULL);
 
@@ -83,13 +98,13 @@ int Plf_Registry::_registerHandler(int key, String name, std_function_int_int_St
 	return 0;
 }
 
-void Plf_Registry::_invokeHandler(int key, String& value, bool valid) {
+void Plf_Registry::_invokeHandler(int key) {
 	int ii;
 	RegHandlerEntry_t *regHandlerEntryp = &_regHandlers[key];
 
 	for (ii=0; ii<regHandlerEntryp->topIndex; ++ii) {
 		if (regHandlerEntryp->fun[ii]) {
-			(*(regHandlerEntryp->fun[ii]))(key, value, valid);
+			(*(regHandlerEntryp->fun[ii]))(key);
 		}
 	}
 }
@@ -102,10 +117,10 @@ void Plf_Registry::_walkHandlers(void) {
 			String value;
 			bool valid;
 
-			get(key, value, valid);
+			getString(key, value, valid);
 			PLF_PRINT(PRNTGRP_DFLT, "[%d] %s: %s, valid: %d", 
 				key, _regHandlers[key].name.c_str(), valid ? value.c_str() : "X", (int)valid);
-			_invokeHandler(key, value, valid);
+			_invokeHandler(key);
 		}
 	}
 }
@@ -156,7 +171,7 @@ void Plf_Registry::_dataDump(void) {
 			String value;
 			bool valid;
 
-			get(key, value, valid);
+			getString(key, value, valid);
 			PLF_PRINT(PRNTGRP_DFLT, "[%d] %s: %s, valid %d\n", 
 				key, _regHandlers[key].name.c_str(), valid ? value.c_str() : "X", (int)valid);
 		}

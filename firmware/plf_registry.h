@@ -20,7 +20,7 @@
 
 #define MAX_NUM_FUNS_PER_KEY 8
 
-typedef std::function<int (int, String&, bool)> std_function_int_int_StringRef_bool_t;
+typedef std::function<int (int)> std_function_int_int_t;
 
 typedef struct RegistryEntry_t {
 	uint8_t value[MAX_KEY_LEN];
@@ -28,7 +28,7 @@ typedef struct RegistryEntry_t {
 } RegistryEntry_t;
 
 typedef struct RegHandlerEntry_t {
-	std_function_int_int_StringRef_bool_t *fun[MAX_NUM_FUNS_PER_KEY];
+	std_function_int_int_t *fun[MAX_NUM_FUNS_PER_KEY];
 	String name;
 	int topIndex;
 } RegHandlerEntry_t;
@@ -42,8 +42,8 @@ private:
 	bool _initialized;
 
 	void _walkHandlers(void);
-	void _invokeHandler(int key, String& value, bool valid);
-	int _registerHandler(int key, String name, std_function_int_int_StringRef_bool_t func);
+	void _invokeHandler(int key);
+	int _registerHandler(int key, String name, std_function_int_int_t func);
 
 	void _dataDump(void);
 	
@@ -52,13 +52,15 @@ public:
 	
 	void init(void);
 
-	int set(int key, String& value, bool valid);
-	int get(int key, String& value, bool& valid);
+	int setString(int key, String& value, bool valid);
+	int getString(int key, String& value, bool& valid);
+	int setInt(int key, int value, bool valid);
+	int getInt(int key, int& value, bool& valid);
 
 	template <typename T>
-    int registerHandler(int key, String name, int (T::*func)(int key, String&, bool), T *instance) {
+    int registerHandler(int key, String name, int (T::*func)(int key), T *instance) {
     	using namespace std::placeholders;
-      	return _registerHandler(key, name, std::bind(func, instance, _1, _2, _3));
+      	return _registerHandler(key, name, std::bind(func, instance, _1));
     }
 
 	int go(void);

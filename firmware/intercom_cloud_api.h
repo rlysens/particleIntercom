@@ -14,7 +14,7 @@ private:
 	unsigned long _prevMillis;
 	
 	virtual void _tickerHook(void);
-	int _registryHandler(int key, String& value, bool valid);
+	int _registryHandler(int key);
 
 public:
 	Intercom_CloudAPI(Intercom_ButtonsAndLeds& intercom_buttonsAndLeds, 

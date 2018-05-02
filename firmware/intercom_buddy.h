@@ -46,7 +46,7 @@ private:
 	int _rxCommStartAck(Intercom_Message& msg, int payloadSize);
 	int _rxCommStopAck(Intercom_Message& msg, int payloadSize);
 	int _rxSetBuddyAck(Intercom_Message& msg, int payloadSize);
-	int _setBuddy(int key, String& value, bool valid);
+	int _setBuddy(int key);
 	void _txSetBuddy(void);
 	void _txKeepAlive(void);
 	void _listeningStateUpdate(void);
@@ -56,7 +56,7 @@ private:
 
 	virtual void _tickerHook(void);
 
-	int _setServerAddr(int key, String& value, bool valid); 
+	int _setServerAddr(int key); 
 
 	void _dataDump(void);
 

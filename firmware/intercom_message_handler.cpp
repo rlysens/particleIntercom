@@ -10,8 +10,11 @@
 
 Intercom_Message intercom_message; /*Shared by all message_handler users*/
 
-int Intercom_MessageHandler::_registryHandlerSecretKey(int key, String& value, bool valid) {
-  plf_assert("invalid reg key", key == REG_KEY_SECRET_KEY);
+int Intercom_MessageHandler::_registryHandlerSecretKey(int key) {
+  String value;
+  bool valid;
+
+  plf_registry.getString(key, value, valid);
 
   if (valid) {
     uint8_t keyArray[17]; /*+1 because getBytes add zero terminator*/
@@ -22,12 +25,12 @@ int Intercom_MessageHandler::_registryHandlerSecretKey(int key, String& value, b
   return 0;
 }
 
-int Intercom_MessageHandler::_registryHandlerMyId(int key, String& value, bool valid) {
-  plf_assert("invalid reg key", key == REG_KEY_MY_ID);
+int Intercom_MessageHandler::_registryHandlerMyId(int key) {
+  int value = ID_UNKNOWN;
+  bool valid;
 
-  if (valid) {
-    _myId = value.toInt();
-  }
+  plf_registry.getInt(key, value, valid);
+  _myId = value;
 
   return 0;
 }

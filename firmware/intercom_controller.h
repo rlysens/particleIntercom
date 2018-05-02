@@ -15,7 +15,7 @@ private:
 	virtual void _tickerHook(void);
 
 	void _dataDump(void);
-	int _registryHandlerSrvrAddr(int key, String& value, bool valid);
+	int _registryHandlerSrvrName(int key);
 	
 public:
 	Intercom_Controller(Intercom_MessageHandler& messageHandler);

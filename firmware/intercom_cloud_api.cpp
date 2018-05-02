@@ -4,21 +4,22 @@
 #include "SparkFunMAX17043.h"
 #include "plf_data_dump.h"
 #include "plf_registry.h"
+#include "intercom_message_handler.h"
 
 #define MODULE_ID 300
 
 #define INTERCOM_CLOUD_API_TICK_INTER_MS 5000
 
-static String my_id;
-static String buddy_0_id;
-static String buddy_1_id;
-static String buddy_2_id;
+static int my_id;
+static int buddy_0_id;
+static int buddy_1_id;
+static int buddy_2_id;
 static String secret_key;
-static String battery_pct;
-static String wifi_pct;
+static int battery_pct;
+static int wifi_pct;
 static String srvr_name;
 
-int Intercom_CloudAPI::_registryHandler(int key, String& value, bool valid) {
+int Intercom_CloudAPI::_registryHandler(int key) {
 	updateVars();
 	return 0;
 }
@@ -28,25 +29,25 @@ void Intercom_CloudAPI::_tickerHook(void) {
 }
 
 int Intercom_CloudAPI::set_my_id(String id) {
-	plf_registry.set(REG_KEY_MY_ID, id, true /*validity*/);
+	plf_registry.setInt(REG_KEY_MY_ID, id.toInt(), true /*validity*/);
   	return 0;
 }
 
 int Intercom_CloudAPI::set_buddy_0_id(String id) {
 	/*Erase buddy_id when setting a new name*/
-	plf_registry.set(REG_KEY_BUDDY_0_ID, id, true /*validity*/);
+	plf_registry.setInt(REG_KEY_BUDDY_0_ID, id.toInt(), true /*validity*/);
 	return 0;
 }
 
 int Intercom_CloudAPI::set_buddy_1_id(String id) {
 	/*Erase buddy_id when setting a new name*/
-	plf_registry.set(REG_KEY_BUDDY_1_ID, id, true /*validity*/);
+	plf_registry.setInt(REG_KEY_BUDDY_1_ID, id.toInt(), true /*validity*/);
 	return 0;
 }
 
 int Intercom_CloudAPI::set_buddy_2_id(String id) {
 	/*Erase buddy_id when setting a new name*/
-	plf_registry.set(REG_KEY_BUDDY_2_ID, id, true /*validity*/);
+	plf_registry.setInt(REG_KEY_BUDDY_2_ID, id.toInt(), true /*validity*/);
 	return 0;
 }
 
@@ -61,46 +62,46 @@ int Intercom_CloudAPI::clr_creds(String name) {
 }
 
 int Intercom_CloudAPI::set_srvr_name(String name) {
-	plf_registry.set(REG_KEY_SRVR_NAME, name, true /*validity*/);
+	plf_registry.setString(REG_KEY_SRVR_NAME, name, true /*validity*/);
 	return 0;
 }
 
 int Intercom_CloudAPI::updateVars(void) {
 	bool valid;
 
-	plf_registry.get(REG_KEY_MY_ID, my_id, valid);
+	plf_registry.getInt(REG_KEY_MY_ID, my_id, valid);
 	if (!valid) {
-		my_id = String();
+		my_id = ID_UNKNOWN;
 	}
 
-	plf_registry.get(REG_KEY_BUDDY_0_ID, buddy_0_id, valid);
+	plf_registry.getInt(REG_KEY_BUDDY_0_ID, buddy_0_id, valid);
 	if (!valid) {
-		buddy_0_id = String();
+		buddy_0_id = ID_UNKNOWN;
 	}
 
-	plf_registry.get(REG_KEY_BUDDY_1_ID, buddy_1_id, valid);
+	plf_registry.getInt(REG_KEY_BUDDY_1_ID, buddy_1_id, valid);
 	if (!valid) {
-		buddy_1_id = String();
+		buddy_1_id = ID_UNKNOWN;
 	}
 
-	plf_registry.get(REG_KEY_BUDDY_2_ID, buddy_2_id, valid);
+	plf_registry.getInt(REG_KEY_BUDDY_2_ID, buddy_2_id, valid);
 	if (!valid) {
-		buddy_2_id = String();
+		buddy_2_id = ID_UNKNOWN;
 	}
 
-	plf_registry.get(REG_KEY_SECRET_KEY, secret_key, valid);
+	plf_registry.getString(REG_KEY_SECRET_KEY, secret_key, valid);
 	if (!valid) {
 		secret_key = String();
 	}
 
-	plf_registry.get(REG_KEY_SRVR_NAME, srvr_name, valid);
+	plf_registry.getString(REG_KEY_SRVR_NAME, srvr_name, valid);
 	if (!valid) {
 		srvr_name = String();
 	}
 
-	battery_pct = String(_intercom_batteryChecker.getBatteryPct());
+	battery_pct = _intercom_batteryChecker.getBatteryPct();
 
-	wifi_pct = String(_intercom_wifiChecker.getRSSIPct());
+	wifi_pct = _intercom_wifiChecker.getRSSIPct();
 
 	return 0;
 }
@@ -142,7 +143,7 @@ int Intercom_CloudAPI::disable_printgroup(String name) {
 }
 
 int Intercom_CloudAPI::set_key(String key_val) {
-	plf_registry.set(REG_KEY_SECRET_KEY, key_val, true /*validity*/);
+	plf_registry.setString(REG_KEY_SECRET_KEY, key_val, true /*validity*/);
   	return 0;
 }
 

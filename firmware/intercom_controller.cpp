@@ -42,8 +42,11 @@ void Intercom_Controller::_tickerHook(void) {
 	_i_am();
 }
 
-int Intercom_Controller::_registryHandlerSrvrAddr(int key, String& value, bool valid) {
-  plf_assert("invalid reg key", key == REG_KEY_SRVR_NAME);
+int Intercom_Controller::_registryHandlerSrvrName(int key) {
+  String value;
+  bool valid;
+
+  plf_registry.getString(key, value, valid);
 
   if (valid) {
   	int resolveAttempts = 0;
@@ -55,8 +58,7 @@ int Intercom_Controller::_registryHandlerSrvrAddr(int key, String& value, bool v
     	}
 	} while ((!_myServerAddress) && (resolveAttempts++ < 5));
 
-    String serverAddrString = String(_myServerAddress.raw().ipv4);
-    plf_registry.set(REG_KEY_SRVR_ADDR, serverAddrString, _myServerAddress);
+    plf_registry.setInt(REG_KEY_SRVR_ADDR, _myServerAddress.raw().ipv4, _myServerAddress /*valid*/);
   }
 
   return 0;
@@ -66,7 +68,7 @@ Intercom_Controller::Intercom_Controller(Intercom_MessageHandler& messageHandler
 	Plf_TickerBase(INTERCOM_CONTROLLER_TICK_INTER_MS), _messageHandler(messageHandler) {
 	_messageHandler.registerHandler(KEEP_ALIVE_T_MSG_ID, &Intercom_Controller::handleMessage, this, true);
 
-	PLF_REGISTRY_REGISTER_HANDLER(REG_KEY_SRVR_NAME, &Intercom_Controller::_registryHandlerSrvrAddr, this);
+	PLF_REGISTRY_REGISTER_HANDLER(REG_KEY_SRVR_NAME, &Intercom_Controller::_registryHandlerSrvrName, this);
 	dataDump.registerFunction("Controller", &Intercom_Controller::_dataDump, this);
 }
 
