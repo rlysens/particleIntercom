@@ -10,7 +10,7 @@
 
 void Intercom_Controller::_i_am(void) {
 	int numEncodedBytes;
-	static i_am_t i_am;
+	i_am_t i_am;
 	uint32_t myId = _messageHandler.getMyId(); /*Returns ID_UNKNOWN if unknown*/
 	
 	if (myId == ID_UNKNOWN) {

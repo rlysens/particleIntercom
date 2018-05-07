@@ -31,7 +31,7 @@
 static const int regKey_buddyId[NUM_BUDDIES] = {REG_KEY_BUDDY_0_ID, REG_KEY_BUDDY_1_ID, REG_KEY_BUDDY_2_ID};
 
 int Intercom_Buddy::_rxKeepAliveResp(Intercom_Message& msg, int payloadSize) {
-	static keep_alive_resp_t keep_alive_resp;
+	keep_alive_resp_t keep_alive_resp;
 	int numDecodedBytes = keep_alive_resp_t_decode(msg.data, 0, payloadSize, &keep_alive_resp);
 
 	if (numDecodedBytes < 0)
@@ -64,7 +64,7 @@ int Intercom_Buddy::_setServerAddr(int key) {
 void Intercom_Buddy::_txSetBuddy(void) {
 	int numEncodedBytes;
 	uint32_t myId = _messageHandlerp->getMyId();
-	static set_buddy_t set_buddy;
+	set_buddy_t set_buddy;
 
 	if (myId == ID_UNKNOWN)
 		return;
@@ -104,7 +104,7 @@ int Intercom_Buddy::_setBuddy(int key) {
 }
 
 int Intercom_Buddy::_rxSetBuddyAck(Intercom_Message& msg, int payloadSize) {
-	static set_buddy_ack_t set_buddy_ack;
+	set_buddy_ack_t set_buddy_ack;
 	int numDecodedBytes = set_buddy_ack_t_decode(msg.data, 0, payloadSize, &set_buddy_ack);
 
 	if (numDecodedBytes < 0)
@@ -119,8 +119,8 @@ int Intercom_Buddy::_rxSetBuddyAck(Intercom_Message& msg, int payloadSize) {
 }
 
 int Intercom_Buddy::_rxCommStart(Intercom_Message& msg, int payloadSize) {
-	static comm_start_t comm_start;
-	static comm_start_ack_t comm_start_ack;
+	comm_start_t comm_start;
+	comm_start_ack_t comm_start_ack;
 	int numEncodedBytes;
 	int numDecodedBytes = comm_start_t_decode(msg.data, 0, payloadSize, &comm_start);
 	uint32_t myId = _messageHandlerp->getMyId();
@@ -150,8 +150,8 @@ int Intercom_Buddy::_rxCommStart(Intercom_Message& msg, int payloadSize) {
 }
 
 int Intercom_Buddy::_rxCommStop(Intercom_Message& msg, int payloadSize) {
-	static comm_stop_t comm_stop;
-	static comm_stop_ack_t comm_stop_ack;
+	comm_stop_t comm_stop;
+	comm_stop_ack_t comm_stop_ack;
 	int numEncodedBytes;
 	int numDecodedBytes = comm_stop_t_decode(msg.data, 0, payloadSize, &comm_stop);
 	uint32_t myId = _messageHandlerp->getMyId();
@@ -182,7 +182,7 @@ int Intercom_Buddy::_rxCommStop(Intercom_Message& msg, int payloadSize) {
 
 void Intercom_Buddy::_txCommStart(void) {
 	int numEncodedBytes;
-	static comm_start_t comm_start;
+	comm_start_t comm_start;
 	uint32_t myId = _messageHandlerp->getMyId();
 
 	if (myId == ID_UNKNOWN)
@@ -201,7 +201,7 @@ void Intercom_Buddy::_txCommStart(void) {
 }
 
 int Intercom_Buddy::_rxCommStartAck(Intercom_Message& msg, int payloadSize) {
-	static comm_start_ack_t comm_start_ack;
+	comm_start_ack_t comm_start_ack;
 	int numDecodedBytes = comm_start_ack_t_decode(msg.data, 0, payloadSize, &comm_start_ack);
 
 	if (numDecodedBytes < 0)
@@ -215,7 +215,7 @@ int Intercom_Buddy::_rxCommStartAck(Intercom_Message& msg, int payloadSize) {
 
 void Intercom_Buddy::_txCommStop(void) {
 	int numEncodedBytes;
-	static comm_stop_t comm_stop;
+	comm_stop_t comm_stop;
 	uint32_t myId = _messageHandlerp->getMyId();
 
 	if (myId == ID_UNKNOWN)
@@ -234,7 +234,7 @@ void Intercom_Buddy::_txCommStop(void) {
 }
 
 int Intercom_Buddy::_rxCommStopAck(Intercom_Message& msg, int payloadSize) {
-	static comm_stop_ack_t comm_stop_ack;
+	comm_stop_ack_t comm_stop_ack;
 	int numDecodedBytes = comm_stop_ack_t_decode(msg.data, 0, payloadSize, &comm_stop_ack);
 
 	if (numDecodedBytes < 0)
@@ -248,7 +248,7 @@ int Intercom_Buddy::_rxCommStopAck(Intercom_Message& msg, int payloadSize) {
 
 void Intercom_Buddy::_txKeepAlive(void) {
 	int numEncodedBytes;
-	static keep_alive_t keep_alive;
+	keep_alive_t keep_alive;
 	uint32_t myId = _messageHandlerp->getMyId();
 
 	if (myId == ID_UNKNOWN)

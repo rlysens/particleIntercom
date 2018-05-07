@@ -91,7 +91,9 @@ class IntercomDB:
 		#Create Intercom object from Item attributes
 		name = item['intercom_name']
 		secret_key = item['intercom_secret_key']
-		server = int(item.get('server'))
+		server = item.get('server')
+		if server is not None:
+			server = int(server)
 		buddies = [int(b) for b in item.get('intercom_buddies')]
 		
 		return (name, secret_key, server, buddies)
