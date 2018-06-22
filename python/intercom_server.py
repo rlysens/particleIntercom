@@ -436,6 +436,13 @@ def msg_voice_data_handler(msg_data, address, msg_handler, intercom):
 		buddy_intercom.sendTo(voice_data.source_id, msg_data, 
 			voice_data_t.voice_data_t.MSG_ID, True)
 
+def msg_retransmit_handler(msg_data, address, msg_handler, intercom):
+	retransmit = retransmit_t.retransmit_t.decode(msg_data)
+	buddy_intercom = intercomLocalTables.getIntercomById(retransmit.destination_id)
+	if buddy_intercom:
+		buddy_intercom.sendTo(retransmit.source_id, msg_data, 
+			retransmit_t.retransmit_t.MSG_ID, True)
+
 def set_buddy_handler(msg_data, address, msg_handler, intercom):
 	set_buddy = set_buddy_t.set_buddy_t.decode(msg_data)
 
@@ -448,6 +455,15 @@ def set_buddy_handler(msg_data, address, msg_handler, intercom):
 	else:
 		print "add_buddy.my_id unknown %d"%(add_buddy.buddy_id)
 
+def retransmit_req_handler(msg_data, address, msg_handler, intercom):
+	retransmit_req = retransmit_req_t.retransmit_req_t.decode(msg_data)
+	buddy_intercom = intercomLocalTables.getIntercomById(retransmit_req.destination_id)
+	if buddy_intercom:
+		buddy_intercom.sendTo(retransmit_req.source_id, msg_data, 
+			retransmit_req_t.retransmit_req_t.MSG_ID, True)
+	else:
+		print "Unknown destination %d"%(comm_stop_ack.destination_id)
+
 MSG_TABLE = {
 	voice_data_t.voice_data_t.MSG_ID : (msg_voice_data_handler, True),
 	i_am_t.i_am_t.MSG_ID : (msg_i_am_handler, True),
@@ -458,6 +474,9 @@ MSG_TABLE = {
 	comm_start_ack_t.comm_start_ack_t.MSG_ID : (msg_comm_start_ack_handler, True),
 	comm_stop_t.comm_stop_t.MSG_ID : (msg_comm_stop_handler, True),
 	comm_stop_ack_t.comm_stop_ack_t.MSG_ID : (msg_comm_stop_ack_handler, True),
+	retransmit_req_t.retransmit_req_t.MSG_ID: (retransmit_req_handler, True),
+	retransmit_t.retransmit_t.MSG_ID: (retransmit_handler, True),
+
 }
 
 try:

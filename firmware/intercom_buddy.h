@@ -59,6 +59,7 @@ private:
 	int _setServerAddr(int key); 
 
 	void _dataDump(void);
+	int _handleMessage(Intercom_Message &msg, int payloadSize);
 
 public:
 	Intercom_Buddy();
@@ -78,9 +79,6 @@ public:
 	IPAddress& getBuddyServerAddress(void) {
 		return _buddyServerAddress;
 	}
-
-	/*private*/
-	int handleMessage(Intercom_Message &msg, int payloadSize);
 };
 
 #endif /*INTERCOM_BUDDY_H*/

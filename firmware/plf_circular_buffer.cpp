@@ -66,6 +66,27 @@ int Plf_CircularBuf::usedSpace(void) {
     return usedSpace;
 }
 
+/*Write at (current position - offset). Don't adjust writePtr.*/
+void Plf_CircularBuf::writeAt(IN uint8_t *data, int numBytes, int offset) {
+    uint8_t *writePtr = _writePtr - offset;
+
+    if (writePtr < _bufStart) {
+        writePtr += _bufSizeBytes;
+    }
+
+    if (writePtr + numBytes > _bufStart + _bufSizeBytes)
+    {
+        /*truncate*/
+        int numBytesTruncated = _bufStart + _bufSizeBytes - writePtr;
+        memcpy(writePtr, data, numBytesTruncated);
+        writePtr = _bufStart;
+        data += numBytesTruncated;
+        numBytes -= numBytesTruncated;
+    }
+    
+    memcpy(writePtr, data, numBytes);
+}
+
 /*Returns number of bytes successfully written. In case of overflow, may be less than requested*/
 int Plf_CircularBuf::write(IN uint8_t *data, int numBytes) {
     if (_writePtr + numBytes > _bufStart + _bufSizeBytes)

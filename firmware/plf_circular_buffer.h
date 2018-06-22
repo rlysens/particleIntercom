@@ -26,6 +26,8 @@ public:
 	int stuff(uint8_t stuffByte, int numBytes);
 	/*Returns number of bytes successfully written. In case of overflow, may be less than requested*/
 	int write(IN uint8_t *data, int numBytes);
+	/*Write at (current position - offset). Don't adjust writePtr.*/
+	void writeAt(IN uint8_t *data, int numBytes, int offset);
 	/*Returns size of data chunk returned in bytes. May be less than request if a boundary is reached*/
 	int readStart(OUT uint8_t **data, int numBytes);
 

@@ -1,7 +1,6 @@
 #include "intercom_outgoing.h"
 #include "plf_event_counter.h"
 #include "vs1063a_codec.h"
-#include "messages.h"
 #include "plf_data_dump.h"
 #include "intercom_incoming.h"
 #include "plf_utils.h"
@@ -17,6 +16,61 @@ Intercom_Outgoing::Intercom_Outgoing() {
   _initialized = false;
 }
 
+int Intercom_Outgoing::_rxRetransmitReq(Intercom_Message& msg, int payloadSize) {
+  int ii;
+  RetransmitEntry_t *retransmitEntryp = &(_retransmitBuffers[_retransmitBufferIndex]);
+  retransmit_req_t retransmit_req;
+  int numDecodedBytes = retransmit_req_t_decode(msg.data, 0, payloadSize, &retransmit_req);
+
+  PLF_COUNT_EVENT(RETRANSMIT_REQ_RX);
+
+  if (numDecodedBytes < 0) {
+    PLF_COUNT_EVENT(RETRANSMIT_REQ_RX_FAIL);
+    return -(MODULE_ID+1);
+  }
+
+  /*Search backwards through voiceDataBuffers for a matching sequence number.*/
+  for (ii=0; ii<NUM_RETRANSMIT_BUFFERS; ii++) {
+    if (--retransmitEntryp < _retransmitBuffers) {
+      retransmitEntryp = &(_retransmitBuffers[NUM_RETRANSMIT_BUFFERS-1]);
+    }
+
+    if (retransmitEntryp->seqNumber == retransmit_req.seq_number) {
+      /*Found it. Retransmit it.*/
+      if (_messageHandlerp->send(
+        retransmitEntryp->msg, 
+        RETRANSMIT_T_MSG_ID, 
+        retransmitEntryp->destinationId, 
+        retransmitEntryp->numEncodedBytes,
+        retransmitEntryp->buddyServerAddr)) {
+        PLF_PRINT(PRNTGRP_DFLT, "Retransmit Tx failed.\n");
+        PLF_COUNT_EVENT(RETRANSMIT_TX_FAIL);
+      }
+      else {
+        PLF_COUNT_EVENT(RETRANSMIT_TX_SUCCESS);
+      }
+
+      return 0;
+    }
+    else {
+      PLF_COUNT_EVENT(RETRANSMIT_TX_FAIL);
+    }
+  }
+
+  return 0;
+}
+
+int Intercom_Outgoing::_handleMessage(Intercom_Message& msg, int payloadSize) {
+  plf_assert("Intercom_Outgoing not initialized", _initialized);
+
+  switch (msg.msgId) {
+    case RETRANSMIT_REQ_T_MSG_ID:
+      return _rxRetransmitReq(msg, payloadSize);
+  }
+
+  return 0;
+}
+
 void Intercom_Outgoing::init(Intercom_MessageHandler& messageHandler, Intercom_Buddy intercom_buddies[NUM_BUDDIES]) {
   _messageHandlerp = &messageHandler;
   _intercom_buddiesp = intercom_buddies;
@@ -24,8 +78,13 @@ void Intercom_Outgoing::init(Intercom_MessageHandler& messageHandler, Intercom_B
   _numBytesSentAcc = 0;
   _seqNumber = 0;
 
+  _messageHandlerp->registerHandler(RETRANSMIT_REQ_T_MSG_ID, &Intercom_Outgoing::_handleMessage, this, true);
+
   plf_assert("NULL ptr in Outgoing ctor", _intercom_buddiesp);
   dataDump.registerFunction("Outgoing", &Intercom_Outgoing::_dataDump, this);
+
+  memset(_retransmitBuffers, 0, sizeof(_retransmitBuffers));
+  _retransmitBufferIndex = 0;
 
   _initialized = true;
 }
@@ -69,12 +128,13 @@ void Intercom_Outgoing::_fsmUpdate(void) {
 }
 
 void Intercom_Outgoing::run(void) {
-  int numEncodedBytes;
-  static voice_data_t voice_data;
   int recordedNumBytes;
   uint32_t myId = _messageHandlerp->getMyId();
+  voice_data_t voice_data;
+  RetransmitEntry_t *retransmitEntryp = &(_retransmitBuffers[_retransmitBufferIndex]);
 
   plf_assert("Outgoing not initialized", _initialized);
+
   _fsmUpdate();
   if (_fsmState == INTERCOM_OUTGOING_FSM_IDLE) {
     return;
@@ -94,7 +154,8 @@ void Intercom_Outgoing::run(void) {
   if (VS1063aStreamOutputBufferFillBytes() < (int)(sizeof(voice_data.data)))
     return;
 
-  recordedNumBytes = VS1063RecordBuf((uint8_t*)voice_data.data, sizeof(voice_data.data));
+  recordedNumBytes = VS1063RecordBuf((uint8_t*)(voice_data.data), 
+    sizeof(voice_data.data));
   if (recordedNumBytes==0) {
       PLF_COUNT_EVENT(NO_ENCODER_AVL_BYTES);
   }
@@ -113,18 +174,25 @@ void Intercom_Outgoing::run(void) {
     if (_intercom_buddiesp[ii].outgoingCommRequested()) {
       voice_data.destination_id = _intercom_buddiesp[ii].getBuddyId();
 
-      numEncodedBytes = voice_data_t_encode(intercom_message.data, 
-        0, sizeof(intercom_message.data), &voice_data);
+      retransmitEntryp->numEncodedBytes = voice_data_t_encode(retransmitEntryp->msg.data, 
+        0, sizeof(retransmitEntryp->msg.data), &voice_data);
+      retransmitEntryp->buddyServerAddr = _intercom_buddiesp[ii].getBuddyServerAddress();
+      retransmitEntryp->seqNumber = voice_data.seq_number;
+      retransmitEntryp->destinationId = voice_data.destination_id;
 
       if (_messageHandlerp->send(
-        intercom_message, 
+        retransmitEntryp->msg, 
         VOICE_DATA_T_MSG_ID, 
         voice_data.destination_id, 
-        numEncodedBytes,
-        _intercom_buddiesp[ii].getBuddyServerAddress())) {
+        retransmitEntryp->numEncodedBytes,
+        retransmitEntryp->buddyServerAddr)) {
         PLF_PRINT(PRNTGRP_DFLT, "Voice data send failed.\n");
       }
     }
+  }
+
+  if (++_retransmitBufferIndex >= NUM_RETRANSMIT_BUFFERS) {
+    _retransmitBufferIndex = 0;
   }
 
   _numBytesSentAcc += recordedNumBytes;

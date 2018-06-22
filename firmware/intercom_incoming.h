@@ -16,9 +16,6 @@ private:
   Intercom_MessageHandler& _messageHandler;
   Intercom_VolumeControl& _volumeControl;
   
-#if 0
-  int _drainState;
-#endif
   int _discardNextByte;
   int _fsmState;
   int32_t _movingAvg;
@@ -26,8 +23,13 @@ private:
   uint32_t _seqNumber;
   int32_t _rateTuneValue;
   bool _rateTuningEnable;
+  IPAddress _myServerAddress;
+
+  int _setServerAddr(int key);
+  void _sendRetransmitReq(uint32_t destinationId, uint32_t seqNumber);
 
   int _rxVoiceDataMsg(Intercom_Message &msg, int payloadSize);
+  int _rxRetransmitMsg(Intercom_Message &msg, int payloadSize);
 
   int _stuff(int rxDataLength);
   int _receive(int8_t *rxData, int rxDataLength);

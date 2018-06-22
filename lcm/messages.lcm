@@ -23,6 +23,14 @@ struct retire_t
 	int8_t dummy[4];
 }
 
+struct retransmit_req_t
+{
+	const int32_t MSG_ID=4;
+	int32_t source_id;
+	int32_t destination_id;
+	int32_t seq_number;	
+}
+
 struct set_buddy_ack_t
 {
 	const int32_t MSG_ID=5;
@@ -78,3 +86,14 @@ struct comm_stop_ack_t
 	int32_t source_id;
 	int32_t destination_id;
 }
+
+struct retransmit_t
+{
+	const int32_t MSG_ID=13;
+	int32_t source_id;
+	int32_t destination_id;
+	int32_t seq_number;
+	int16_t data_size;
+	int8_t data[482];
+}
+

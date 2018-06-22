@@ -13,5 +13,7 @@
 #include "comm_start_ack_t.h"
 #include "comm_stop_t.h"
 #include "comm_stop_ack_t.h"
+#include "retransmit_req_t.h"
+#include "retransmit_t.h"
 
 #endif /*MESSAGES_H*/

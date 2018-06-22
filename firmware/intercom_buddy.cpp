@@ -509,12 +509,12 @@ void Intercom_Buddy::init(Intercom_Incoming* intercom_incomingp,
 
 	memset(_outgoingCommRequests, 0, sizeof(_outgoingCommRequests));
 	
-	_messageHandlerp->registerHandler(COMM_START_ACK_T_MSG_ID, &Intercom_Buddy::handleMessage, this, true);
-	_messageHandlerp->registerHandler(COMM_STOP_ACK_T_MSG_ID, &Intercom_Buddy::handleMessage, this, true);
-	_messageHandlerp->registerHandler(COMM_START_T_MSG_ID, &Intercom_Buddy::handleMessage, this, true);
-	_messageHandlerp->registerHandler(COMM_STOP_T_MSG_ID, &Intercom_Buddy::handleMessage, this, true);
-	_messageHandlerp->registerHandler(KEEP_ALIVE_RESP_T_MSG_ID, &Intercom_Buddy::handleMessage, this, true);
-	_messageHandlerp->registerHandler(SET_BUDDY_ACK_T_MSG_ID, &Intercom_Buddy::handleMessage, this, true);
+	_messageHandlerp->registerHandler(COMM_START_ACK_T_MSG_ID, &Intercom_Buddy::_handleMessage, this, true);
+	_messageHandlerp->registerHandler(COMM_STOP_ACK_T_MSG_ID, &Intercom_Buddy::_handleMessage, this, true);
+	_messageHandlerp->registerHandler(COMM_START_T_MSG_ID, &Intercom_Buddy::_handleMessage, this, true);
+	_messageHandlerp->registerHandler(COMM_STOP_T_MSG_ID, &Intercom_Buddy::_handleMessage, this, true);
+	_messageHandlerp->registerHandler(KEEP_ALIVE_RESP_T_MSG_ID, &Intercom_Buddy::_handleMessage, this, true);
+	_messageHandlerp->registerHandler(SET_BUDDY_ACK_T_MSG_ID, &Intercom_Buddy::_handleMessage, this, true);
 
 
 	PLF_REGISTRY_REGISTER_HANDLER(regKey_buddyId[_buddyIdx], &Intercom_Buddy::_setBuddy, this);
@@ -531,7 +531,7 @@ void Intercom_Buddy::init(Intercom_Incoming* intercom_incomingp,
 	_initialized = true;
 }
 
-int Intercom_Buddy::handleMessage(Intercom_Message& msg, int payloadSize) {
+int Intercom_Buddy::_handleMessage(Intercom_Message& msg, int payloadSize) {
 	plf_assert("IntercomBuddy not initialized", _initialized);
 
 	switch (msg.msgId) {

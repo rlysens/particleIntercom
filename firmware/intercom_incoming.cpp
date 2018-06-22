@@ -5,6 +5,7 @@
 #include "plf_event_counter.h"
 #include "messages.h"
 #include "plf_data_dump.h"
+#include "plf_registry.h"
 
 #define MODULE_ID 500
 
@@ -62,6 +63,72 @@ int Intercom_Incoming::_fsmUpdate(void) {
   return _fsmState;
 }
 
+int Intercom_Incoming::_setServerAddr(int key) {
+  int value;
+  bool valid;
+
+  plf_registry.getInt(key, value, valid);
+
+  if (valid) {
+    IPAddress address = IPAddress(value);
+    _myServerAddress = address;
+  }
+
+  return 0;
+}
+
+void Intercom_Incoming::_sendRetransmitReq(uint32_t destinationId, uint32_t seqNumber) {
+  if (_myServerAddress) {
+    int numEncodedBytes;
+    retransmit_req_t retransmit_req;
+    uint32_t myId = _messageHandler.getMyId();
+
+    retransmit_req.source_id = myId;
+    retransmit_req.destination_id = destinationId;
+    retransmit_req.seq_number = seqNumber;
+
+    numEncodedBytes = retransmit_req_t_encode(intercom_message.data, 0, 
+      sizeof(intercom_message.data), &retransmit_req);
+    plf_assert("Msg Encode Error", numEncodedBytes>=0);
+
+    _messageHandler.send(intercom_message, RETRANSMIT_REQ_T_MSG_ID, destinationId, 
+      numEncodedBytes, _myServerAddress);
+  }
+}
+
+int Intercom_Incoming::_rxRetransmitMsg(Intercom_Message &msg, int payloadSize) {
+  static retransmit_t retransmit;
+  int retCode = 0;
+  int numDecodedMsgBytes = retransmit_t_decode(msg.data, 0, payloadSize, &retransmit);
+  uint32_t senderId = retransmit.source_id;
+
+  /*Only accept this message if not already in sending state or if it's from the
+   *currently active sender*/
+  if ((_fsmState == INCOMING_FSM_STATE_LISTENING) || (senderId == _activeSender)) {
+    if (numDecodedMsgBytes < 0) {
+      PLF_COUNT_EVENT(RETRANSMIT_RX_FAIL);
+      retCode = -(MODULE_ID+1);
+    }
+    else {
+      int offset = _seqNumber - retransmit.seq_number;
+      /*Don't go further back than filling level of the buffer*/
+      if (offset < _circularBuf.usedSpace()) {
+        /*Write it at the correct offset in the circular buffer*/
+        _circularBuf.writeAt((uint8_t*)retransmit.data, retransmit.data_size, offset);
+        PLF_COUNT_EVENT(RETRANSMIT_RX_SUCCESS);
+      }
+      else {
+        PLF_COUNT_EVENT(RETRANSMIT_RX_FAIL);
+      }
+    }
+  }
+  else {
+    PLF_COUNT_EVENT(RETRANSMIT_RX_FAIL);
+  }
+
+  return retCode;
+}
+
 int Intercom_Incoming::_rxVoiceDataMsg(Intercom_Message &msg, int payloadSize) {
   static voice_data_t voiceData;
   int retCode = 0;
@@ -82,6 +149,9 @@ int Intercom_Incoming::_rxVoiceDataMsg(Intercom_Message &msg, int payloadSize) {
       /*Did we miss anything?*/
       if (_seqNumber != (uint32_t)voiceData.seq_number) {
         uint32_t bytesMissed = voiceData.seq_number - _seqNumber;
+
+        _sendRetransmitReq(senderId, _seqNumber);
+
         PLF_COUNT_VAL(BYTES_MISSED, bytesMissed);
         PLF_PRINT(PRNTGRP_DFLT, "Missed seq# %d, Rx: %d, Missing: %d\n", (int)_seqNumber, (int)voiceData.seq_number, 
           (int)(voiceData.seq_number - _seqNumber));
@@ -108,6 +178,10 @@ int Intercom_Incoming::_handleMessage(Intercom_Message &msg, int payloadSize) {
   switch (msg.msgId) {
     case VOICE_DATA_T_MSG_ID:
       retCode = _rxVoiceDataMsg(msg, payloadSize);
+      break;
+
+    case RETRANSMIT_T_MSG_ID:
+      retCode = _rxRetransmitMsg(msg, payloadSize);
       break;
 
     case COMM_START_T_MSG_ID:
@@ -236,9 +310,12 @@ Intercom_Incoming::Intercom_Incoming(Intercom_MessageHandler& messageHandler, In
   PLF_COUNT_MIN_INIT(BYTES_SENT_TO_DECODER_MIN);
   PLF_COUNT_MIN_INIT(CIRCULAR_BUF_MIN);
 
+  _messageHandler.registerHandler(RETRANSMIT_T_MSG_ID, &Intercom_Incoming::_handleMessage, this, true);
   _messageHandler.registerHandler(VOICE_DATA_T_MSG_ID, &Intercom_Incoming::_handleMessage, this, true);
   _messageHandler.registerHandler(COMM_START_T_MSG_ID, &Intercom_Incoming::_handleMessage, this, true);
   _messageHandler.registerHandler(COMM_STOP_T_MSG_ID, &Intercom_Incoming::_handleMessage, this, true);
+
+  PLF_REGISTRY_REGISTER_HANDLER(REG_KEY_SRVR_ADDR, &Intercom_Incoming::_setServerAddr, this);
 
   dataDump.registerFunction("Incoming", &Intercom_Incoming::_dataDump, this);
 }
